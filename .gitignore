@@ -16,6 +16,7 @@ node_modules/
 dist/
 build/
 coverage/
+.worktrees/
 
 # Local app data
 .future/
