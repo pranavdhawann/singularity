@@ -1,4 +1,5 @@
 import { buildContextPack } from "@future/retrieval";
+import { redactSensitiveText } from "@future/permissions";
 import type { FastifyInstance } from "fastify";
 import type { ApiDependencies } from "../server/dependencies";
 
@@ -19,6 +20,7 @@ export async function registerContextPackRoutes(
   deps: ApiDependencies
 ): Promise<void> {
   server.post<{ Body: PreviewBody }>("/api/context-packs/preview", async (request) => {
+    const commandRedaction = redactSensitiveText(request.body.command);
     const memories = deps.db
       .prepare<{ workspaceId: string }, MemoryCandidateRow>(
         `SELECT id, statement, confidence
@@ -38,7 +40,7 @@ export async function registerContextPackRoutes(
 
     const pack = buildContextPack({
       workspaceId: request.body.workspaceId,
-      command: request.body.command,
+      command: commandRedaction.text,
       budgetTokens: request.body.budgetTokens ?? 1200,
       memories,
       chunks: [],
@@ -63,7 +65,7 @@ export async function registerContextPackRoutes(
           NULL,
           @budgetJson,
           @itemsJson,
-          '[]',
+          @redactionsJson,
           @createdAt
         )`
       )
@@ -72,10 +74,11 @@ export async function registerContextPackRoutes(
         workspaceId: pack.workspaceId,
         budgetJson: JSON.stringify({ budgetTokens: request.body.budgetTokens ?? 1200 }),
         itemsJson: JSON.stringify(pack.items),
+        redactionsJson: JSON.stringify(commandRedaction.redactions),
         createdAt: pack.createdAt.toISOString()
       });
 
-    return pack;
+    return { ...pack, redactions: commandRedaction.redactions };
   });
 }
 

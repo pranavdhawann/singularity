@@ -35,6 +35,26 @@ describe("memory routes", () => {
       url: `/api/memories?workspaceId=${workspace.id}&reviewState=approved`
     });
 
+    const patchResponse = await server.inject({
+      method: "PATCH",
+      url: `/api/memories/${created.id}`,
+      payload: {
+        statement: "Future uses SQLite and FTS5 for local truth.",
+        pinned: true
+      }
+    });
+    const patched = patchResponse.json<{ statement: string; pinned: boolean }>();
+
+    const deleteResponse = await server.inject({
+      method: "DELETE",
+      url: `/api/memories/${created.id}`
+    });
+
+    const afterDeleteResponse = await server.inject({
+      method: "GET",
+      url: `/api/memories?workspaceId=${workspace.id}`
+    });
+
     await server.close();
 
     expect(createResponse.statusCode).toBe(201);
@@ -44,5 +64,14 @@ describe("memory routes", () => {
     expect(listResponse.json<{ memories: Array<{ statement: string }> }>().memories).toEqual([
       expect.objectContaining({ statement: "Future uses SQLite for local truth." })
     ]);
+    expect(patchResponse.statusCode).toBe(200);
+    expect(patched).toEqual(
+      expect.objectContaining({
+        statement: "Future uses SQLite and FTS5 for local truth.",
+        pinned: true
+      })
+    );
+    expect(deleteResponse.statusCode).toBe(204);
+    expect(afterDeleteResponse.json<{ memories: unknown[] }>().memories).toEqual([]);
   });
 });
