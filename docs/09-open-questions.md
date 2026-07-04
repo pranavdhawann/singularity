@@ -1,48 +1,42 @@
-# Open Questions
+# Resolved and Deferred Decisions
 
-These questions should be resolved before implementation begins.
+The earlier product and technical questions are resolved for the first build by
+the end-to-end design and implementation blueprint:
 
-## Product
+- [End-to-End Design](superpowers/specs/2026-07-04-future-end-to-end-design.md)
+- [Implementation Blueprint](superpowers/plans/2026-07-04-future-mvp-implementation-blueprint.md)
 
-- What is the final project name?
-- Should the app launch as a browser-only local web app first, or use a desktop
-  wrapper from day one?
-- What is the first hero workflow for demos?
-- Should the first public release target developers, power users, or both
-  equally?
+## Resolved for MVP
 
-## Technical
+- Product name: Future.
+- First release audience: developers and power users, with a developer
+  workspace as the first demo because it exercises imports, memory, retrieval,
+  permissions, and provider routing.
+- App shell: plain local web app first, desktop wrapper later.
+- Backend: TypeScript Node local API.
+- Frontend: TypeScript React with Vite.
+- Storage: SQLite as local source of truth, SQLite FTS5 for lexical search, and
+  a replaceable vector-search adapter.
+- Provider routing: small custom provider interface with mock,
+  OpenAI-compatible, and Ollama-compatible adapters first.
+- MCP support: deferred until the plugin boundary exists.
+- Memory promotion: review is required for personal facts, procedures,
+  credential-like text, low-confidence memories, and memories from imported
+  third-party chats.
+- Prompt preview: required by default before external model calls.
+- Privacy-sensitive workspaces: can be configured as local-model-only.
+- Background tasks: denied in MVP except foreground import/indexing jobs.
+- Core integrations: imports and providers stay in core; broad connectors such
+  as email, calendar, Slack, Discord, Telegram, WhatsApp, phone calls, and web
+  automation are plugin candidates.
 
-- Should the first app use Tauri, Electron, or a plain local web server?
-- Should the first backend be Node.js, Python, Rust, or a hybrid?
-- Should vector search use sqlite-vec, LanceDB, Qdrant, or another local store?
-- Should provider routing use an existing library or a small custom adapter?
-- How much MCP support belongs in v1?
+## Deferred Beyond MVP
 
-## Memory
-
-- Which memories should require user review before promotion?
-- How should conflicting memories be resolved?
-- What is the default retention policy?
-- How should compactions be regenerated after memory edits?
-
-## Privacy
-
-- Which PII types are blocked by default?
-- Which sensitive data types can be replaced with local placeholders?
-- Should external model calls show prompt previews by default?
-- Should privacy-sensitive workspaces be local-model-only by default?
-
-## Permissions
-
-- What permissions should be denied by default?
-- Which permissions can be granted per workspace?
-- How should users review past grants?
-- Should background tasks be allowed in v1?
-
-## Open Source
-
-- What license should be used long term?
-- What contribution model should be documented first?
-- Should the project publish an architecture RFC before code?
-- Which integrations should be accepted into core versus plugins?
+- Packaged desktop wrapper choice between Tauri and Electron.
+- Hosted sync.
+- Team workspaces.
+- Plugin marketplace.
+- Smart cost-based model routing.
+- Graph memory beyond source-linked records.
+- Autonomous background agents.
+- Open-source contribution process beyond the existing MIT license.

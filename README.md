@@ -37,7 +37,9 @@ not the primary interface.
 ## Repository Status
 
 This repository currently contains the product concept, research notes, v1
-scope, architecture direction, and roadmap. It is intentionally docs-first.
+scope, architecture direction, roadmap, end-to-end design, and implementation
+blueprint. It is intentionally docs-first and ready for a first MVP scaffold
+from the blueprint.
 
 ## Docs
 
@@ -50,9 +52,11 @@ scope, architecture direction, and roadmap. It is intentionally docs-first.
 - [Model Routing](docs/06-model-routing.md)
 - [Permissions and Privacy](docs/07-permissions-privacy.md)
 - [Roadmap](docs/08-roadmap.md)
-- [Open Questions](docs/09-open-questions.md)
+- [Resolved and Deferred Decisions](docs/09-open-questions.md)
 - [References](docs/references.md)
-- [Design Spec](docs/superpowers/specs/2026-07-03-memory-first-assistant-ide-design.md)
+- [Initial Design Spec](docs/superpowers/specs/2026-07-03-memory-first-assistant-ide-design.md)
+- [Canonical End-to-End Design](docs/superpowers/specs/2026-07-04-future-end-to-end-design.md)
+- [MVP Implementation Blueprint](docs/superpowers/plans/2026-07-04-future-mvp-implementation-blueprint.md)
 
 ## License
 
