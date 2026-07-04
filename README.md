@@ -36,10 +36,12 @@ not the primary interface.
 
 ## Repository Status
 
-This repository currently contains the product concept, research notes, v1
-scope, architecture direction, roadmap, end-to-end design, and implementation
-blueprint. It is intentionally docs-first and ready for a first MVP scaffold
-from the blueprint.
+This repository contains the product concept, research notes, v1 scope,
+architecture direction, roadmap, end-to-end design, implementation blueprint,
+and the first local MVP scaffold. The current implementation is a TypeScript
+monorepo with a local API, React command center, SQLite event store, imports,
+memory review, provider abstraction, permissions, context packs, and Playwright
+hero-flow coverage.
 
 ## Docs
 
@@ -54,9 +56,25 @@ from the blueprint.
 - [Roadmap](docs/08-roadmap.md)
 - [Resolved and Deferred Decisions](docs/09-open-questions.md)
 - [References](docs/references.md)
+- [Build Runbook](docs/10-build-runbook.md)
+- [Release Checklist](docs/11-release-checklist.md)
 - [Initial Design Spec](docs/superpowers/specs/2026-07-03-memory-first-assistant-ide-design.md)
 - [Canonical End-to-End Design](docs/superpowers/specs/2026-07-04-future-end-to-end-design.md)
 - [MVP Implementation Blueprint](docs/superpowers/plans/2026-07-04-future-mvp-implementation-blueprint.md)
+
+## Local Development
+
+```powershell
+corepack pnpm install
+corepack pnpm dev
+```
+
+Verification:
+
+```powershell
+corepack pnpm check
+corepack pnpm test:e2e
+```
 
 ## License
 
