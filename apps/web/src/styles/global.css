@@ -300,6 +300,33 @@ h3 {
   background: #ffffff;
 }
 
+.prompt-preview {
+  border: 1px solid #d8e0e2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.preview-list {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.preview-list article {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #edf1f2;
+}
+
+.preview-list article:last-child {
+  border-bottom: 0;
+}
+
+.preview-redactions {
+  margin: 0;
+  padding: 0 14px 14px;
+  color: #52636b;
+}
+
 @media (max-width: 900px) {
   .app-shell,
   .content-grid {
