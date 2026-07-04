@@ -23,41 +23,45 @@ export class EventRepository {
 
   append(event: TimelineEvent): void {
     const insert = this.db.transaction((nextEvent: TimelineEvent) => {
-      this.db
-        .prepare(
-          `INSERT INTO events (
-            id,
-            workspace_id,
-            type,
-            actor,
-            title,
-            payload_json,
-            privacy_json,
-            created_at
-          ) VALUES (
-            @id,
-            @workspaceId,
-            @type,
-            @actor,
-            @title,
-            @payloadJson,
-            @privacyJson,
-            @createdAt
-          )`
-        )
-        .run({
-          id: nextEvent.id,
-          workspaceId: nextEvent.workspaceId,
-          type: nextEvent.type,
-          actor: nextEvent.actor,
-          title: nextEvent.title,
-          payloadJson: JSON.stringify(nextEvent.payload),
-          privacyJson: JSON.stringify(nextEvent.privacy),
-          createdAt: nextEvent.createdAt.toISOString()
-        });
+      this.appendInCurrentTransaction(nextEvent);
     });
 
     insert(event);
+  }
+
+  appendInCurrentTransaction(event: TimelineEvent): void {
+    this.db
+      .prepare(
+        `INSERT INTO events (
+          id,
+          workspace_id,
+          type,
+          actor,
+          title,
+          payload_json,
+          privacy_json,
+          created_at
+        ) VALUES (
+          @id,
+          @workspaceId,
+          @type,
+          @actor,
+          @title,
+          @payloadJson,
+          @privacyJson,
+          @createdAt
+        )`
+      )
+      .run({
+        id: event.id,
+        workspaceId: event.workspaceId,
+        type: event.type,
+        actor: event.actor,
+        title: event.title,
+        payloadJson: JSON.stringify(event.payload),
+        privacyJson: JSON.stringify(event.privacy),
+        createdAt: event.createdAt.toISOString()
+      });
   }
 
   list(options: EventListOptions = {}): TimelineEvent[] {
