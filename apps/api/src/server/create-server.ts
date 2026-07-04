@@ -1,5 +1,6 @@
 import { EventRepository, openDatabase } from "@future/db";
 import Fastify, { type FastifyInstance } from "fastify";
+import { registerCommandRoutes } from "../routes/commands";
 import { registerContextPackRoutes } from "../routes/context-packs";
 import { registerHealthRoutes } from "../routes/health";
 import { registerImportRoutes } from "../routes/imports";
@@ -35,6 +36,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   await registerProviderRoutes(server, deps);
   await registerPermissionRoutes(server, deps);
   await registerContextPackRoutes(server, deps);
+  await registerCommandRoutes(server, deps);
   await registerTimelineRoutes(server, deps);
 
   return server;

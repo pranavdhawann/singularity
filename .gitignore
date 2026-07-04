@@ -17,6 +17,8 @@ dist/
 build/
 coverage/
 .worktrees/
+test-results/
+playwright-report/
 
 # Local app data
 .future/
