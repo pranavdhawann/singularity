@@ -1,0 +1,27 @@
+{
+  "name": "@future/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fastify/cors": "11.2.0",
+    "@future/core": "workspace:*",
+    "@future/db": "workspace:*",
+    "@future/importers": "workspace:*",
+    "@future/memory": "workspace:*",
+    "@future/permissions": "workspace:*",
+    "@future/providers": "workspace:*",
+    "@future/retrieval": "workspace:*",
+    "fastify": "5.9.0",
+    "tsx": "4.23.0"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
+  }
+}
