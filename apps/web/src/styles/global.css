@@ -327,6 +327,22 @@ h3 {
   color: #52636b;
 }
 
+.permissions-panel {
+  display: grid;
+  gap: 8px;
+}
+
+.permission-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #d8e0e2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
 @media (max-width: 900px) {
   .app-shell,
   .content-grid {

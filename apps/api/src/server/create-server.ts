@@ -4,6 +4,7 @@ import { registerContextPackRoutes } from "../routes/context-packs";
 import { registerHealthRoutes } from "../routes/health";
 import { registerImportRoutes } from "../routes/imports";
 import { registerMemoryRoutes } from "../routes/memories";
+import { registerPermissionRoutes } from "../routes/permissions";
 import { registerProviderRoutes } from "../routes/providers";
 import { registerTimelineRoutes } from "../routes/timeline";
 import { registerWorkspaceRoutes } from "../routes/workspaces";
@@ -32,6 +33,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   await registerImportRoutes(server, deps);
   await registerMemoryRoutes(server, deps);
   await registerProviderRoutes(server, deps);
+  await registerPermissionRoutes(server, deps);
   await registerContextPackRoutes(server, deps);
   await registerTimelineRoutes(server, deps);
 
