@@ -272,6 +272,34 @@ h3 {
   text-transform: uppercase;
 }
 
+.memory-browser {
+  display: grid;
+  gap: 12px;
+}
+
+.memory-tabs,
+.memory-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.memory-tabs button,
+.memory-actions button {
+  padding: 7px 9px;
+  border: 1px solid #d8e0e2;
+  border-radius: 8px;
+  color: #32444d;
+  background: #ffffff;
+}
+
+.memory-card {
+  padding: 14px;
+  border: 1px solid #d8e0e2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
 @media (max-width: 900px) {
   .app-shell,
   .content-grid {
