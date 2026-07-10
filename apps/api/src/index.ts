@@ -1,4 +1,5 @@
 import { mkdir } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { dirname } from "node:path";
 import { createServer } from "./server/create-server";
 
@@ -7,7 +8,7 @@ const port = Number.parseInt(process.env.PORT ?? "4174", 10);
 
 await mkdir(dirname(databasePath), { recursive: true });
 
-const server = await createServer({ databasePath });
+const server = await createServer({ databasePath, sessionToken: randomUUID() });
 await server.listen({ host: "127.0.0.1", port });
 
 console.log(`Future API listening on http://127.0.0.1:${port}`);

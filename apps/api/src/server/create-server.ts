@@ -1,4 +1,5 @@
 import { EventRepository, openDatabase } from "@future/db";
+import { randomUUID } from "node:crypto";
 import Fastify, { type FastifyInstance } from "fastify";
 import { registerCommandRoutes } from "../routes/commands";
 import { registerContextPackRoutes } from "../routes/context-packs";
@@ -11,9 +12,12 @@ import { registerTimelineRoutes } from "../routes/timeline";
 import { registerWorkspaceRoutes } from "../routes/workspaces";
 import type { ApiDependencies } from "./dependencies";
 import { registerApiErrorHandler } from "./api-errors";
+import { registerLocalSession } from "./local-session";
 
 export interface CreateServerOptions {
   databasePath: string;
+  sessionToken?: string;
+  allowedOrigins?: readonly string[];
 }
 
 export async function createServer(options: CreateServerOptions): Promise<FastifyInstance> {
@@ -24,6 +28,11 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   };
   const server = Fastify({ logger: false });
   registerApiErrorHandler(server);
+  await registerLocalSession(
+    server,
+    options.sessionToken ?? randomUUID(),
+    options.allowedOrigins ?? ["http://127.0.0.1:4173"]
+  );
 
   server.addHook("onClose", async () => {
     if (db.open) {
