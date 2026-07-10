@@ -1,4 +1,4 @@
-import type { EventActor, TimelineEvent } from "@future/core";
+import type { EventActor, SourceReference, TimelineEvent } from "@future/core";
 import type { SqliteDatabase } from "../connection";
 
 interface EventRow {
@@ -16,6 +16,17 @@ export interface EventListOptions {
   workspaceId?: string;
   type?: string;
   limit?: number;
+  after?: string;
+  order?: "asc" | "desc";
+}
+
+interface EventCursorRow {
+  id: string;
+  created_at: string;
+}
+
+interface EventSourceRow {
+  source_json: string;
 }
 
 export class EventRepository {
@@ -80,13 +91,29 @@ export class EventRepository {
       params.type = options.type;
     }
 
+    const order = options.order ?? "desc";
+    if (options.after) {
+      const cursor = this.db.prepare<{ id: string }, EventCursorRow>(
+        "SELECT id, created_at FROM events WHERE id = @id"
+      ).get({ id: options.after });
+      if (cursor) {
+        params.cursorCreatedAt = cursor.created_at;
+        params.cursorId = cursor.id;
+        where.push(
+          order === "asc"
+            ? "(created_at > @cursorCreatedAt OR (created_at = @cursorCreatedAt AND id > @cursorId))"
+            : "(created_at < @cursorCreatedAt OR (created_at = @cursorCreatedAt AND id < @cursorId))"
+        );
+      }
+    }
+
     const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
     const rows = this.db
       .prepare<Record<string, string | number>, EventRow>(
         `SELECT id, workspace_id, type, actor, title, payload_json, privacy_json, created_at
          FROM events
          ${whereSql}
-         ORDER BY created_at DESC, id DESC
+         ORDER BY created_at ${order === "asc" ? "ASC" : "DESC"}, id ${order === "asc" ? "ASC" : "DESC"}
          LIMIT @limit`
       )
       .all(params);
@@ -101,5 +128,34 @@ export class EventRepository {
       privacy: JSON.parse(row.privacy_json) as Record<string, unknown>,
       createdAt: new Date(row.created_at)
     }));
+  }
+
+  attachSources(eventId: string, sources: readonly SourceReference[]): void {
+    const insert = this.db.prepare(
+      `INSERT INTO assistant_response_sources (
+        event_id, source_kind, source_id, source_json, ordinal
+      ) VALUES (
+        @eventId, @sourceKind, @sourceId, @sourceJson, @ordinal
+      )`
+    );
+    const attach = this.db.transaction(() => {
+      sources.forEach((source, ordinal) => {
+        insert.run({
+          eventId,
+          sourceKind: source.kind,
+          sourceId: source.id,
+          sourceJson: JSON.stringify(source),
+          ordinal
+        });
+      });
+    });
+    attach();
+  }
+
+  listSources(eventId: string): SourceReference[] {
+    return this.db.prepare<{ eventId: string }, EventSourceRow>(
+      `SELECT source_json FROM assistant_response_sources
+       WHERE event_id = @eventId ORDER BY ordinal ASC`
+    ).all({ eventId }).map((row) => JSON.parse(row.source_json) as SourceReference);
   }
 }
