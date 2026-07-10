@@ -1,4 +1,9 @@
-import { EventRepository, openDatabase } from "@future/db";
+import {
+  EventRepository,
+  ModelProfileRepository,
+  ProviderRepository,
+  openDatabase
+} from "@future/db";
 import { randomUUID } from "node:crypto";
 import Fastify, { type FastifyInstance } from "fastify";
 import { registerCommandRoutes } from "../routes/commands";
@@ -10,6 +15,7 @@ import { registerPermissionRoutes } from "../routes/permissions";
 import { registerProviderRoutes } from "../routes/providers";
 import { registerTimelineRoutes } from "../routes/timeline";
 import { registerWorkspaceRoutes } from "../routes/workspaces";
+import { ProviderService } from "../services/provider-service";
 import type { ApiDependencies } from "./dependencies";
 import { registerApiErrorHandler } from "./api-errors";
 import { registerLocalSession } from "./local-session";
@@ -22,9 +28,14 @@ export interface CreateServerOptions {
 
 export async function createServer(options: CreateServerOptions): Promise<FastifyInstance> {
   const db = openDatabase({ path: options.databasePath });
+  const providers = new ProviderRepository(db);
+  const modelProfiles = new ModelProfileRepository(db);
   const deps: ApiDependencies = {
     db,
-    events: new EventRepository(db)
+    events: new EventRepository(db),
+    providers,
+    modelProfiles,
+    providerService: new ProviderService(providers, modelProfiles)
   };
   const server = Fastify({ logger: false });
   registerApiErrorHandler(server);
