@@ -1,8 +1,9 @@
 import type { SqliteDatabase } from "../connection";
 import { initialMigration } from "./0001-initial";
+import { continuousAssistantMigration } from "./0002-continuous-assistant";
 import type { Migration, MigrationRecord } from "./types";
 
-export const migrations: readonly Migration[] = [initialMigration];
+export const migrations: readonly Migration[] = [initialMigration, continuousAssistantMigration];
 
 export function runMigrations(db: SqliteDatabase): MigrationRecord[] {
   db.exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
