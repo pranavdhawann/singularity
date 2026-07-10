@@ -15,6 +15,9 @@ import { registerPermissionRoutes } from "../routes/permissions";
 import { registerProviderRoutes } from "../routes/providers";
 import { registerTimelineRoutes } from "../routes/timeline";
 import { registerWorkspaceRoutes } from "../routes/workspaces";
+import { registerV2HealthRoutes } from "../routes/v2/health";
+import { registerV2ProviderRoutes } from "../routes/v2/providers";
+import { registerV2WorkspaceRoutes } from "../routes/v2/workspaces";
 import { ProviderService } from "../services/provider-service";
 import type { ApiDependencies } from "./dependencies";
 import { registerApiErrorHandler } from "./api-errors";
@@ -37,7 +40,14 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
     modelProfiles,
     providerService: new ProviderService(providers, modelProfiles)
   };
-  const server = Fastify({ logger: false });
+  const server = Fastify({
+    logger: false,
+    ajv: {
+      customOptions: {
+        removeAdditional: false
+      }
+    }
+  });
   registerApiErrorHandler(server);
   await registerLocalSession(
     server,
@@ -50,6 +60,10 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
       db.close();
     }
   });
+
+  await registerV2HealthRoutes(server, deps);
+  await registerV2WorkspaceRoutes(server, deps);
+  await registerV2ProviderRoutes(server, deps);
 
   await registerHealthRoutes(server);
   await registerWorkspaceRoutes(server, deps);
