@@ -9,6 +9,12 @@ test("hero flow records imports, memory, context, model call, and response", asy
   request
 }) => {
   await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Set up Future" })).toBeVisible();
+  await page.getByLabel("Workspace name").fill("Browser Workspace");
+  await page.getByRole("button", { name: "Create local assistant" }).click();
+
+  await expect(page.getByLabel("Workspace")).toContainText("Browser Workspace");
+  await expect(page.getByText("Model: Default")).toBeVisible();
   await expect(page.getByRole("button", { name: /command palette/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Timeline" })).toBeVisible();
 

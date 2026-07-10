@@ -15,8 +15,59 @@ body {
 }
 
 button,
-select {
+select,
+input {
   font: inherit;
+}
+
+.state-panel,
+.setup-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+.setup-panel {
+  width: min(100%, 560px);
+  padding: 28px;
+  border: 1px solid #d8e0e2;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.setup-panel form {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.setup-panel label {
+  display: grid;
+  gap: 6px;
+  color: #52636b;
+  font-size: 13px;
+}
+
+.setup-panel input,
+.setup-panel select {
+  padding: 9px 10px;
+  border: 1px solid #c8d2d5;
+  border-radius: 8px;
+}
+
+.setup-panel button,
+.state-panel button {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #18242d;
+}
+
+.empty-state {
+  padding: 20px;
+  color: #60737c;
 }
 
 .app-shell {

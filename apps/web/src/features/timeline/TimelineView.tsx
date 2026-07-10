@@ -1,22 +1,6 @@
-const events = [
-  {
-    type: "workspace.created",
-    title: "Future workspace ready",
-    detail: "Local storage and permissions initialized"
-  },
-  {
-    type: "memory.review",
-    title: "Memory review queue",
-    detail: "No proposed memories yet"
-  },
-  {
-    type: "provider.status",
-    title: "Mock provider available",
-    detail: "External calls require prompt preview"
-  }
-];
+interface TimelineItem { type: string; title: string; detail: string; }
 
-export function TimelineView() {
+export function TimelineView({ events = [] }: { events?: TimelineItem[] }) {
   return (
     <section className="timeline-panel" aria-labelledby="timeline-heading">
       <div className="panel-heading">
@@ -27,6 +11,7 @@ export function TimelineView() {
         <span className="status-pill">Local</span>
       </div>
       <div className="timeline-list">
+        {events.length === 0 ? <p className="empty-state">No activity recorded yet.</p> : null}
         {events.map((event) => (
           <article className="timeline-event" key={event.type}>
             <span className="event-type">{event.type}</span>

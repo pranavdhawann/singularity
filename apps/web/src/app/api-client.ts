@@ -1,15 +1,20 @@
 import type {
   ApiErrorResponse,
+  CreateModelProfileInput,
+  CreateProviderInput,
   CreateWorkspaceInput,
   LocalSessionResponse,
+  ModelProfile,
+  ProviderConfig,
   WorkspaceDto
 } from "@future/core";
+import type { FutureApi } from "./api-types";
 
 export interface ApiClientOptions {
   baseUrl?: string;
 }
 
-export class ApiClient {
+export class ApiClient implements FutureApi {
   private readonly baseUrl: string;
   private sessionToken?: string;
 
@@ -27,6 +32,35 @@ export class ApiClient {
 
   async createWorkspace(input: CreateWorkspaceInput): Promise<WorkspaceDto> {
     return this.mutate<WorkspaceDto>("/workspaces", input);
+  }
+
+  async listWorkspaces(): Promise<{ workspaces: WorkspaceDto[] }> {
+    return this.get<{ workspaces: WorkspaceDto[] }>("/workspaces");
+  }
+
+  async listProviders(): Promise<{ providers: ProviderConfig[] }> {
+    return this.get<{ providers: ProviderConfig[] }>("/providers");
+  }
+
+  async createProvider(input: CreateProviderInput): Promise<ProviderConfig> {
+    return this.mutate<ProviderConfig>("/providers", input);
+  }
+
+  async listModelProfiles(providerId?: string): Promise<{ modelProfiles: ModelProfile[] }> {
+    const query = providerId ? `?providerId=${encodeURIComponent(providerId)}` : "";
+    return this.get<{ modelProfiles: ModelProfile[] }>(`/model-profiles${query}`);
+  }
+
+  async createModelProfile(input: CreateModelProfileInput): Promise<ModelProfile> {
+    return this.mutate<ModelProfile>("/model-profiles", input);
+  }
+
+  private async get<T>(path: string): Promise<T> {
+    const response = await fetch(`${this.baseUrl}/v2${path}`);
+    if (!response.ok) {
+      throw await ApiClient.toError(response);
+    }
+    return (await response.json()) as T;
   }
 
   private async getSessionToken(): Promise<string> {

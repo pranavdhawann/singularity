@@ -21,7 +21,7 @@ export default defineConfig({
       command: "corepack pnpm --filter @future/api dev",
       url: "http://127.0.0.1:4174/api/health",
       env: {
-        FUTURE_DB_PATH: ".future/e2e.sqlite",
+        FUTURE_DB_PATH: ":memory:",
         PORT: "4174"
       },
       reuseExistingServer: true,
