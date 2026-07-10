@@ -50,7 +50,7 @@ export async function runCommand(input: RunCommandInput): Promise<RunCommandResu
       title: "Created context pack",
       payload: {
         contextPackId: contextPack.id,
-        itemIds: contextPack.items.map((item) => item.id),
+        itemIds: contextPack.items.map((item) => item.source.id),
         estimatedTokens: contextPack.estimatedTokens
       },
       privacy: { labels: ["local"] }

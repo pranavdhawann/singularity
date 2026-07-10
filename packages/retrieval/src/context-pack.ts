@@ -1,7 +1,7 @@
-import { createId } from "@future/core";
+import { createId, sourceReferenceKey, type SourceReference } from "@future/core";
 
 export interface ContextCandidate {
-  id: string;
+  source: SourceReference;
   text: string;
   tokenCount: number;
   score: number;
@@ -16,9 +16,7 @@ export interface BuildContextPackInput {
   recentEvents: ContextCandidate[];
 }
 
-export interface BuiltContextPackItem extends ContextCandidate {
-  kind: "memory" | "document_chunk" | "timeline_event";
-}
+export type BuiltContextPackItem = ContextCandidate;
 
 export interface BuiltContextPack {
   id: string;
@@ -30,11 +28,15 @@ export interface BuiltContextPack {
 }
 
 export function buildContextPack(input: BuildContextPackInput): BuiltContextPack {
-  const candidates: BuiltContextPackItem[] = [
-    ...input.memories.map((item) => ({ ...item, kind: "memory" as const })),
-    ...input.chunks.map((item) => ({ ...item, kind: "document_chunk" as const })),
-    ...input.recentEvents.map((item) => ({ ...item, kind: "timeline_event" as const }))
-  ].sort((a, b) => b.score - a.score);
+  const deduplicated = new Map<string, BuiltContextPackItem>();
+  for (const candidate of [...input.memories, ...input.chunks, ...input.recentEvents]) {
+    const key = sourceReferenceKey(candidate.source);
+    const current = deduplicated.get(key);
+    if (!current || candidate.score > current.score) deduplicated.set(key, candidate);
+  }
+  const candidates = [...deduplicated.values()].sort(
+    (a, b) => b.score - a.score || sourceReferenceKey(a.source).localeCompare(sourceReferenceKey(b.source))
+  );
 
   const items: BuiltContextPackItem[] = [];
   let estimatedTokens = estimateTokenCount(input.command);

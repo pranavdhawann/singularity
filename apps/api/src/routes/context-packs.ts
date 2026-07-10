@@ -1,5 +1,6 @@
 import { buildContextPack } from "@future/retrieval";
 import { redactSensitiveText } from "@future/permissions";
+import { createHash } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import type { ApiDependencies } from "../server/dependencies";
 
@@ -32,7 +33,13 @@ export async function registerContextPackRoutes(
       )
       .all({ workspaceId: request.body.workspaceId })
       .map((memory) => ({
-        id: memory.id,
+        source: {
+          kind: "memory" as const,
+          id: memory.id,
+          workspaceId: request.body.workspaceId,
+          title: "Approved memory",
+          contentHash: createHash("sha256").update(memory.statement).digest("hex")
+        },
         text: memory.statement,
         tokenCount: estimateTokenCount(memory.statement),
         score: memory.confidence * 10
