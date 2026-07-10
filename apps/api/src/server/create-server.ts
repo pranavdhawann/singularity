@@ -10,6 +10,7 @@ import { registerProviderRoutes } from "../routes/providers";
 import { registerTimelineRoutes } from "../routes/timeline";
 import { registerWorkspaceRoutes } from "../routes/workspaces";
 import type { ApiDependencies } from "./dependencies";
+import { registerApiErrorHandler } from "./api-errors";
 
 export interface CreateServerOptions {
   databasePath: string;
@@ -22,6 +23,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
     events: new EventRepository(db)
   };
   const server = Fastify({ logger: false });
+  registerApiErrorHandler(server);
 
   server.addHook("onClose", async () => {
     if (db.open) {

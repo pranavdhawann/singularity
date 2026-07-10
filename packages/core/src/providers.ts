@@ -31,3 +31,43 @@ export interface ModelProvider {
   streamText(request: ModelTextRequest): AsyncIterable<ModelTextChunk>;
   createEmbedding?(request: EmbeddingRequest): Promise<EmbeddingResult>;
 }
+
+export interface CreateProviderInput {
+  kind: ProviderKind;
+  displayName: string;
+  baseUrl?: string;
+  secretEnvironmentVariable?: string;
+  isLocal: boolean;
+}
+
+export interface ProviderConfig {
+  id: string;
+  kind: ProviderKind;
+  displayName: string;
+  baseUrl?: string;
+  isLocal: boolean;
+  hasSecret: boolean;
+  capabilities: {
+    streaming: boolean;
+    text: boolean;
+    embeddings: boolean;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateModelProfileInput {
+  providerId: string;
+  name: string;
+  model: string;
+  contextWindow: number;
+  purpose: string;
+  temperature?: number;
+  privacyPolicy: "local_only" | "prompt_preview";
+}
+
+export interface ModelProfile extends CreateModelProfileInput {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+}
