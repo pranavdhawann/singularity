@@ -43,6 +43,10 @@ monorepo with a local API, React command center, SQLite event store, imports,
 memory review, provider abstraction, permissions, context packs, and Playwright
 hero-flow coverage.
 
+The `v2` branch is building the continuous-assistant architecture. Phase 1 adds
+versioned database migrations, protected `/api/v2` setup routes, persisted model
+profiles, and a browser-driven first-run flow backed by real local data.
+
 ## Docs
 
 - [Vision](docs/00-vision.md)
@@ -60,6 +64,9 @@ hero-flow coverage.
 - [Release Checklist](docs/11-release-checklist.md)
 - [Initial Design Spec](docs/superpowers/specs/2026-07-03-memory-first-assistant-ide-design.md)
 - [Canonical End-to-End Design](docs/superpowers/specs/2026-07-04-future-end-to-end-design.md)
+- [V2 Continuous Assistant Design](docs/superpowers/specs/2026-07-10-future-v2-continuous-assistant-design.md)
+- [V2 Phase 1 Plan](docs/superpowers/plans/2026-07-10-future-v2-phase-1-foundation-connected-shell.md)
+- [Agent Context](docs/context.md)
 - [MVP Implementation Blueprint](docs/superpowers/plans/2026-07-04-future-mvp-implementation-blueprint.md)
 
 ## Local Development

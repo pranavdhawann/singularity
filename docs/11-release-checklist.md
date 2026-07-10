@@ -7,6 +7,19 @@ Use this checklist before treating the local MVP as releasable.
 - [ ] `corepack pnpm install` completes.
 - [ ] `corepack pnpm check` passes.
 - [ ] `corepack pnpm test:e2e` passes.
+- [ ] `corepack pnpm --filter @future/web build` passes.
+- [ ] `git diff --check` passes.
+
+## V2 Foundation Gates
+
+- [ ] Startup records the `0001_initial` migration exactly once.
+- [ ] An existing MVP database opens without losing workspace records.
+- [ ] V2 mutations reject missing session tokens and unrelated browser origins.
+- [ ] V2 validation rejects unknown request properties.
+- [ ] Provider responses expose `hasSecret` but never secret references or values.
+- [ ] The browser creates a workspace, provider, and model profile during first run.
+- [ ] The connected shell displays persisted workspace and model-profile names.
+- [ ] The timeline shows an honest empty state instead of demo events.
 
 ## Functional Gates
 

@@ -35,10 +35,22 @@ Default local URLs:
 The API stores local data at `.future/future.sqlite` unless `FUTURE_DB_PATH` is
 set.
 
+On a new V2 database, the browser opens a first-run form that creates a workspace,
+provider, and model profile. The mock provider proves the setup without network
+access. Ollama defaults to `http://127.0.0.1:11434` and accepts a user-selected
+model name.
+
+V2 database startup applies ordered migrations recorded in `schema_migrations`.
+Existing MVP databases are adopted by the idempotent baseline migration without
+deleting their records.
+
 ## Useful Environment Variables
 
 - `FUTURE_DB_PATH`: SQLite database path.
 - `PORT`: API port. Defaults to `4174`.
+- Provider secret references use environment-variable names such as
+  `FUTURE_MODEL_KEY`; secret values are not stored in SQLite or returned to the
+  browser.
 
 Example:
 
@@ -72,7 +84,8 @@ corepack pnpm test:e2e
 ```
 
 `pnpm check` runs typecheck, lint, and unit tests. `pnpm test:e2e` starts the API
-and web app, then runs the Playwright hero flow in Chromium.
+and web app with an in-memory test database, then runs the browser-driven first-run
+and hero flow in Chromium.
 
 ## Reset Local Data
 
