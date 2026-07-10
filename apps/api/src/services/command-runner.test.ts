@@ -52,7 +52,7 @@ describe("runCommand", () => {
     expect(JSON.parse(requestInit.body)).toEqual(
       expect.objectContaining({
         model: "llama3.2",
-        stream: false
+        stream: true
       })
     );
   });

@@ -9,6 +9,7 @@ export interface ModelDescriptor {
 export interface ModelTextRequest {
   prompt: string;
   model: string;
+  signal?: AbortSignal;
 }
 
 export interface ModelTextChunk {

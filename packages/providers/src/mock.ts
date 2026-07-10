@@ -15,6 +15,10 @@ export class MockProvider implements ModelProvider {
   }
 
   async *streamText(request: ModelTextRequest): AsyncIterable<ModelTextChunk> {
-    yield { text: `Mock response for: ${request.prompt}` };
+    const chunks = `Mock response for: ${request.prompt}`.match(/\S+\s*/g) ?? [];
+    for (const text of chunks) {
+      request.signal?.throwIfAborted();
+      yield { text };
+    }
   }
 }

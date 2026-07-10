@@ -10,6 +10,25 @@ describe("MockProvider", () => {
       chunks.push(chunk.text);
     }
 
-    expect(chunks.join("")).toContain("Mock response");
+    expect(chunks.length).toBeGreaterThan(1);
+    expect(chunks.join("")).toBe("Mock response for: hello");
+  });
+
+  it("stops before yielding when cancelled", async () => {
+    const provider = new MockProvider();
+    const controller = new AbortController();
+    controller.abort();
+
+    const consume = async () => {
+      for await (const _chunk of provider.streamText({
+        prompt: "hello",
+        model: "mock",
+        signal: controller.signal
+      })) {
+        // The aborted stream must not yield.
+      }
+    };
+
+    await expect(consume()).rejects.toMatchObject({ name: "AbortError" });
   });
 });
