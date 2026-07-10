@@ -131,6 +131,13 @@ export class EventRepository {
   }
 
   attachSources(eventId: string, sources: readonly SourceReference[]): void {
+    const attach = this.db.transaction(() => {
+      this.attachSourcesInCurrentTransaction(eventId, sources);
+    });
+    attach();
+  }
+
+  attachSourcesInCurrentTransaction(eventId: string, sources: readonly SourceReference[]): void {
     const insert = this.db.prepare(
       `INSERT INTO assistant_response_sources (
         event_id, source_kind, source_id, source_json, ordinal
@@ -138,18 +145,15 @@ export class EventRepository {
         @eventId, @sourceKind, @sourceId, @sourceJson, @ordinal
       )`
     );
-    const attach = this.db.transaction(() => {
-      sources.forEach((source, ordinal) => {
-        insert.run({
-          eventId,
-          sourceKind: source.kind,
-          sourceId: source.id,
-          sourceJson: JSON.stringify(source),
-          ordinal
-        });
+    sources.forEach((source, ordinal) => {
+      insert.run({
+        eventId,
+        sourceKind: source.kind,
+        sourceId: source.id,
+        sourceJson: JSON.stringify(source),
+        ordinal
       });
     });
-    attach();
   }
 
   listSources(eventId: string): SourceReference[] {

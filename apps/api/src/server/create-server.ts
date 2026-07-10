@@ -1,4 +1,6 @@
 import {
+  AssistantTurnRepository,
+  ContextPackRepository,
   EventRepository,
   ModelProfileRepository,
   ProviderRepository,
@@ -18,7 +20,10 @@ import { registerWorkspaceRoutes } from "../routes/workspaces";
 import { registerV2HealthRoutes } from "../routes/v2/health";
 import { registerV2ProviderRoutes } from "../routes/v2/providers";
 import { registerV2WorkspaceRoutes } from "../routes/v2/workspaces";
+import { AssistantService } from "../services/assistant-service";
+import { ContextService } from "../services/context-service";
 import { ProviderService } from "../services/provider-service";
+import { TurnCancellationRegistry } from "../services/turn-cancellation";
 import type { ApiDependencies } from "./dependencies";
 import { registerApiErrorHandler } from "./api-errors";
 import { registerLocalSession } from "./local-session";
@@ -33,12 +38,30 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   const db = openDatabase({ path: options.databasePath });
   const providers = new ProviderRepository(db);
   const modelProfiles = new ModelProfileRepository(db);
+  const events = new EventRepository(db);
+  const turns = new AssistantTurnRepository(db);
+  const contextPacks = new ContextPackRepository(db);
+  const providerService = new ProviderService(providers, modelProfiles);
+  const contextService = new ContextService({ db, events, contextPacks });
+  const cancellations = new TurnCancellationRegistry();
   const deps: ApiDependencies = {
     db,
-    events: new EventRepository(db),
+    turns,
+    contextPacks,
+    events,
     providers,
     modelProfiles,
-    providerService: new ProviderService(providers, modelProfiles)
+    providerService,
+    contextService,
+    cancellations,
+    assistantService: new AssistantService({
+      db,
+      turns,
+      events,
+      contextService,
+      providerService,
+      cancellations
+    })
   };
   const server = Fastify({
     logger: false,
