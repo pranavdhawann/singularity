@@ -1,5 +1,5 @@
 import Database from "better-sqlite3";
-import { schemaStatements } from "./schema";
+import { runMigrations } from "./migrations/runner";
 
 export type SqliteDatabase = InstanceType<typeof Database>;
 
@@ -10,16 +10,10 @@ export interface OpenDatabaseOptions {
 export function openDatabase(options: OpenDatabaseOptions): SqliteDatabase {
   const db = new Database(options.path);
   db.pragma("foreign_keys = ON");
-  initializeSchema(db);
+  runMigrations(db);
   return db;
 }
 
 export function initializeSchema(db: SqliteDatabase): void {
-  const createSchema = db.transaction(() => {
-    for (const statement of schemaStatements) {
-      db.exec(statement);
-    }
-  });
-
-  createSchema();
+  runMigrations(db);
 }
