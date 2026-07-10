@@ -7,6 +7,24 @@ import {
 import type { FastifyInstance } from "fastify";
 import type { ApiDependencies } from "../server/dependencies";
 
+const permissionCapabilities: PermissionCapability[] = [
+  "read_files",
+  "write_files",
+  "run_commands",
+  "browse_web",
+  "call_apis",
+  "write_memory",
+  "use_external_models"
+];
+
+const permissionStates: PermissionState[] = [
+  "deny",
+  "ask_every_time",
+  "allow_for_session",
+  "allow_for_workspace",
+  "always_allow"
+];
+
 interface PermissionQuery {
   workspaceId?: string;
 }
@@ -80,6 +98,21 @@ export async function registerPermissionRoutes(
 
   server.post<{ Body: PermissionRequestBody }>(
     "/api/permission-requests",
+    {
+      schema: {
+        body: {
+          type: "object",
+          required: ["workspaceId", "capability", "reason"],
+          additionalProperties: false,
+          properties: {
+            workspaceId: { type: "string", minLength: 1 },
+            capability: { type: "string", enum: permissionCapabilities },
+            reason: { type: "string", minLength: 1 },
+            dataAccess: { type: "object", additionalProperties: true }
+          }
+        }
+      }
+    },
     async (request, reply) => {
       const now = new Date().toISOString();
       const permissionRequest = {
@@ -142,6 +175,26 @@ export async function registerPermissionRoutes(
 
   server.post<{ Params: PermissionParams; Body: PermissionDecisionBody }>(
     "/api/permission-requests/:id/decide",
+    {
+      schema: {
+        params: {
+          type: "object",
+          required: ["id"],
+          properties: {
+            id: { type: "string", minLength: 1 }
+          }
+        },
+        body: {
+          type: "object",
+          required: ["decision"],
+          additionalProperties: false,
+          properties: {
+            decision: { type: "string", enum: ["granted", "denied"] },
+            state: { type: "string", enum: permissionStates }
+          }
+        }
+      }
+    },
     async (request, reply) => {
       const row = deps.db
         .prepare<{ id: string }, PermissionRequestRow>("SELECT * FROM permission_requests WHERE id = @id")

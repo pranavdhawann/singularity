@@ -20,15 +20,32 @@ export async function registerCommandRoutes(
   server: FastifyInstance,
   deps: ApiDependencies
 ): Promise<void> {
-  server.post<{ Body: CommandBody }>("/api/commands", async (request, reply) => {
-    const providerId = request.body.providerId ?? "mock";
-    if (providerId !== "mock" && providerId !== "ollama") {
-      const now = new Date().toISOString();
-      const permissionRequestId = createId("permreq");
-      const createPermissionRequest = deps.db.transaction(() => {
-        deps.db
-          .prepare(
-            `INSERT INTO permission_requests (
+  server.post<{ Body: CommandBody }>(
+    "/api/commands",
+    {
+      schema: {
+        body: {
+          type: "object",
+          required: ["workspaceId", "command", "input"],
+          additionalProperties: false,
+          properties: {
+            workspaceId: { type: "string", minLength: 1 },
+            command: { type: "string", enum: ["ask_with_memory"] },
+            input: { type: "string", minLength: 1 },
+            providerId: { type: "string", minLength: 1 }
+          }
+        }
+      }
+    },
+    async (request, reply) => {
+      const providerId = request.body.providerId ?? "mock";
+      if (providerId !== "mock" && providerId !== "ollama") {
+        const now = new Date().toISOString();
+        const permissionRequestId = createId("permreq");
+        const createPermissionRequest = deps.db.transaction(() => {
+          deps.db
+            .prepare(
+              `INSERT INTO permission_requests (
               id,
               workspace_id,
               capability,
@@ -47,68 +64,69 @@ export async function registerCommandRoutes(
               @createdAt,
               NULL
             )`
-          )
-          .run({
-            id: permissionRequestId,
-            workspaceId: request.body.workspaceId,
-            reason: "External model calls require approval",
-            dataAccessJson: JSON.stringify({ providerId }),
-            createdAt: now
-          });
+            )
+            .run({
+              id: permissionRequestId,
+              workspaceId: request.body.workspaceId,
+              reason: "External model calls require approval",
+              dataAccessJson: JSON.stringify({ providerId }),
+              createdAt: now
+            });
 
-        deps.events.appendInCurrentTransaction(
-          createEvent({
-            workspaceId: request.body.workspaceId,
-            type: "permission.requested",
-            actor: "assistant",
-            title: "Requested use_external_models",
-            payload: { permissionRequestId, providerId },
-            privacy: { labels: ["local"] }
-          })
-        );
-      });
+          deps.events.appendInCurrentTransaction(
+            createEvent({
+              workspaceId: request.body.workspaceId,
+              type: "permission.requested",
+              actor: "assistant",
+              title: "Requested use_external_models",
+              payload: { permissionRequestId, providerId },
+              privacy: { labels: ["local"] }
+            })
+          );
+        });
 
-      createPermissionRequest();
-      return reply.code(403).send({
-        error: "permission_required",
-        permissionRequestId
-      });
-    }
+        createPermissionRequest();
+        return reply.code(403).send({
+          error: "permission_required",
+          permissionRequestId
+        });
+      }
 
-    const memories = deps.db
-      .prepare<{ workspaceId: string }, MemoryCandidateRow>(
-        `SELECT id, statement, confidence
+      const memories = deps.db
+        .prepare<{ workspaceId: string }, MemoryCandidateRow>(
+          `SELECT id, statement, confidence
          FROM memories
          WHERE workspace_id = @workspaceId
            AND review_state = 'approved'
          ORDER BY pinned DESC, confidence DESC
          LIMIT 12`
-      )
-      .all({ workspaceId: request.body.workspaceId })
-      .map((memory) => ({
-        id: memory.id,
-        text: memory.statement,
-        tokenCount: estimateTokenCount(memory.statement),
-        score: memory.confidence * 10
-      }));
+        )
+        .all({ workspaceId: request.body.workspaceId })
+        .map((memory) => ({
+          id: memory.id,
+          text: memory.statement,
+          tokenCount: estimateTokenCount(memory.statement),
+          score: memory.confidence * 10
+        }));
 
-    const result = await runCommand({
-      workspaceId: request.body.workspaceId,
-      command: request.body.command,
-      input: request.body.input,
-      providerId,
-      memories
-    });
+      const result = await runCommand({
+        workspaceId: request.body.workspaceId,
+        command: request.body.command,
+        input: request.body.input,
+        providerId,
+        memories
+      });
 
-    const appendEvents = deps.db.transaction(() => {
-      for (const event of result.events) {
-        deps.events.appendInCurrentTransaction(event);
-      }
-    });
-    appendEvents();
+      const appendEvents = deps.db.transaction(() => {
+        for (const event of result.events) {
+          deps.events.appendInCurrentTransaction(event);
+        }
+      });
+      appendEvents();
 
-    return reply.code(201).send(result);
-  });
+      return reply.code(201).send(result);
+    }
+  );
 }
 
 function estimateTokenCount(text: string): number {

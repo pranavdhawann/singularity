@@ -1,5 +1,5 @@
 import { createEvent, type TimelineEvent } from "@future/core";
-import { MockProvider, ProviderRegistry } from "@future/providers";
+import { MockProvider, OllamaProvider, ProviderRegistry, type ModelProvider } from "@future/providers";
 import { buildContextPack, type ContextCandidate } from "@future/retrieval";
 
 export interface RunCommandInput {
@@ -17,8 +17,9 @@ export interface RunCommandResult {
 }
 
 export async function runCommand(input: RunCommandInput): Promise<RunCommandResult> {
-  const providers = new ProviderRegistry([new MockProvider()]);
+  const providers = new ProviderRegistry([new MockProvider(), new OllamaProvider()]);
   const provider = providers.get(input.providerId);
+  const model = defaultModelFor(provider);
   const contextPack = buildContextPack({
     workspaceId: input.workspaceId,
     command: input.input,
@@ -29,7 +30,7 @@ export async function runCommand(input: RunCommandInput): Promise<RunCommandResu
   });
 
   let responseText = "";
-  for await (const chunk of provider.streamText({ prompt: buildPrompt(input.input, contextPack.items), model: "mock" })) {
+  for await (const chunk of provider.streamText({ prompt: buildPrompt(input.input, contextPack.items), model })) {
     responseText += chunk.text;
   }
 
@@ -58,8 +59,13 @@ export async function runCommand(input: RunCommandInput): Promise<RunCommandResu
       workspaceId: input.workspaceId,
       type: "model_call.completed",
       actor: "assistant",
-      title: "Mock model call completed",
-      payload: { providerId: input.providerId, outputCharacters: responseText.length },
+      title: `${formatProviderKind(provider.kind)} model call completed`,
+      payload: {
+        providerId: input.providerId,
+        providerKind: provider.kind,
+        model,
+        outputCharacters: responseText.length
+      },
       privacy: { labels: ["local"] }
     }),
     createEvent({
@@ -82,4 +88,16 @@ export async function runCommand(input: RunCommandInput): Promise<RunCommandResu
 function buildPrompt(command: string, items: ContextCandidate[]): string {
   const context = items.map((item) => `- ${item.text}`).join("\n");
   return context ? `${command}\n\nContext:\n${context}` : command;
+}
+
+function defaultModelFor(provider: ModelProvider): string {
+  if (provider.kind === "ollama") return "llama3.2";
+  return "mock";
+}
+
+function formatProviderKind(kind: ModelProvider["kind"]): string {
+  return kind
+    .split("-")
+    .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1))
+    .join(" ");
 }
