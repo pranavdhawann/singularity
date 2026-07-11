@@ -5,6 +5,7 @@ export * from "./repositories/assistant-turns";
 export * from "./repositories/compactions";
 export * from "./repositories/context-packs";
 export * from "./repositories/events";
+export * from "./repositories/import-jobs";
 export * from "./repositories/embeddings";
 export * from "./repositories/model-profiles";
 export * from "./repositories/memories";

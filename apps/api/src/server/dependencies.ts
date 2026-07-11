@@ -3,6 +3,7 @@ import type {
   CompactionRepository,
   ContextPackRepository,
   EventRepository,
+  ImportJobRepository,
   EmbeddingRepository,
   MemoryRepository,
   ModelProfileRepository,
@@ -13,6 +14,7 @@ import type {
 import type { AssistantService } from "../services/assistant-service";
 import type { ContextService } from "../services/context-service";
 import type { MemoryService } from "../services/memory-service";
+import type { ImportService } from "../services/import-service";
 import type { ProviderService } from "../services/provider-service";
 import type { TurnCancellationRegistry } from "../services/turn-cancellation";
 
@@ -21,6 +23,7 @@ export interface ApiDependencies {
   turns: AssistantTurnRepository;
   contextPacks: ContextPackRepository;
   events: EventRepository;
+  importJobs: ImportJobRepository;
   memories: MemoryRepository;
   namespaces: NamespaceRepository;
   compactions: CompactionRepository;
@@ -30,6 +33,7 @@ export interface ApiDependencies {
   providerService: ProviderService;
   contextService: ContextService;
   memoryService: MemoryService;
+  importService: ImportService;
   assistantService: AssistantService;
   cancellations: TurnCancellationRegistry;
 }

@@ -3,6 +3,7 @@ import {
   CompactionRepository,
   ContextPackRepository,
   EventRepository,
+  ImportJobRepository,
   EmbeddingRepository,
   MemoryRepository,
   ModelProfileRepository,
@@ -33,6 +34,7 @@ import { registerV2WorkspaceRoutes } from "../routes/v2/workspaces";
 import { AssistantService } from "../services/assistant-service";
 import { ContextService } from "../services/context-service";
 import { MemoryService } from "../services/memory-service";
+import { ImportService } from "../services/import-service";
 import { ProviderService } from "../services/provider-service";
 import { TurnCancellationRegistry } from "../services/turn-cancellation";
 import type { ApiDependencies } from "./dependencies";
@@ -50,6 +52,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   const providers = new ProviderRepository(db);
   const modelProfiles = new ModelProfileRepository(db);
   const events = new EventRepository(db);
+  const importJobs = new ImportJobRepository(db);
   const turns = new AssistantTurnRepository(db);
   const contextPacks = new ContextPackRepository(db);
   const memories = new MemoryRepository(db);
@@ -65,6 +68,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
     turns,
     contextPacks,
     events,
+    importJobs,
     memories,
     namespaces,
     compactions,
@@ -74,6 +78,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
     providerService,
     contextService,
     memoryService: new MemoryService({ db, memories, namespaces, compactions, embeddings, events }),
+    importService: new ImportService({ db, jobs: importJobs, events }),
     cancellations,
     assistantService: new AssistantService({
       db,

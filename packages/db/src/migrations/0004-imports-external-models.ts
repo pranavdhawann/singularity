@@ -21,6 +21,10 @@ const statements = [
     phase TEXT NOT NULL DEFAULT 'queued',
     updated_at TEXT NOT NULL
   )`,
+  `CREATE TABLE import_payloads (
+    import_id TEXT PRIMARY KEY,
+    content BLOB NOT NULL
+  )`,
   `CREATE UNIQUE INDEX documents_import_hash_idx
     ON documents (import_id, hash) WHERE import_id IS NOT NULL`,
   `CREATE UNIQUE INDEX document_chunks_identity_idx

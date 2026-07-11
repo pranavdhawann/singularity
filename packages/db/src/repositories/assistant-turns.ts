@@ -32,7 +32,8 @@ export interface AssistantTurnReferences {
 
 const allowedTransitions: Record<AssistantTurnState, readonly AssistantTurnState[]> = {
   queued: ["building_context", "cancelled"],
-  building_context: ["running", "failed", "cancelled"],
+  building_context: ["awaiting_approval", "running", "failed", "cancelled"],
+  awaiting_approval: ["running", "failed", "cancelled"],
   running: ["completed", "failed", "cancelled"],
   completed: [],
   failed: [],

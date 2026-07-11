@@ -12,6 +12,7 @@ export interface IndexSearchChunkInput {
   sourceUri?: string;
   mediaType?: string;
   hash?: string;
+  contentHash?: string;
   sourceRange?: { start: number; end: number };
 }
 
@@ -84,7 +85,8 @@ export function indexSearchChunk(db: SqliteDatabase, input: IndexSearchChunkInpu
         token_count,
         source_range_json,
         embedding_status,
-        created_at
+        created_at,
+        content_hash
       ) VALUES (
         @chunkId,
         @documentId,
@@ -93,7 +95,8 @@ export function indexSearchChunk(db: SqliteDatabase, input: IndexSearchChunkInpu
         @tokenCount,
         @sourceRangeJson,
         'pending',
-        @createdAt
+        @createdAt,
+        @contentHash
       )`
     ).run({
       chunkId: chunk.chunkId,
@@ -102,7 +105,8 @@ export function indexSearchChunk(db: SqliteDatabase, input: IndexSearchChunkInpu
       text: chunk.text,
       tokenCount: chunk.tokenCount,
       sourceRangeJson: chunk.sourceRange ? JSON.stringify(chunk.sourceRange) : null,
-      createdAt: now
+      createdAt: now,
+      contentHash: chunk.contentHash ?? chunk.hash ?? chunk.chunkId
     });
 
     db.prepare(
