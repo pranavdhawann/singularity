@@ -56,6 +56,19 @@ export interface ContextPackInspectionItem {
   text: string;
   tokenCount: number;
   score: number;
+  retrieval?: RetrievalBreakdown;
+}
+
+export interface RetrievalBreakdown {
+  lexicalScore?: number;
+  vectorScore?: number;
+  finalScore: number;
+  reasons: string[];
+}
+
+export interface ContextPackRetrievalMetadata {
+  mode: "lexical" | "hybrid";
+  fallbackReason: string | null;
 }
 
 export interface ContextPackInspection {
@@ -68,6 +81,7 @@ export interface ContextPackInspection {
   items: ContextPackInspectionItem[];
   estimatedTokens: number;
   redactionCount: number;
+  retrieval?: ContextPackRetrievalMetadata;
   createdAt: string;
 }
 

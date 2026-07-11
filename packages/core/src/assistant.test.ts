@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { ContextPackInspection } from "./assistant";
 import { createEvent } from "./events";
 import { serializeTimelineEvent, sourceReferenceKey } from "./assistant";
 
@@ -40,5 +41,21 @@ describe("assistant contracts", () => {
         range: { start: 10, end: 25 }
       })
     ).toBe("document_chunk:chunk_1:def:10-25");
+  });
+
+  it("carries channel scores and ranking reasons", () => {
+    const pack = {
+      id: "ctx_1", workspaceId: "w_1", turnId: "turn_1",
+      modelProfileId: "profile_1", providerId: "provider_1", model: "mock",
+      items: [{
+        source: { kind: "memory", id: "mem_1", workspaceId: "w_1", title: "Decision", contentHash: "hash_1" },
+        text: "Use SQLite", tokenCount: 3, score: 0.74,
+        retrieval: { lexicalScore: 0.8, vectorScore: 0.6, finalScore: 0.74, reasons: ["lexical", "pinned"] }
+      }],
+      estimatedTokens: 3, redactionCount: 0,
+      retrieval: { mode: "hybrid", fallbackReason: null },
+      createdAt: "2026-07-11T12:00:00.000Z"
+    } satisfies ContextPackInspection;
+    expect(pack.items[0]?.retrieval.reasons).toEqual(["lexical", "pinned"]);
   });
 });

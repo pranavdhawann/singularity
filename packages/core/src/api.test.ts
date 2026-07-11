@@ -14,4 +14,15 @@ describe("apiError", () => {
       }
     });
   });
+
+  it("preserves optimistic conflict details", () => {
+    expect(apiError("conflict", "Memory changed", "req_2", { expectedVersion: 2 })).toEqual({
+      error: {
+        code: "conflict",
+        message: "Memory changed",
+        requestId: "req_2",
+        details: { expectedVersion: 2 }
+      }
+    });
+  });
 });
