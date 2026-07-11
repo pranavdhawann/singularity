@@ -1,6 +1,6 @@
 import type { ModelProfile, ModelProvider } from "@future/core";
 import type { ModelProfileRepository, ProviderRepository } from "@future/db";
-import { MockProvider, OllamaProvider } from "@future/providers";
+import { MockProvider, OllamaProvider, OpenAiCompatibleProvider } from "@future/providers";
 import {
   OllamaEmbeddingAdapter,
   OpenAiCompatibleEmbeddingAdapter,
@@ -10,7 +10,9 @@ import {
 export type ProviderServiceErrorCode =
   | "model_profile_not_found"
   | "provider_not_found"
-  | "secret_store_not_configured";
+  | "secret_store_not_configured"
+  | "missing_external_secret"
+  | "invalid_external_endpoint";
 
 export class ProviderServiceError extends Error {
   constructor(readonly code: ProviderServiceErrorCode) {
@@ -51,6 +53,28 @@ export class ProviderService {
       };
     }
 
+    if (config.kind === "openai-compatible") {
+      const runtimeConfig = this.providers.getRuntimeConfig(config.id);
+      const baseUrl = runtimeConfig?.baseUrl;
+      if (!baseUrl || !isHttpUrl(baseUrl)) {
+        throw new ProviderServiceError("invalid_external_endpoint");
+      }
+      const reference = runtimeConfig.secretReference;
+      const apiKey = reference ? resolveEnvironmentSecret(reference) : undefined;
+      if (!reference?.startsWith("env:") || !apiKey) {
+        throw new ProviderServiceError("missing_external_secret");
+      }
+      return {
+        provider: new OpenAiCompatibleProvider({
+          id: config.id,
+          baseUrl,
+          apiKey,
+          models: [{ id: profile.model, displayName: profile.model, contextWindow: profile.contextWindow }]
+        }),
+        profile
+      };
+    }
+
     throw new ProviderServiceError("secret_store_not_configured");
   }
 
@@ -72,4 +96,13 @@ export class ProviderService {
 
 function resolveEnvironmentSecret(reference: string): string | undefined {
   return reference.startsWith("env:") ? process.env[reference.slice(4)] : undefined;
+}
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
 }

@@ -82,4 +82,39 @@ describe("ProviderService", () => {
       db.close();
     }
   });
+
+  it("resolves an OpenAI-compatible secret from the environment at call time", async () => {
+    const db = createTestDb();
+    const previous = process.env.FUTURE_TEST_OPENAI_KEY;
+    try {
+      const providers = new ProviderRepository(db.client);
+      const profiles = new ModelProfileRepository(db.client);
+      const provider = providers.create({
+        kind: "openai-compatible", displayName: "External",
+        baseUrl: "http://127.0.0.1:9999/v1", isLocal: false,
+        secretEnvironmentVariable: "FUTURE_TEST_OPENAI_KEY"
+      });
+      const profile = profiles.create({
+        providerId: provider.id, name: "External model", model: "model-1",
+        contextWindow: 8192, purpose: "general", privacyPolicy: "prompt_preview"
+      });
+      const service = new ProviderService(providers, profiles);
+
+      delete process.env.FUTURE_TEST_OPENAI_KEY;
+      expect(() => service.getRuntime(profile.id)).toThrowError(
+        expect.objectContaining<Partial<ProviderServiceError>>({ code: "missing_external_secret" })
+      );
+      process.env.FUTURE_TEST_OPENAI_KEY = "resolved-at-call-time";
+      const runtime = service.getRuntime(profile.id);
+
+      expect(runtime.provider.kind).toBe("openai-compatible");
+      await expect(runtime.provider.listModels()).resolves.toEqual([
+        { id: "model-1", displayName: "model-1", contextWindow: 8192 }
+      ]);
+    } finally {
+      if (previous === undefined) delete process.env.FUTURE_TEST_OPENAI_KEY;
+      else process.env.FUTURE_TEST_OPENAI_KEY = previous;
+      db.close();
+    }
+  });
 });
