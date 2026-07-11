@@ -13,9 +13,12 @@ Thumbs.db
 
 # Dependencies and build output
 node_modules/
+.pnpm-store/
 dist/
 build/
 coverage/
+.cache/
+.turbo/
 .worktrees/
 test-results/
 playwright-report/
@@ -26,6 +29,17 @@ data/
 *.sqlite
 *.sqlite3
 *.db
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite3-shm
+*.sqlite3-wal
+*.db-shm
+*.db-wal
+
+# Temporary files
+tmp/
+temp/
+*.tmp
 
 # Logs
 *.log
