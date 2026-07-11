@@ -12,6 +12,11 @@ function createApi(overrides: Partial<FutureApi> = {}): FutureApi {
     createProvider: vi.fn(),
     listModelProfiles: vi.fn(async () => ({ modelProfiles: [] })),
     createModelProfile: vi.fn(),
+    createAssistantTurn: vi.fn(),
+    streamAssistantTurn: vi.fn(),
+    cancelAssistantTurn: vi.fn(),
+    listTimeline: vi.fn(async () => ({ events: [] })),
+    getContextPack: vi.fn(),
     ...overrides
   };
 }

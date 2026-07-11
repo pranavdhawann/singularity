@@ -1,11 +1,16 @@
 import type {
+  AssistantStreamFrame,
+  AssistantTurnDto,
   ApiErrorResponse,
+  ContextPackInspection,
+  CreateAssistantTurnInput,
   CreateModelProfileInput,
   CreateProviderInput,
   CreateWorkspaceInput,
   LocalSessionResponse,
   ModelProfile,
   ProviderConfig,
+  TimelineEventDto,
   WorkspaceDto
 } from "@future/core";
 import type { FutureApi } from "./api-types";
@@ -55,6 +60,58 @@ export class ApiClient implements FutureApi {
     return this.mutate<ModelProfile>("/model-profiles", input);
   }
 
+  async createAssistantTurn(
+    input: CreateAssistantTurnInput
+  ): Promise<{ turn: AssistantTurnDto; replayed: boolean }> {
+    return this.mutate<{ turn: AssistantTurnDto; replayed: boolean }>("/assistant-turns", input);
+  }
+
+  async *streamAssistantTurn(id: string): AsyncIterable<AssistantStreamFrame> {
+    const token = await this.getSessionToken();
+    const response = await fetch(`${this.baseUrl}/v2/assistant-turns/${encodeURIComponent(id)}/stream`, {
+      method: "POST",
+      headers: { "x-future-session": token }
+    });
+    if (!response.ok) throw await ApiClient.toError(response);
+    if (!response.body) throw new Error("Assistant stream was unavailable");
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    while (true) {
+      const { value, done } = await reader.read();
+      if (value) buffer += decoder.decode(value, { stream: !done }).replaceAll("\r\n", "\n");
+      let boundary = buffer.indexOf("\n\n");
+      while (boundary >= 0) {
+        const record = buffer.slice(0, boundary);
+        buffer = buffer.slice(boundary + 2);
+        const frame = parseSseRecord(record);
+        if (frame) yield frame;
+        boundary = buffer.indexOf("\n\n");
+      }
+      if (done) break;
+    }
+    const finalFrame = parseSseRecord(buffer);
+    if (finalFrame) yield finalFrame;
+  }
+
+  async cancelAssistantTurn(id: string): Promise<AssistantTurnDto> {
+    return this.mutate<AssistantTurnDto>(`/assistant-turns/${encodeURIComponent(id)}/cancel`, null);
+  }
+
+  async listTimeline(
+    workspaceId: string,
+    after?: string
+  ): Promise<{ events: TimelineEventDto[]; nextCursor?: string }> {
+    const query = new URLSearchParams({ workspaceId });
+    if (after) query.set("after", after);
+    return this.get<{ events: TimelineEventDto[]; nextCursor?: string }>(`/timeline?${query}`);
+  }
+
+  async getContextPack(id: string): Promise<ContextPackInspection> {
+    return this.get<ContextPackInspection>(`/context-packs/${encodeURIComponent(id)}`);
+  }
+
   private async get<T>(path: string): Promise<T> {
     const response = await fetch(`${this.baseUrl}/v2${path}`);
     if (!response.ok) {
@@ -99,4 +156,12 @@ export class ApiClient implements FutureApi {
     const body = (await response.json()) as Partial<ApiErrorResponse>;
     return new Error(body.error?.message ?? `Request failed with ${response.status}`);
   }
+}
+
+function parseSseRecord(record: string): AssistantStreamFrame | undefined {
+  const data = record.split("\n")
+    .filter((line) => line.startsWith("data:"))
+    .map((line) => line.slice(5).trimStart())
+    .join("\n");
+  return data ? JSON.parse(data) as AssistantStreamFrame : undefined;
 }
