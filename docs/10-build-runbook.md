@@ -104,6 +104,37 @@ The mock adapter emits deterministic incremental chunks offline. Ollama calls
 Provider failures expose a safe browser message; raw prompts and provider errors
 are not written into failure events.
 
+## Phase 3 Memory and Hybrid Retrieval
+
+Open **Memory** in the left rail to create or review memory, create a virtual
+namespace, edit and pin a record, change its review state, inspect revisions and
+provenance, create a source-linked compaction from its inspector, or delete it
+after confirmation. The persistent assistant composer remains available in the
+Memory lens. Deleted records remain absent from ordinary lists and retrieval;
+an explicit `?includeDeleted=true` detail request can inspect the tombstone.
+
+Protected resources are:
+
+- `GET|POST /api/v2/memories`
+- `GET|PATCH|DELETE /api/v2/memories/:id`
+- `GET /api/v2/memories/:id/revisions`
+- `GET|POST /api/v2/namespaces`
+- `POST /api/v2/memory-compactions`
+- `GET /api/v2/search`
+
+Migration `0003_memory_hybrid_retrieval` indexes active document chunks,
+approved/non-outdated memories, text-bearing timeline events, and active
+compactions with FTS5. Context construction adds pinned memory and recent events,
+suppresses sources represented by an active compaction, ranks deterministically,
+and persists exact ranking explanations in the immutable context pack.
+
+Set an optional `embeddingModel` when creating a model profile to enable vector
+augmentation. Ollama uses `/api/embed`; OpenAI-compatible providers use
+`/embeddings` and resolve their `env:` secret reference only at call time. Secrets,
+provider response bodies, and raw failures are never persisted. Missing,
+unreachable, or invalid embedding adapters produce visible lexical-only metadata
+and do not fail the assistant turn.
+
 ## Verification Commands
 
 ```powershell
@@ -116,6 +147,10 @@ and web app with an in-memory test database, then runs the browser-driven first-
 and continuous-assistant flow in Chromium. The Playwright flow creates all state
 through visible browser controls; it does not drive setup or assertions through
 direct API requests.
+
+The browser suite also creates, namespaces, approves, pins, outdates, corrects,
+and deletes memory, then proves later answers stop citing unavailable memory and
+that deletion remains effective after reload.
 
 ## Reset Local Data
 

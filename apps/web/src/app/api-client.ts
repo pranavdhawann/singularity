@@ -3,12 +3,20 @@ import type {
   AssistantTurnDto,
   ApiErrorResponse,
   ContextPackInspection,
+  CreateCompactionInput,
+  CreateMemoryInput,
+  CreateNamespaceInput,
   CreateAssistantTurnInput,
   CreateModelProfileInput,
   CreateProviderInput,
   CreateWorkspaceInput,
   LocalSessionResponse,
   ModelProfile,
+  MemoryDto,
+  MemoryCompactionDto,
+  MemoryMutationInput,
+  MemoryNamespaceDto,
+  MemoryRevisionDto,
   ProviderConfig,
   TimelineEventDto,
   WorkspaceDto
@@ -112,6 +120,34 @@ export class ApiClient implements FutureApi {
     return this.get<ContextPackInspection>(`/context-packs/${encodeURIComponent(id)}`);
   }
 
+  async listMemories(workspaceId: string, filters: { reviewState?: string; namespaceId?: string } = {}): Promise<{ items: MemoryDto[]; nextCursor?: string }> {
+    const query = new URLSearchParams({ workspaceId });
+    if (filters.reviewState) query.set("reviewState", filters.reviewState);
+    if (filters.namespaceId) query.set("namespaceId", filters.namespaceId);
+    return this.get(`/memories?${query}`);
+  }
+
+  async getMemory(id: string): Promise<MemoryDto> { return this.get(`/memories/${encodeURIComponent(id)}`); }
+  async listMemoryRevisions(id: string): Promise<{ revisions: MemoryRevisionDto[] }> {
+    return this.get(`/memories/${encodeURIComponent(id)}/revisions`);
+  }
+  async createMemory(input: CreateMemoryInput): Promise<MemoryDto> { return this.mutate("/memories", input); }
+  async updateMemory(id: string, input: MemoryMutationInput): Promise<MemoryDto> {
+    return this.mutate(`/memories/${encodeURIComponent(id)}`, input, "PATCH");
+  }
+  async deleteMemory(id: string, expectedVersion: number): Promise<MemoryDto> {
+    return this.mutate(`/memories/${encodeURIComponent(id)}`, { expectedVersion }, "DELETE");
+  }
+  async listNamespaces(workspaceId: string): Promise<{ namespaces: MemoryNamespaceDto[] }> {
+    return this.get(`/namespaces?workspaceId=${encodeURIComponent(workspaceId)}`);
+  }
+  async createNamespace(input: CreateNamespaceInput): Promise<MemoryNamespaceDto> {
+    return this.mutate("/namespaces", input);
+  }
+  async createCompaction(input: CreateCompactionInput): Promise<MemoryCompactionDto> {
+    return this.mutate("/memory-compactions", input);
+  }
+
   private async get<T>(path: string): Promise<T> {
     const response = await fetch(`${this.baseUrl}/v2${path}`);
     if (!response.ok) {
@@ -134,10 +170,10 @@ export class ApiClient implements FutureApi {
     return this.sessionToken;
   }
 
-  private async mutate<T>(path: string, body: unknown): Promise<T> {
+  private async mutate<T>(path: string, body: unknown, method: "POST" | "PATCH" | "DELETE" = "POST"): Promise<T> {
     const token = await this.getSessionToken();
     const response = await fetch(`${this.baseUrl}/v2${path}`, {
-      method: "POST",
+      method,
       headers: {
         "content-type": "application/json",
         "x-future-session": token

@@ -1,4 +1,4 @@
-import type { SqliteDatabase } from "@future/db";
+import { SearchRepository, type SqliteDatabase, type UnifiedSearchCandidate } from "@future/db";
 
 export interface IndexSearchChunkInput {
   chunkId: string;
@@ -156,6 +156,13 @@ export function searchLexical(db: SqliteDatabase, input: LexicalSearchInput): Le
       ? (JSON.parse(row.source_range_json) as { start: number; end: number })
       : null
   }));
+}
+
+export function searchAllLexical(
+  db: SqliteDatabase,
+  input: { workspaceId: string; query: string; limit?: number }
+): UnifiedSearchCandidate[] {
+  return new SearchRepository(db).search(input);
 }
 
 function sanitizeFtsQuery(query: string): string {

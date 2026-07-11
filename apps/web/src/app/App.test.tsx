@@ -17,6 +17,15 @@ function createApi(overrides: Partial<FutureApi> = {}): FutureApi {
     cancelAssistantTurn: vi.fn(),
     listTimeline: vi.fn(async () => ({ events: [] })),
     getContextPack: vi.fn(),
+    listMemories: vi.fn(async () => ({ items: [] })),
+    getMemory: vi.fn(),
+    listMemoryRevisions: vi.fn(async () => ({ revisions: [] })),
+    createMemory: vi.fn(),
+    updateMemory: vi.fn(),
+    deleteMemory: vi.fn(),
+    listNamespaces: vi.fn(async () => ({ namespaces: [] })),
+    createNamespace: vi.fn(),
+    createCompaction: vi.fn(),
     ...overrides
   };
 }

@@ -1,9 +1,13 @@
 import {
   AssistantTurnRepository,
+  CompactionRepository,
   ContextPackRepository,
   EventRepository,
+  EmbeddingRepository,
+  MemoryRepository,
   ModelProfileRepository,
   ProviderRepository,
+  NamespaceRepository,
   openDatabase
 } from "@future/db";
 import { randomUUID } from "node:crypto";
@@ -20,11 +24,15 @@ import { registerWorkspaceRoutes } from "../routes/workspaces";
 import { registerV2HealthRoutes } from "../routes/v2/health";
 import { registerV2AssistantTurnRoutes } from "../routes/v2/assistant-turns";
 import { registerV2ContextPackRoutes } from "../routes/v2/context-packs";
+import { registerV2MemoryRoutes } from "../routes/v2/memories";
+import { registerV2NamespaceRoutes } from "../routes/v2/namespaces";
 import { registerV2ProviderRoutes } from "../routes/v2/providers";
+import { registerV2SearchRoutes } from "../routes/v2/search";
 import { registerV2TimelineRoutes } from "../routes/v2/timeline";
 import { registerV2WorkspaceRoutes } from "../routes/v2/workspaces";
 import { AssistantService } from "../services/assistant-service";
 import { ContextService } from "../services/context-service";
+import { MemoryService } from "../services/memory-service";
 import { ProviderService } from "../services/provider-service";
 import { TurnCancellationRegistry } from "../services/turn-cancellation";
 import type { ApiDependencies } from "./dependencies";
@@ -44,18 +52,28 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   const events = new EventRepository(db);
   const turns = new AssistantTurnRepository(db);
   const contextPacks = new ContextPackRepository(db);
+  const memories = new MemoryRepository(db);
+  const namespaces = new NamespaceRepository(db);
+  const compactions = new CompactionRepository(db);
+  const embeddings = new EmbeddingRepository(db);
   const providerService = new ProviderService(providers, modelProfiles);
-  const contextService = new ContextService({ db, events, contextPacks });
+  const contextService = new ContextService({ db, events, contextPacks, embeddings, compactions,
+    embeddingResolver: providerService });
   const cancellations = new TurnCancellationRegistry();
   const deps: ApiDependencies = {
     db,
     turns,
     contextPacks,
     events,
+    memories,
+    namespaces,
+    compactions,
+    embeddings,
     providers,
     modelProfiles,
     providerService,
     contextService,
+    memoryService: new MemoryService({ db, memories, namespaces, compactions, embeddings, events }),
     cancellations,
     assistantService: new AssistantService({
       db,
@@ -93,6 +111,9 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   await registerV2AssistantTurnRoutes(server, deps);
   await registerV2TimelineRoutes(server, deps);
   await registerV2ContextPackRoutes(server, deps);
+  await registerV2MemoryRoutes(server, deps);
+  await registerV2NamespaceRoutes(server, deps);
+  await registerV2SearchRoutes(server, deps);
 
   await registerHealthRoutes(server);
   await registerWorkspaceRoutes(server, deps);

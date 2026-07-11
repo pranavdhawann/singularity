@@ -352,6 +352,96 @@ h3 {
   background: #ffffff;
 }
 
+.memory-workspace,
+.memory-toolbar,
+.memory-create-row form,
+.memory-inspector form,
+.revision-list {
+  display: grid;
+  gap: 12px;
+}
+
+.memory-toolbar {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  padding: 16px;
+  border: 1px solid #d8e0e2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.memory-toolbar label,
+.memory-create-row label,
+.memory-inspector label {
+  display: grid;
+  gap: 5px;
+  color: #52636b;
+  font-size: 13px;
+}
+
+.memory-toolbar select,
+.memory-create-row input,
+.memory-inspector textarea,
+.memory-inspector select {
+  padding: 8px 10px;
+  border: 1px solid #c8d2d5;
+  border-radius: 8px;
+}
+
+.namespace-list,
+.memory-create-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.namespace-list button,
+.memory-create-row button,
+.memory-inspector button {
+  padding: 8px 10px;
+  border: 1px solid #c8d2d5;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.namespace-list button.selected {
+  color: #ffffff;
+  background: #2d6d5e;
+}
+
+.memory-list {
+  display: grid;
+  gap: 8px;
+}
+
+.memory-list .memory-card {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  color: inherit;
+  text-align: left;
+}
+
+.memory-list .memory-card span,
+.memory-list .memory-card small {
+  color: #60737c;
+}
+
+.memory-inspector textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.checkbox-row {
+  display: flex !important;
+  align-items: center;
+}
+
+.revision-list article {
+  padding-top: 10px;
+  border-top: 1px solid #edf1f2;
+}
+
 .prompt-preview {
   border: 1px solid #d8e0e2;
   border-radius: 8px;
@@ -520,6 +610,40 @@ h3 {
 .context-source-card small {
   color: #60737c;
   font-size: 12px;
+}
+
+.retrieval-fallback {
+  padding: 8px;
+  border-radius: 6px;
+  color: #6d521d !important;
+  background: #fff4d8;
+}
+
+.retrieval-details {
+  display: grid;
+  gap: 5px;
+  margin: 10px 0 0;
+}
+
+.retrieval-details div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.retrieval-details dt {
+  color: #60737c;
+  font-size: 12px;
+}
+
+.retrieval-details dd {
+  margin: 0;
+  font-size: 12px;
+}
+
+.compaction-source {
+  display: block;
+  margin-top: 7px;
 }
 
 .source-list {

@@ -33,6 +33,9 @@ export function ContextInspector({ api, contextPackId }: { api: FutureApi; conte
             <strong>Model: {pack.model}</strong>
             <p>{pack.estimatedTokens} estimated tokens</p>
             <p>{pack.redactionCount} redactions</p>
+            {pack.retrieval?.mode === "lexical" ? <p className="retrieval-fallback">
+              Lexical retrieval only{pack.retrieval.fallbackReason ? ` (${pack.retrieval.fallbackReason})` : ""}
+            </p> : null}
           </div>
           <div className="context-source-list">
             {pack.items.length === 0 ? <p>No stored sources selected.</p> : null}
@@ -41,6 +44,17 @@ export function ContextInspector({ api, contextPackId }: { api: FutureApi; conte
                 <span>{formatKind(item.source.kind)}</span>
                 <h3>[{index + 1}] {item.source.title}</h3>
                 <p>{item.text}</p>
+                {item.retrieval ? <dl className="retrieval-details">
+                  <div><dt>Final</dt><dd>Final score {item.retrieval.finalScore.toFixed(3)}</dd></div>
+                  <div><dt>Channels</dt><dd>
+                    {item.retrieval.lexicalScore !== undefined ? `Lexical ${item.retrieval.lexicalScore.toFixed(3)}` : "No lexical score"}
+                    {item.retrieval.vectorScore !== undefined ? ` · Vector ${item.retrieval.vectorScore.toFixed(3)}` : ""}
+                  </dd></div>
+                  <div><dt>Reasons</dt><dd>{item.retrieval.reasons.map((reason) => reason.replaceAll("_", " ")).join(", ")}</dd></div>
+                </dl> : null}
+                {item.compactionSources?.map((source) => <small className="compaction-source" key={`${source.kind}:${source.id}`}>
+                  Compacted from {source.kind.replaceAll("_", " ")} {source.id}
+                </small>)}
                 {item.source.range ? <small>Characters {item.source.range.start}-{item.source.range.end}</small> : null}
               </article>
             ))}

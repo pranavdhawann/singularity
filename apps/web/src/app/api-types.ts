@@ -2,11 +2,19 @@ import type {
   AssistantStreamFrame,
   AssistantTurnDto,
   ContextPackInspection,
+  CreateCompactionInput,
+  CreateMemoryInput,
+  CreateNamespaceInput,
   CreateAssistantTurnInput,
   CreateModelProfileInput,
   CreateProviderInput,
   CreateWorkspaceInput,
   ModelProfile,
+  MemoryDto,
+  MemoryCompactionDto,
+  MemoryMutationInput,
+  MemoryNamespaceDto,
+  MemoryRevisionDto,
   ProviderConfig,
   TimelineEventDto,
   WorkspaceDto
@@ -16,11 +24,19 @@ export type {
   AssistantStreamFrame,
   AssistantTurnDto,
   ContextPackInspection,
+  CreateCompactionInput,
+  CreateMemoryInput,
+  CreateNamespaceInput,
   CreateAssistantTurnInput,
   CreateModelProfileInput,
   CreateProviderInput,
   CreateWorkspaceInput,
   ModelProfile,
+  MemoryDto,
+  MemoryCompactionDto,
+  MemoryMutationInput,
+  MemoryNamespaceDto,
+  MemoryRevisionDto,
   ProviderConfig,
   TimelineEventDto,
   WorkspaceDto
@@ -38,4 +54,13 @@ export interface FutureApi {
   cancelAssistantTurn(id: string): Promise<AssistantTurnDto>;
   listTimeline(workspaceId: string, after?: string): Promise<{ events: TimelineEventDto[]; nextCursor?: string }>;
   getContextPack(id: string): Promise<ContextPackInspection>;
+  listMemories(workspaceId: string, filters?: { reviewState?: string; namespaceId?: string }): Promise<{ items: MemoryDto[]; nextCursor?: string }>;
+  getMemory(id: string): Promise<MemoryDto>;
+  listMemoryRevisions(id: string): Promise<{ revisions: MemoryRevisionDto[] }>;
+  createMemory(input: CreateMemoryInput): Promise<MemoryDto>;
+  updateMemory(id: string, input: MemoryMutationInput): Promise<MemoryDto>;
+  deleteMemory(id: string, expectedVersion: number): Promise<MemoryDto>;
+  listNamespaces(workspaceId: string): Promise<{ namespaces: MemoryNamespaceDto[] }>;
+  createNamespace(input: CreateNamespaceInput): Promise<MemoryNamespaceDto>;
+  createCompaction(input: CreateCompactionInput): Promise<MemoryCompactionDto>;
 }

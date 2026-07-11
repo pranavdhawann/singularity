@@ -9,7 +9,7 @@ export type AssistantTurnState =
   | "cancelled";
 
 export interface SourceReference {
-  kind: "memory" | "document_chunk" | "timeline_event";
+  kind: "memory" | "document_chunk" | "timeline_event" | "compaction";
   id: string;
   workspaceId: string;
   title: string;
@@ -56,6 +56,20 @@ export interface ContextPackInspectionItem {
   text: string;
   tokenCount: number;
   score: number;
+  retrieval?: RetrievalBreakdown;
+  compactionSources?: SourceReference[];
+}
+
+export interface RetrievalBreakdown {
+  lexicalScore?: number;
+  vectorScore?: number;
+  finalScore: number;
+  reasons: string[];
+}
+
+export interface ContextPackRetrievalMetadata {
+  mode: "lexical" | "hybrid";
+  fallbackReason: string | null;
 }
 
 export interface ContextPackInspection {
@@ -68,6 +82,7 @@ export interface ContextPackInspection {
   items: ContextPackInspectionItem[];
   estimatedTokens: number;
   redactionCount: number;
+  retrieval?: ContextPackRetrievalMetadata;
   createdAt: string;
 }
 
