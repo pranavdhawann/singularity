@@ -1,89 +1,129 @@
 # Future
 
-Future is a local, model-agnostic assistant IDE for power users and developers.
+Future is a local, model-agnostic, memory-first continuous assistant. It keeps
+one durable assistant relationship across projects, files, imported sources,
+decisions, and tasks instead of splitting context across disposable chat threads.
 
-It is not another chat app. The core product is a command center with a unified
-timeline, durable memory, explicit permissions, and bring-your-own model
-providers. Users can connect OpenAI, Anthropic, Google, OpenRouter, Ollama,
-LM Studio, or any OpenAI-compatible endpoint while keeping their history,
-memory, and permissions under local control.
+## What Future Is
 
-## Core Idea
+Future is a local command center for working with AI models while keeping the
+assistant's history, memory, retrieval, and permissions inspectable. Models are
+replaceable infrastructure: the user chooses a local Ollama model or a configured
+external provider without handing ownership of the assistant relationship to one
+vendor.
 
-Future helps a user maintain one long-running assistant relationship across
-projects, files, chats, notes, decisions, and tasks.
+The product is built around four ideas:
 
-The assistant can:
+- one persistent timeline for user requests, model responses, imports, failures,
+  cancellations, and system actions;
+- source-backed memory that can be reviewed, edited, pinned, outdated, or deleted;
+- visible context selection, citations, model calls, and permission decisions;
+- local-first storage with explicit approval before sensitive context leaves the
+  machine.
 
-- remember past work through local event history, summaries, facts, and labels
-- retrieve relevant context before answering or acting
-- route requests to different models and providers
-- show what it is allowed to read, write, run, call, or connect to
-- ask for help when it lacks enough context or permission
-- keep a complete timeline of conversations, imports, compactions, decisions,
-  and actions
+## What Works Today
 
-## Positioning
+Phase 3, Memory and Hybrid Retrieval, is complete. The current application has:
 
-Future sits between:
+- a React command center with first-run setup, workspace switching, a persistent
+  composer, timeline polling, and streamed assistant responses;
+- a Fastify API protected by a local session token and origin checks;
+- a SQLite event store with ordered, checksum-verified migrations;
+- mock and Ollama text-generation profiles with persisted model selection;
+- idempotent assistant turns with durable completion, cancellation, and failure
+  outcomes;
+- lexical and optional embedding retrieval across document chunks, approved
+  memories, events, and compactions;
+- immutable context packs with source citations and ranking explanations;
+- browser memory review, editing, pinning, lifecycle controls, and namespaces;
+- prompt redaction primitives, explicit permissions, and context inspection;
+- unit, integration, build, and Playwright hero-flow coverage.
 
-- local AI assistants such as OpenClaw, Open WebUI, AnythingLLM, Jan, and LibreChat
-- developer AI tools such as Continue, OpenHands, Aider, Cursor, Codex, and Claude Code
-- memory layers such as Mem0, Letta, Zep, and LangGraph memory stores
+Legacy `/api` routes remain during migration, while the connected browser uses
+the protected `/api/v2` contracts.
 
-The wedge is a memory-first local command center. Chat is a source of context,
-not the primary interface.
+## How It Works
 
-## Repository Status
+1. The browser creates an idempotent assistant turn for the active workspace.
+2. The API stores the user event before calling a model.
+3. Retrieval ranks approved memories, imported chunks, recent events, and active
+   compactions, then stores the selected material as an immutable context pack.
+4. The selected provider streams a response through the protected SSE endpoint.
+5. The API stores the terminal answer, failure, or cancellation and attaches
+   normalized citations separately from response text.
+6. The browser refreshes the durable timeline and can inspect the exact sources
+   used for the turn.
 
-This repository contains the product concept, research notes, v1 scope,
-architecture direction, roadmap, end-to-end design, implementation blueprint,
-and the first local MVP scaffold. The current implementation is a TypeScript
-monorepo with a local API, React command center, SQLite event store, imports,
-memory review, provider abstraction, permissions, context packs, and Playwright
-hero-flow coverage.
+## Privacy Model
 
-The continuous-assistant architecture has completed Phase 3: connected setup and
-streaming, one persistent timeline and composer, hybrid source-backed retrieval,
-memory namespaces and revisions, optional embeddings, compaction, and a connected
-browser memory-management flow. Phase 4 is imports and external-model privacy.
+Application data is stored locally in SQLite. Local mock and Ollama flows can run
+without sending context to an external model. Permissions and redaction are
+explicit product boundaries, not hidden provider settings.
 
-## Docs
+The full external-model privacy path is not complete yet. Phase 4 will add
+whole-prompt redaction and an immutable preview grant bound to the final provider,
+model, context pack, and prompt before an external call is allowed.
 
-- [Vision](docs/00-vision.md)
-- [Market Research](docs/01-market-research.md)
-- [Product Principles](docs/02-product-principles.md)
-- [V1 Scope](docs/03-v1-scope.md)
-- [Interface](docs/04-interface.md)
-- [Memory Architecture](docs/05-memory-architecture.md)
-- [Model Routing](docs/06-model-routing.md)
-- [Permissions and Privacy](docs/07-permissions-privacy.md)
-- [Roadmap](docs/08-roadmap.md)
-- [Resolved and Deferred Decisions](docs/09-open-questions.md)
-- [References](docs/references.md)
-- [Build Runbook](docs/10-build-runbook.md)
-- [Release Checklist](docs/11-release-checklist.md)
-- [Next Steps](docs/12-next-steps.md)
-- [Initial Design Spec](docs/superpowers/specs/2026-07-03-memory-first-assistant-ide-design.md)
-- [Canonical End-to-End Design](docs/superpowers/specs/2026-07-04-future-end-to-end-design.md)
-- [V2 Continuous Assistant Design](docs/superpowers/specs/2026-07-10-future-v2-continuous-assistant-design.md)
-- [V2 Phase 1 Plan](docs/superpowers/plans/2026-07-10-future-v2-phase-1-foundation-connected-shell.md)
-- [Agent Context](docs/context.md)
-- [MVP Implementation Blueprint](docs/superpowers/plans/2026-07-04-future-mvp-implementation-blueprint.md)
+## Repository Layout
 
-## Local Development
+- `apps/api` — Fastify orchestration and local HTTP boundary
+- `apps/web` — React command center and setup experience
+- `packages/core` — shared contracts and pure domain types
+- `packages/db` — SQLite migrations, connection, and repositories
+- `packages/importers` — normalized Markdown, text, and ChatGPT parsing
+- `packages/memory` — memory extraction, review, and state transitions
+- `packages/retrieval` — lexical, embedding, hybrid-ranking, and context-pack logic
+- `packages/providers` — mock, Ollama, and OpenAI-compatible adapters
+- `packages/permissions` — policy evaluation and redaction
+- `tests/e2e` — browser hero-flow coverage
+
+## Run Locally
+
+Requirements: a current Node.js release with Corepack and the pinned pnpm version
+from `package.json`.
 
 ```powershell
-corepack pnpm install
+corepack pnpm install --frozen-lockfile
 corepack pnpm dev
 ```
 
-Verification:
+The web app and API start together. See the [build runbook](docs/10-build-runbook.md)
+for ports, environment configuration, and troubleshooting.
+
+## Verification
 
 ```powershell
 corepack pnpm check
+corepack pnpm --filter @future/web build
 corepack pnpm test:e2e
+git diff --check
 ```
+
+Playwright requires its pinned Chromium build:
+
+```powershell
+corepack pnpm exec playwright install chromium
+```
+
+## What Is Left
+
+The next release boundary is Phase 4: browser file and ChatGPT imports, resumable
+indexing, persisted OpenAI-compatible text generation, whole-prompt privacy
+enforcement, and immutable external prompt-preview grants. Phase 5 adds opt-in
+proactive assistance, job controls, operational hardening, real linting, CI, and
+contributor/security documentation.
+
+The ordered requirements and acceptance gates live in
+[Next Steps](docs/12-next-steps.md).
+
+## Documentation
+
+- [Current architecture and product design](docs/superpowers/specs/2026-07-10-future-v2-continuous-assistant-design.md)
+- [Contributor and agent context](docs/context.md)
+- [Build runbook](docs/10-build-runbook.md)
+- [Release checklist](docs/11-release-checklist.md)
+- [Remaining work](docs/12-next-steps.md)
+- [Research references](docs/references.md)
 
 ## License
 

@@ -10,10 +10,10 @@ lenses over the same assistant relationship.
 The V2 source of truth is
 `docs/superpowers/specs/2026-07-10-future-v2-continuous-assistant-design.md`.
 
-## Current Branch State
+## Current Implementation
 
-The `codex/phase3-memory-retrieval` branch has completed Phase 3, Memory and
-Hybrid Retrieval. It retains the completed Phase 2 continuous-assistant slice and adds:
+Phase 3, Memory and Hybrid Retrieval, is complete. The implementation retains
+the Phase 2 continuous-assistant slice and adds:
 
 - ordered SQLite migrations with checksum verification
 - stable API error envelopes
