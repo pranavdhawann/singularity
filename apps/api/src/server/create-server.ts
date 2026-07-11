@@ -1,9 +1,13 @@
 import {
   AssistantTurnRepository,
+  CompactionRepository,
   ContextPackRepository,
   EventRepository,
+  EmbeddingRepository,
+  MemoryRepository,
   ModelProfileRepository,
   ProviderRepository,
+  NamespaceRepository,
   openDatabase
 } from "@future/db";
 import { randomUUID } from "node:crypto";
@@ -25,6 +29,7 @@ import { registerV2TimelineRoutes } from "../routes/v2/timeline";
 import { registerV2WorkspaceRoutes } from "../routes/v2/workspaces";
 import { AssistantService } from "../services/assistant-service";
 import { ContextService } from "../services/context-service";
+import { MemoryService } from "../services/memory-service";
 import { ProviderService } from "../services/provider-service";
 import { TurnCancellationRegistry } from "../services/turn-cancellation";
 import type { ApiDependencies } from "./dependencies";
@@ -44,6 +49,10 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   const events = new EventRepository(db);
   const turns = new AssistantTurnRepository(db);
   const contextPacks = new ContextPackRepository(db);
+  const memories = new MemoryRepository(db);
+  const namespaces = new NamespaceRepository(db);
+  const compactions = new CompactionRepository(db);
+  const embeddings = new EmbeddingRepository(db);
   const providerService = new ProviderService(providers, modelProfiles);
   const contextService = new ContextService({ db, events, contextPacks });
   const cancellations = new TurnCancellationRegistry();
@@ -52,10 +61,15 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
     turns,
     contextPacks,
     events,
+    memories,
+    namespaces,
+    compactions,
+    embeddings,
     providers,
     modelProfiles,
     providerService,
     contextService,
+    memoryService: new MemoryService({ db, memories, namespaces, compactions, embeddings, events }),
     cancellations,
     assistantService: new AssistantService({
       db,

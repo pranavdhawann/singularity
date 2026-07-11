@@ -33,7 +33,7 @@ export class MemoryConflictError extends Error {
 export class MemoryRepository {
   constructor(private readonly db: SqliteDatabase) {}
 
-  create(input: CreateMemoryRecordInput): MemoryDto {
+  create(input: CreateMemoryRecordInput, appendEvent: (memory: MemoryDto) => void = () => {}): MemoryDto {
     const id = createId("mem");
     const now = new Date().toISOString();
     const insert = this.db.transaction(() => {
@@ -52,6 +52,7 @@ export class MemoryRepository {
          VALUES (@memoryId, 'timeline_event', @sourceId, NULL)`
       );
       for (const sourceId of input.sourceIds) source.run({ memoryId: id, sourceId });
+      appendEvent(this.get(id)!);
     });
     insert();
     return this.get(id)!;
