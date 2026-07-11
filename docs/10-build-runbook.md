@@ -76,6 +76,34 @@ The implemented loop is:
 5. Run `ask_with_memory` through `POST /api/commands`.
 6. Inspect the audit trail through `GET /api/timeline`.
 
+## V2 Continuous Assistant Flow
+
+After first-run setup, the browser presents one persistent composer below the live
+timeline. The active workspace changes the retrieval/display lens; it does not
+create another assistant or conversation.
+
+The protected V2 lifecycle is:
+
+1. `POST /api/v2/assistant-turns` persists a queued turn and user message using a
+   client-generated idempotency key.
+2. `POST /api/v2/assistant-turns/:id/stream` builds hybrid local context and streams
+   `started`, `context`, `delta`, and one terminal SSE frame.
+3. The API retrieves approved, non-outdated memories, matching document chunks,
+   and recent text-bearing events from the active workspace.
+4. A completed answer, model-call metadata, citations, and turn references are
+   committed to SQLite before the terminal frame is sent.
+5. `POST /api/v2/assistant-turns/:id/cancel` aborts active provider work. Cancelled
+   and failed turns write safe terminal timeline events without a completed answer.
+6. `GET /api/v2/timeline?workspaceId=...&after=...` returns new SQLite events in
+   stable cursor order.
+7. `GET /api/v2/context-packs/:id` returns the exact immutable memory, document,
+   and event sources used, along with model and token metadata.
+
+The mock adapter emits deterministic incremental chunks offline. Ollama calls
+`/api/generate` with `stream: true` and parses newline-delimited response chunks.
+Provider failures expose a safe browser message; raw prompts and provider errors
+are not written into failure events.
+
 ## Verification Commands
 
 ```powershell
@@ -85,7 +113,9 @@ corepack pnpm test:e2e
 
 `pnpm check` runs typecheck, lint, and unit tests. `pnpm test:e2e` starts the API
 and web app with an in-memory test database, then runs the browser-driven first-run
-and hero flow in Chromium.
+and continuous-assistant flow in Chromium. The Playwright flow creates all state
+through visible browser controls; it does not drive setup or assertions through
+direct API requests.
 
 ## Reset Local Data
 

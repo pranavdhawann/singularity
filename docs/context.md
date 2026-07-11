@@ -12,7 +12,7 @@ The V2 source of truth is
 
 ## Current Branch State
 
-The `v2` branch has completed Phase 1, Foundation and Connected Shell:
+The `v2` branch has completed Phase 2, Continuous Assistant Vertical Slice:
 
 - ordered SQLite migrations with checksum verification
 - stable API error envelopes
@@ -22,6 +22,13 @@ The `v2` branch has completed Phase 1, Foundation and Connected Shell:
 - V2 workspace, provider, model-profile, and health routes
 - Vite proxy and typed browser API client
 - browser-driven first-run setup using live local data
+- one persistent composer over the active workspace lens
+- idempotent assistant turns correlated across user events, context packs, model calls, and answers
+- incremental mock and Ollama streaming over protected V2 SSE routes
+- live SQLite timeline polling with persisted user, assistant, failure, and cancellation events
+- hybrid context assembly from approved memories, document chunks, and recent events
+- separately stored source citations and immutable context-pack inspection
+- browser-only Playwright coverage for setup, streaming, citations, inspection, and reload durability
 
 Legacy `/api` routes remain available during migration.
 
@@ -53,9 +60,21 @@ Playwright requires the pinned Chromium build:
 corepack pnpm exec playwright install chromium
 ```
 
+## Assistant Flow
+
+The browser creates an idempotent turn through `/api/v2/assistant-turns`, consumes
+its protected SSE stream, and polls `/api/v2/timeline` from the last event cursor.
+The API persists the user event before model execution. Completion, cancellation,
+and provider failure are terminal persisted outcomes. Completed answers attach
+normalized citations separately from response text and reference an immutable
+context pack available through `/api/v2/context-packs/:id`.
+
+Legacy `/api` routes remain available during migration, but the connected browser
+assistant uses V2 contracts.
+
 ## Next Boundary
 
-Phase 2 is the Continuous Assistant Vertical Slice: persistent composer, assistant
-turn orchestration, streamed mock/Ollama responses, live timeline events, context
-inspection, and citations. Build it on the V2 session, provider-profile, and event
-contracts rather than extending the legacy hard-coded command runner.
+Phase 3 expands memory and retrieval management: memory namespaces and revisions,
+review/edit/outdate/delete UI, full event and memory FTS ranking, optional embedding
+adapters, and compaction. It must extend the Phase 2 turn/context contracts rather
+than creating a parallel conversation flow.

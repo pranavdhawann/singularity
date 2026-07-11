@@ -21,6 +21,28 @@ Use this checklist before treating the local MVP as releasable.
 - [ ] The connected shell displays persisted workspace and model-profile names.
 - [ ] The timeline shows an honest empty state instead of demo events.
 
+## V2 Continuous Assistant Gates
+
+- [ ] The ready shell always exposes one persistent `Message Future` composer.
+- [ ] Retrying a create request with the same idempotency input returns one turn
+  and writes one `user.message.created` event.
+- [ ] Mock and Ollama providers emit incremental chunks through the V2 SSE route.
+- [ ] The browser timeline reads persisted SQLite events and advances by cursor
+  without duplicating events.
+- [ ] Context assembly includes only approved, non-outdated workspace memories,
+  matching workspace document chunks, and earlier text-bearing workspace events.
+- [ ] Completed answers store citations separately from rendered response text.
+- [ ] The context inspector displays the immutable source text, source kind,
+  model, token estimate, and redaction count used for the selected answer.
+- [ ] Cancelling a queued or active turn records cancellation events and no
+  completed assistant response.
+- [ ] Provider failure records safe failure events and no raw provider error or
+  completed assistant response.
+- [ ] Reloading the browser restores persisted user and assistant turns while the
+  composer remains available.
+- [ ] Playwright completes setup, both assistant turns, citation inspection, and
+  reload assertions entirely through browser controls.
+
 ## Functional Gates
 
 - [ ] Clean SQLite startup creates the schema from scratch.
