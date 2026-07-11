@@ -17,6 +17,8 @@ import type {
   MemoryNamespaceDto,
   MemoryRevisionDto,
   ProviderConfig,
+  PromptDecisionDto,
+  PromptPreviewDto,
   TimelineEventDto,
   WorkspaceDto
 } from "@future/core";
@@ -40,6 +42,8 @@ export type {
   MemoryNamespaceDto,
   MemoryRevisionDto,
   ProviderConfig,
+  PromptDecisionDto,
+  PromptPreviewDto,
   TimelineEventDto,
   WorkspaceDto
 } from "@future/core";
@@ -69,6 +73,13 @@ export interface FutureApi {
   listImports(workspaceId: string): Promise<{ jobs: ImportJobDto[] }>;
   getImport(id: string): Promise<ImportJobDto>;
   retryImport(id: string): Promise<{ job: ImportJobDto }>;
+  getPromptPreview(id: string, workspaceId: string): Promise<PromptPreviewDto>;
+  decidePromptPreview(
+    id: string,
+    workspaceId: string,
+    decision: "approved" | "denied",
+    bindingHash: string
+  ): Promise<PromptDecisionDto>;
 }
 
 export interface ImportUploadResult {

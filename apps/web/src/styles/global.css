@@ -654,6 +654,78 @@ h3 {
   font-size: 13px;
 }
 
+.import-picker {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto auto;
+  align-items: end;
+  gap: 12px;
+  padding: 16px;
+  border: 1px dashed #aebfc2;
+  border-radius: 10px;
+  background: #f8faf9;
+}
+
+.import-picker label {
+  display: grid;
+  gap: 7px;
+}
+
+.import-list .memory-card {
+  cursor: default;
+}
+
+.prompt-preview {
+  position: fixed;
+  z-index: 20;
+  inset: 5vh max(5vw, calc((100vw - 900px) / 2));
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid #9fb1b5;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 24px 80px rgb(23 42 48 / 28%);
+}
+
+.prompt-preview header,
+.prompt-preview footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.prompt-preview dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.prompt-preview dl div {
+  padding: 10px;
+  border-radius: 8px;
+  background: #f1f5f4;
+}
+
+.prompt-preview dt {
+  color: #60737c;
+  font-size: 12px;
+}
+
+.prompt-preview dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.prompt-preview pre {
+  max-height: 34vh;
+  overflow: auto;
+  padding: 16px;
+  border-radius: 8px;
+  color: #dff5ef;
+  background: #17302e;
+  white-space: pre-wrap;
+}
+
 @media (max-width: 900px) {
   .app-shell,
   .content-grid {
@@ -676,6 +748,10 @@ h3 {
   }
 
   .composer-row {
+    grid-template-columns: 1fr;
+  }
+
+  .import-picker {
     grid-template-columns: 1fr;
   }
 }

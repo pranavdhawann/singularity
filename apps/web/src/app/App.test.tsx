@@ -30,6 +30,8 @@ function createApi(overrides: Partial<FutureApi> = {}): FutureApi {
     listImports: vi.fn(async () => ({ jobs: [] })),
     getImport: vi.fn(),
     retryImport: vi.fn(),
+    getPromptPreview: vi.fn(),
+    decidePromptPreview: vi.fn(),
     ...overrides
   };
 }

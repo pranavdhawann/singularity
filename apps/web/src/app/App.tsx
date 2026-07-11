@@ -8,6 +8,7 @@ import { FirstRunSetup } from "../features/setup/FirstRunSetup";
 import { TimelineView } from "../features/timeline/TimelineView";
 import { MemoryWorkspace } from "../features/memory/MemoryWorkspace";
 import { ImportWorkspace } from "../features/imports/ImportWorkspace";
+import { ExternalPromptPreview } from "../features/prompt-preview/ExternalPromptPreview";
 import { useTimeline } from "../features/timeline/use-timeline";
 import { WorkspaceSwitcher } from "../features/workspaces/WorkspaceSwitcher";
 import "../styles/global.css";
@@ -125,6 +126,11 @@ function ReadyAssistantShell({
           <span>Timeline: {timeline.events.length} events</span>
           <span>Provider: {providers[0]?.displayName}</span>
         </footer>
+        {assistant.promptPreview ? <ExternalPromptPreview
+          preview={assistant.promptPreview}
+          onApprove={assistant.approvePrompt}
+          onDeny={assistant.denyPrompt}
+        /> : null}
       </section>
     </main>
   );

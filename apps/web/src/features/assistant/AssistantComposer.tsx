@@ -10,7 +10,7 @@ interface AssistantComposerProps {
 
 export function AssistantComposer({ status, error, onSubmit, onCancel }: AssistantComposerProps) {
   const [message, setMessage] = useState("");
-  const active = status === "creating" || status === "streaming";
+  const active = status === "creating" || status === "streaming" || status === "awaiting_approval";
 
   useEffect(() => {
     if (status === "completed") setMessage("");
@@ -51,6 +51,7 @@ export function AssistantComposer({ status, error, onSubmit, onCancel }: Assista
         )}
       </div>
       {status === "streaming" ? <p className="composer-status">Future is responding...</p> : null}
+      {status === "awaiting_approval" ? <p className="composer-status">Review the external prompt before continuing.</p> : null}
       {status === "cancelled" ? <p className="turn-cancelled">Turn cancelled.</p> : null}
       {error ? <p className="turn-error" role="alert">{error}</p> : null}
     </form>

@@ -19,6 +19,8 @@ import type {
   MemoryNamespaceDto,
   MemoryRevisionDto,
   ProviderConfig,
+  PromptDecisionDto,
+  PromptPreviewDto,
   TimelineEventDto,
   WorkspaceDto
 } from "@future/core";
@@ -173,6 +175,21 @@ export class ApiClient implements FutureApi {
 
   async retryImport(id: string): Promise<{ job: ImportJobDto }> {
     return this.mutate(`/imports/${encodeURIComponent(id)}/retry`, null);
+  }
+
+  async getPromptPreview(id: string, workspaceId: string): Promise<PromptPreviewDto> {
+    return this.get(`/prompt-previews/${encodeURIComponent(id)}?workspaceId=${encodeURIComponent(workspaceId)}`);
+  }
+
+  async decidePromptPreview(
+    id: string,
+    workspaceId: string,
+    decision: "approved" | "denied",
+    bindingHash: string
+  ): Promise<PromptDecisionDto> {
+    return this.mutate(`/prompt-previews/${encodeURIComponent(id)}/decision`, {
+      workspaceId, decision, bindingHash
+    });
   }
 
   private async get<T>(path: string): Promise<T> {
