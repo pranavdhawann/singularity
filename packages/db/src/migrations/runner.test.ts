@@ -34,16 +34,19 @@ describe("runMigrations", () => {
       expect(columns.map((column) => column.name)).toEqual(
         expect.arrayContaining(["idempotency_key", "context_pack_id", "assistant_event_id"])
       );
+      const profileColumns = db.prepare("PRAGMA table_info(model_profiles)").all() as Array<{ name: string }>;
+      expect(profileColumns.map((column) => column.name)).toContain("embedding_model");
 
       const phase3Tables = db.prepare(
         `SELECT name FROM sqlite_master
          WHERE name IN (
            'memory_namespaces', 'memory_namespace_memberships',
            'memory_compaction_sources', 'source_embeddings',
-           'memories_fts', 'events_fts'
+           'memories_fts', 'events_fts', 'compactions_fts'
          ) ORDER BY name`
       ).pluck().all();
       expect(phase3Tables).toEqual([
+        "compactions_fts",
         "events_fts",
         "memories_fts",
         "memory_compaction_sources",

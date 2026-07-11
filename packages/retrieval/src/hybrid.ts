@@ -36,7 +36,7 @@ export function rankHybridCandidates(input: {
   ranked.sort(compareRanked);
   const diverse: RankedContextCandidate[] = [];
   const selected = new Set<string>();
-  for (const kind of ["memory", "document_chunk", "timeline_event"] as const) {
+  for (const kind of ["memory", "compaction", "document_chunk", "timeline_event"] as const) {
     const item = ranked.find((candidate) => candidate.source.kind === kind);
     if (item) { diverse.push(item); selected.add(sourceIdentity(item)); }
   }
@@ -57,7 +57,8 @@ function rank(candidate: HybridRetrievalCandidate, now: Date): RankedContextCand
     reasons.push("confidence");
   }
   if (candidate.pinned) { score += 0.15; reasons.push("pinned"); }
-  const quality = candidate.kind === "memory" ? 0.05 : candidate.kind === "document_chunk" ? 0.04 : 0.02;
+  const quality = candidate.kind === "memory" || candidate.kind === "compaction" ? 0.05
+    : candidate.kind === "document_chunk" ? 0.04 : 0.02;
   score += quality; reasons.push("source_quality");
   if (candidate.createdAt) {
     const ageDays = Math.max(0, now.getTime() - new Date(candidate.createdAt).getTime()) / 86_400_000;

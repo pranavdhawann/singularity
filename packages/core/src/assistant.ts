@@ -9,7 +9,7 @@ export type AssistantTurnState =
   | "cancelled";
 
 export interface SourceReference {
-  kind: "memory" | "document_chunk" | "timeline_event";
+  kind: "memory" | "document_chunk" | "timeline_event" | "compaction";
   id: string;
   workspaceId: string;
   title: string;

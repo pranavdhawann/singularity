@@ -54,7 +54,8 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   const compactions = new CompactionRepository(db);
   const embeddings = new EmbeddingRepository(db);
   const providerService = new ProviderService(providers, modelProfiles);
-  const contextService = new ContextService({ db, events, contextPacks });
+  const contextService = new ContextService({ db, events, contextPacks, embeddings, compactions,
+    embeddingResolver: providerService });
   const cancellations = new TurnCancellationRegistry();
   const deps: ApiDependencies = {
     db,

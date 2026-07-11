@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { Migration } from "./types";
 
 const statements = [
+  "ALTER TABLE model_profiles ADD COLUMN embedding_model TEXT",
   "ALTER TABLE memories ADD COLUMN version INTEGER NOT NULL DEFAULT 1",
   "ALTER TABLE memories ADD COLUMN deleted_at TEXT",
   "ALTER TABLE memories ADD COLUMN content_hash TEXT NOT NULL DEFAULT ''",
@@ -52,11 +53,14 @@ const statements = [
     ON source_embeddings (workspace_id, source_kind, source_id)`,
   `CREATE VIRTUAL TABLE memories_fts USING fts5(memory_id UNINDEXED, statement)`,
   `CREATE VIRTUAL TABLE events_fts USING fts5(event_id UNINDEXED, title, text)`,
+  `CREATE VIRTUAL TABLE compactions_fts USING fts5(compaction_id UNINDEXED, summary)`,
   `INSERT INTO memories_fts (memory_id, statement)
     SELECT id, statement FROM memories
     WHERE review_state = 'approved' AND outdated_at IS NULL AND deleted_at IS NULL`,
   `INSERT INTO events_fts (event_id, title, text)
     SELECT id, title, payload_json FROM events`,
+  `INSERT INTO compactions_fts (compaction_id, summary)
+    SELECT id, summary FROM compactions WHERE invalidated_at IS NULL`,
   `CREATE TRIGGER memories_fts_insert AFTER INSERT ON memories
     WHEN NEW.review_state = 'approved' AND NEW.outdated_at IS NULL AND NEW.deleted_at IS NULL
     BEGIN
@@ -85,6 +89,21 @@ const statements = [
   `CREATE TRIGGER events_fts_delete AFTER DELETE ON events
     BEGIN
       DELETE FROM events_fts WHERE event_id = OLD.id;
+    END`,
+  `CREATE TRIGGER compactions_fts_insert AFTER INSERT ON compactions
+    WHEN NEW.invalidated_at IS NULL
+    BEGIN
+      INSERT INTO compactions_fts (compaction_id, summary) VALUES (NEW.id, NEW.summary);
+    END`,
+  `CREATE TRIGGER compactions_fts_update AFTER UPDATE ON compactions
+    BEGIN
+      DELETE FROM compactions_fts WHERE compaction_id = OLD.id;
+      INSERT INTO compactions_fts (compaction_id, summary)
+        SELECT NEW.id, NEW.summary WHERE NEW.invalidated_at IS NULL;
+    END`,
+  `CREATE TRIGGER compactions_fts_delete AFTER DELETE ON compactions
+    BEGIN
+      DELETE FROM compactions_fts WHERE compaction_id = OLD.id;
     END`
 ] as const;
 

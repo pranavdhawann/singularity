@@ -6,6 +6,7 @@ interface ModelProfileRow {
   provider_id: string;
   name: string;
   model: string;
+  embedding_model: string | null;
   context_window: number;
   purpose: string;
   temperature: number | null;
@@ -44,6 +45,7 @@ export class ModelProfileRepository {
       provider_id: input.providerId,
       name: input.name,
       model: input.model,
+      embedding_model: input.embeddingModel ?? null,
       context_window: input.contextWindow,
       purpose: input.purpose,
       temperature: input.temperature ?? null,
@@ -59,6 +61,7 @@ export class ModelProfileRepository {
           provider_id,
           name,
           model,
+          embedding_model,
           context_window,
           purpose,
           temperature,
@@ -70,6 +73,7 @@ export class ModelProfileRepository {
           @provider_id,
           @name,
           @model,
+          @embedding_model,
           @context_window,
           @purpose,
           @temperature,
@@ -90,6 +94,7 @@ function rowToModelProfile(row: ModelProfileRow): ModelProfile {
     providerId: row.provider_id,
     name: row.name,
     model: row.model,
+    ...(row.embedding_model ? { embeddingModel: row.embedding_model } : {}),
     contextWindow: row.context_window,
     purpose: row.purpose,
     ...(row.temperature === null ? {} : { temperature: row.temperature }),

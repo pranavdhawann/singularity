@@ -16,6 +16,7 @@ interface StoredContextMetadata {
   providerId: string;
   model: string;
   estimatedTokens: number;
+  retrieval?: ContextPackInspection["retrieval"];
 }
 
 export class ContextPackRepository {
@@ -38,7 +39,8 @@ export class ContextPackRepository {
         turnId: pack.turnId,
         providerId: pack.providerId,
         model: pack.model,
-        estimatedTokens: pack.estimatedTokens
+        estimatedTokens: pack.estimatedTokens,
+        retrieval: pack.retrieval
       }),
       itemsJson: JSON.stringify(pack.items),
       redactionsJson: JSON.stringify({ count: pack.redactionCount }),
@@ -66,6 +68,7 @@ export class ContextPackRepository {
       items: JSON.parse(row.items_json) as ContextPackInspection["items"],
       estimatedTokens: metadata.estimatedTokens,
       redactionCount: redactions.count ?? 0,
+      ...(metadata.retrieval ? { retrieval: metadata.retrieval } : {}),
       createdAt: row.created_at
     };
   }

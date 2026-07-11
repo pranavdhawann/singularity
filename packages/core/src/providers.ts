@@ -61,6 +61,7 @@ export interface CreateModelProfileInput {
   providerId: string;
   name: string;
   model: string;
+  embeddingModel?: string;
   contextWindow: number;
   purpose: string;
   temperature?: number;

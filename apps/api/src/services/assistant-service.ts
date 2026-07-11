@@ -73,7 +73,7 @@ export class AssistantService {
       const { provider, profile } = this.dependencies.providerService.getRuntime(
         building.modelProfileId
       );
-      const contextPack = this.dependencies.contextService.buildForTurn({
+      const contextPack = await this.dependencies.contextService.buildForTurn({
         turnId,
         workspaceId: building.workspaceId,
         userEventId: building.userEventId,

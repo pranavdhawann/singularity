@@ -13,6 +13,10 @@ interface ProviderRow {
   updated_at: string;
 }
 
+export interface ProviderRuntimeConfig extends ProviderConfig {
+  secretReference?: string;
+}
+
 export class ProviderRepository {
   constructor(private readonly db: SqliteDatabase) {}
 
@@ -28,6 +32,12 @@ export class ProviderRepository {
       .prepare<{ id: string }, ProviderRow>("SELECT * FROM providers WHERE id = @id")
       .get({ id });
     return row ? rowToProvider(row) : undefined;
+  }
+
+  getRuntimeConfig(id: string): ProviderRuntimeConfig | undefined {
+    const row = this.db.prepare<{ id: string }, ProviderRow>("SELECT * FROM providers WHERE id = @id").get({ id });
+    if (!row) return undefined;
+    return { ...rowToProvider(row), ...(row.api_key_ref ? { secretReference: row.api_key_ref } : {}) };
   }
 
   create(input: CreateProviderInput): ProviderConfig {

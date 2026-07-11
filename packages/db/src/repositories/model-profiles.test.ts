@@ -20,6 +20,7 @@ describe("ModelProfileRepository", () => {
         providerId: provider.id,
         name: "Local default",
         model: "llama3.2",
+        embeddingModel: "nomic-embed-text",
         contextWindow: 8192,
         purpose: "general",
         privacyPolicy: "local_only"

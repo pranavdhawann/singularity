@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import type { SqliteDatabase } from "../connection";
 
-export type SearchSourceKind = "document_chunk" | "memory" | "timeline_event";
+export type SearchSourceKind = "document_chunk" | "memory" | "timeline_event" | "compaction";
 export interface UnifiedSearchCandidate {
   kind: SearchSourceKind; id: string; workspaceId: string; title: string; text: string;
   tokenCount: number; contentHash: string; lexicalScore: number;
@@ -22,6 +22,7 @@ export class SearchRepository {
       ...this.searchDocuments(input.workspaceId, query),
       ...this.searchMemories(input.workspaceId, query),
       ...this.searchEvents(input.workspaceId, query)
+      , ...this.searchCompactions(input.workspaceId, query)
     ];
     const max = Math.max(...candidates.map((candidate) => candidate.rawScore), 0);
     return candidates.map(({ rawScore, ...candidate }) => ({
@@ -77,6 +78,18 @@ export class SearchRepository {
         title: row.title, text, tokenCount: estimateTokens(text), contentHash: hash(text),
         createdAt: row.created_at, rawScore: Math.max(row.rank, 0) }] : [];
     });
+  }
+
+  private searchCompactions(workspaceId: string, query: string): RankedCandidate[] {
+    interface Row { id: string; summary: string; content_hash: string; created_at: string; rank: number }
+    return this.db.prepare<{ workspaceId: string; query: string }, Row>(
+      `SELECT c.id, c.summary, c.content_hash, c.created_at, -bm25(compactions_fts) AS rank
+       FROM compactions_fts f JOIN compactions c ON c.id = f.compaction_id
+       WHERE compactions_fts MATCH @query AND c.workspace_id = @workspaceId AND c.invalidated_at IS NULL`
+    ).all({ workspaceId, query }).map((row) => ({ kind: "compaction", id: row.id, workspaceId,
+      title: "Memory compaction", text: row.summary, tokenCount: estimateTokens(row.summary),
+      contentHash: row.content_hash || hash(row.summary), createdAt: row.created_at,
+      rawScore: Math.max(row.rank, 0) }));
   }
 }
 
