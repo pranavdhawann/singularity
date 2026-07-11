@@ -12,6 +12,7 @@ import type {
   CreateWorkspaceInput,
   LocalSessionResponse,
   ModelProfile,
+  ImportJobDto,
   MemoryDto,
   MemoryCompactionDto,
   MemoryMutationInput,
@@ -21,7 +22,7 @@ import type {
   TimelineEventDto,
   WorkspaceDto
 } from "@future/core";
-import type { FutureApi } from "./api-types";
+import type { FutureApi, ImportUploadResult } from "./api-types";
 
 export interface ApiClientOptions {
   baseUrl?: string;
@@ -146,6 +147,32 @@ export class ApiClient implements FutureApi {
   }
   async createCompaction(input: CreateCompactionInput): Promise<MemoryCompactionDto> {
     return this.mutate("/memory-compactions", input);
+  }
+
+  async uploadImports(workspaceId: string, files: File[]): Promise<ImportUploadResult> {
+    const token = await this.getSessionToken();
+    const form = new FormData();
+    form.append("workspaceId", workspaceId);
+    for (const file of files) form.append("files", file, file.name);
+    const response = await fetch(`${this.baseUrl}/v2/imports`, {
+      method: "POST",
+      headers: { "x-future-session": token },
+      body: form
+    });
+    if (!response.ok) throw await ApiClient.toError(response);
+    return (await response.json()) as ImportUploadResult;
+  }
+
+  async listImports(workspaceId: string): Promise<{ jobs: ImportJobDto[] }> {
+    return this.get(`/imports?workspaceId=${encodeURIComponent(workspaceId)}`);
+  }
+
+  async getImport(id: string): Promise<ImportJobDto> {
+    return this.get(`/imports/${encodeURIComponent(id)}`);
+  }
+
+  async retryImport(id: string): Promise<{ job: ImportJobDto }> {
+    return this.mutate(`/imports/${encodeURIComponent(id)}/retry`, null);
   }
 
   private async get<T>(path: string): Promise<T> {

@@ -7,6 +7,7 @@ import { CommandPalette } from "../features/command-palette/CommandPalette";
 import { FirstRunSetup } from "../features/setup/FirstRunSetup";
 import { TimelineView } from "../features/timeline/TimelineView";
 import { MemoryWorkspace } from "../features/memory/MemoryWorkspace";
+import { ImportWorkspace } from "../features/imports/ImportWorkspace";
 import { useTimeline } from "../features/timeline/use-timeline";
 import { WorkspaceSwitcher } from "../features/workspaces/WorkspaceSwitcher";
 import "../styles/global.css";
@@ -58,7 +59,7 @@ function ReadyAssistantShell({
 }) {
   const [activeWorkspaceId, setActiveWorkspaceId] = useState(workspaces[0]?.id ?? "");
   const [selectedContextPackId, setSelectedContextPackId] = useState<string | undefined>(undefined);
-  const [activeLens, setActiveLens] = useState<"timeline" | "memory">("timeline");
+  const [activeLens, setActiveLens] = useState<"timeline" | "memory" | "imports">("timeline");
   const activeProfile = modelProfiles[0];
   const timeline = useTimeline(api, activeWorkspaceId);
   const assistant = useAssistantTurn({
@@ -85,8 +86,8 @@ function ReadyAssistantShell({
         </div>
         <nav className="nav-list">
           {navigationItems.map((item) => <button className="nav-item" type="button" key={item}
-            aria-pressed={(item === "Memory" ? activeLens === "memory" : item === "Timeline" ? activeLens === "timeline" : false)}
-            onClick={() => { if (item === "Memory") setActiveLens("memory"); if (item === "Timeline") setActiveLens("timeline"); }}>{item}</button>)}
+            aria-pressed={(item === "Memory" ? activeLens === "memory" : item === "Imports" ? activeLens === "imports" : item === "Timeline" ? activeLens === "timeline" : false)}
+            onClick={() => { if (item === "Memory") setActiveLens("memory"); if (item === "Imports") setActiveLens("imports"); if (item === "Timeline") setActiveLens("timeline"); }}>{item}</button>)}
         </nav>
       </aside>
       <section className="workspace">
@@ -105,7 +106,7 @@ function ReadyAssistantShell({
           </div>
         </header>
         <div className="content-grid">
-          {activeLens === "memory" ? <MemoryWorkspace api={api} workspaceId={activeWorkspaceId} composer={composer} /> : <>
+          {activeLens === "memory" ? <MemoryWorkspace api={api} workspaceId={activeWorkspaceId} composer={composer} /> : activeLens === "imports" ? <ImportWorkspace api={api} workspaceId={activeWorkspaceId} /> : <>
           <section className="main-column">
             <CommandPalette />
             {timeline.error ? <p className="turn-error" role="alert">{timeline.error}</p> : null}

@@ -111,4 +111,21 @@ describe("ApiClient local session", () => {
       method: "DELETE", body: JSON.stringify({ expectedVersion: 2 })
     }));
   });
+
+  it("uploads multipart imports without overriding the browser content type", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ token: "test-token" }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ files: [] }), { status: 201 }));
+    vi.stubGlobal("fetch", fetch);
+    const client = new ApiClient();
+    const file = new File(["# Notes"], "notes.md", { type: "text/markdown" });
+
+    await client.uploadImports("w_1", [file]);
+
+    const init = fetch.mock.calls[1]?.[1] as RequestInit;
+    expect(fetch.mock.calls[1]?.[0]).toBe("/api/v2/imports");
+    expect(init.body).toBeInstanceOf(FormData);
+    expect(init.headers).toEqual({ "x-future-session": "test-token" });
+    expect((init.headers as Record<string, string>)["content-type"]).toBeUndefined();
+  });
 });

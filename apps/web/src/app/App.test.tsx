@@ -26,6 +26,10 @@ function createApi(overrides: Partial<FutureApi> = {}): FutureApi {
     listNamespaces: vi.fn(async () => ({ namespaces: [] })),
     createNamespace: vi.fn(),
     createCompaction: vi.fn(),
+    uploadImports: vi.fn(async () => ({ files: [] })),
+    listImports: vi.fn(async () => ({ jobs: [] })),
+    getImport: vi.fn(),
+    retryImport: vi.fn(),
     ...overrides
   };
 }

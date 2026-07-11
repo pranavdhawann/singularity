@@ -10,6 +10,7 @@ import type {
   CreateProviderInput,
   CreateWorkspaceInput,
   ModelProfile,
+  ImportJobDto,
   MemoryDto,
   MemoryCompactionDto,
   MemoryMutationInput,
@@ -32,6 +33,7 @@ export type {
   CreateProviderInput,
   CreateWorkspaceInput,
   ModelProfile,
+  ImportJobDto,
   MemoryDto,
   MemoryCompactionDto,
   MemoryMutationInput,
@@ -63,4 +65,15 @@ export interface FutureApi {
   listNamespaces(workspaceId: string): Promise<{ namespaces: MemoryNamespaceDto[] }>;
   createNamespace(input: CreateNamespaceInput): Promise<MemoryNamespaceDto>;
   createCompaction(input: CreateCompactionInput): Promise<MemoryCompactionDto>;
+  uploadImports(workspaceId: string, files: File[]): Promise<ImportUploadResult>;
+  listImports(workspaceId: string): Promise<{ jobs: ImportJobDto[] }>;
+  getImport(id: string): Promise<ImportJobDto>;
+  retryImport(id: string): Promise<{ job: ImportJobDto }>;
+}
+
+export interface ImportUploadResult {
+  files: Array<
+    | { filename: string; job: ImportJobDto }
+    | { filename: string; errorCode: "unsupported_file" | "file_too_large" }
+  >;
 }
