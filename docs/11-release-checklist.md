@@ -43,6 +43,34 @@ Use this checklist before treating the local MVP as releasable.
 - [ ] Playwright completes setup, both assistant turns, citation inspection, and
   reload assertions entirely through browser controls.
 
+## V2 Memory and Hybrid Retrieval Gates
+
+- [ ] Migration `0003_memory_hybrid_retrieval` applies once on clean startup and
+  preserves Phase 2 turns, context packs, citations, and events during upgrade.
+- [ ] FTS search returns authorized document chunks, approved active memories,
+  text-bearing events, and active compactions with stable ordering.
+- [ ] Proposed, rejected, outdated, deleted, and cross-workspace memory never
+  enters normal retrieval.
+- [ ] Noop, Ollama, and OpenAI-compatible embedding adapters validate ordered
+  vectors, dimensions, cancellation, and safe errors without secret leakage.
+- [ ] Embedding failure completes the turn lexically and persists a safe fallback
+  reason in its immutable context pack.
+- [ ] Hybrid ranking proves channel fusion, pin/confidence/recency/quality boosts,
+  authorization, diversity, hash/range deduplication, and context budgeting.
+- [ ] Namespace hierarchy rejects grandchildren and cross-workspace parents.
+- [ ] Editing, pinning, review changes, namespace assignment, outdating, and
+  deletion create immutable revisions and transactional timeline events.
+- [ ] Editing or deleting memory invalidates its embeddings and dependent
+  compactions; deleted memory remains an inspectable tombstone but is not listed.
+- [ ] The browser Memory lens supports filters, namespace navigation, provenance,
+  revision history, optimistic edits, source-linked compaction, and confirmed
+  deletion while retaining the persistent composer.
+- [ ] Context inspection displays channel scores, final score, ranking reasons,
+  compaction provenance, and lexical-only fallback metadata.
+- [ ] Playwright proves review, namespace assignment, correction, pinning,
+  outdating, changed citations, deletion, and reload durability through browser
+  controls only.
+
 ## Functional Gates
 
 - [ ] Clean SQLite startup creates the schema from scratch.

@@ -12,7 +12,8 @@ The V2 source of truth is
 
 ## Current Branch State
 
-The `v2` branch has completed Phase 2, Continuous Assistant Vertical Slice:
+The `codex/phase3-memory-retrieval` branch has completed Phase 3, Memory and
+Hybrid Retrieval. It retains the completed Phase 2 continuous-assistant slice and adds:
 
 - ordered SQLite migrations with checksum verification
 - stable API error envelopes
@@ -29,6 +30,19 @@ The `v2` branch has completed Phase 2, Continuous Assistant Vertical Slice:
 - hybrid context assembly from approved memories, document chunks, and recent events
 - separately stored source citations and immutable context-pack inspection
 - browser-only Playwright coverage for setup, streaming, citations, inspection, and reload durability
+- migration `0003_memory_hybrid_retrieval` with memory/event/compaction FTS,
+  namespaces, memberships, embeddings, and compaction provenance
+- workspace-scoped FTS across document chunks, approved active memories,
+  text-bearing events, and active compactions
+- deterministic hybrid ranking, context budgeting, overlap/hash deduplication,
+  source diversity, pin/confidence/recency boosts, and ranking explanations
+- optional noop, Ollama, and OpenAI-compatible embedding adapters; adapter
+  failure degrades safely to lexical retrieval
+- shallow virtual namespaces, optimistic memory revisions, review/edit/pin/
+  outdate/delete flows, retrieval tombstones, and source-linked compaction
+- protected V2 memory, namespace, revision, compaction, and search resources
+- connected browser Memory lens with persistent composer and browser-only
+  lifecycle coverage proving memory changes alter later context selection
 
 Legacy `/api` routes remain available during migration.
 
@@ -74,7 +88,7 @@ assistant uses V2 contracts.
 
 ## Next Boundary
 
-Phase 3 expands memory and retrieval management: memory namespaces and revisions,
-review/edit/outdate/delete UI, full event and memory FTS ranking, optional embedding
-adapters, and compaction. It must extend the Phase 2 turn/context contracts rather
-than creating a parallel conversation flow.
+Phase 4 adds browser file/ChatGPT import, resumable indexing work, persisted
+OpenAI-compatible text generation, whole-prompt redaction, and immutable external
+prompt-preview grants. It must reuse the Phase 3 source, retrieval, context-pack,
+and memory contracts.
