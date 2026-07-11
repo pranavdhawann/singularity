@@ -8,6 +8,7 @@ import {
   MemoryRepository,
   ModelProfileRepository,
   ProviderRepository,
+  PromptPreviewRepository,
   NamespaceRepository,
   openDatabase
 } from "@future/db";
@@ -29,6 +30,7 @@ import { registerV2ContextPackRoutes } from "../routes/v2/context-packs";
 import { registerV2MemoryRoutes } from "../routes/v2/memories";
 import { registerV2NamespaceRoutes } from "../routes/v2/namespaces";
 import { registerV2ProviderRoutes } from "../routes/v2/providers";
+import { registerV2PromptPreviewRoutes } from "../routes/v2/prompt-previews";
 import { registerV2SearchRoutes } from "../routes/v2/search";
 import { registerV2TimelineRoutes } from "../routes/v2/timeline";
 import { registerV2WorkspaceRoutes } from "../routes/v2/workspaces";
@@ -37,6 +39,7 @@ import { ContextService } from "../services/context-service";
 import { MemoryService } from "../services/memory-service";
 import { ImportService } from "../services/import-service";
 import { ProviderService } from "../services/provider-service";
+import { PromptPreviewService } from "../services/prompt-preview-service";
 import { TurnCancellationRegistry } from "../services/turn-cancellation";
 import type { ApiDependencies } from "./dependencies";
 import { registerApiErrorHandler } from "./api-errors";
@@ -51,6 +54,7 @@ export interface CreateServerOptions {
 export async function createServer(options: CreateServerOptions): Promise<FastifyInstance> {
   const db = openDatabase({ path: options.databasePath });
   const providers = new ProviderRepository(db);
+  const promptPreviews = new PromptPreviewRepository(db);
   const modelProfiles = new ModelProfileRepository(db);
   const events = new EventRepository(db);
   const importJobs = new ImportJobRepository(db);
@@ -75,8 +79,10 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
     compactions,
     embeddings,
     providers,
+    promptPreviews,
     modelProfiles,
     providerService,
+    promptPreviewService: new PromptPreviewService({ previews: promptPreviews }),
     contextService,
     memoryService: new MemoryService({ db, memories, namespaces, compactions, embeddings, events }),
     importService: new ImportService({ db, jobs: importJobs, events }),
@@ -115,6 +121,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   await registerV2ImportRoutes(server, deps);
   await registerV2WorkspaceRoutes(server, deps);
   await registerV2ProviderRoutes(server, deps);
+  await registerV2PromptPreviewRoutes(server, deps);
   await registerV2AssistantTurnRoutes(server, deps);
   await registerV2TimelineRoutes(server, deps);
   await registerV2ContextPackRoutes(server, deps);
