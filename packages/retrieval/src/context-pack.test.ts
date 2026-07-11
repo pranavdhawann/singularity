@@ -46,4 +46,24 @@ describe("buildContextPack", () => {
     expect(pack.items.filter((item) => item.source.id === "mem_1")).toHaveLength(1);
     expect(pack.estimatedTokens).toBeLessThanOrEqual(80);
   });
+
+  it("deduplicates identical content and overlapping ranges and reserves output tokens", () => {
+    const pack = buildContextPack({
+      command: "question", budgetTokens: 20, reservedTokens: 10,
+      memories: [{ source: { kind: "memory", id: "m1", workspaceId: "w_demo", title: "Memory", contentHash: "same" },
+        text: "same content", tokenCount: 3, score: 1 }],
+      chunks: [
+        { source: { kind: "document_chunk", id: "c1", workspaceId: "w_demo", title: "Chunk", contentHash: "same" },
+          text: "same content", tokenCount: 3, score: 0.5 },
+        { source: { kind: "document_chunk", id: "c2", workspaceId: "w_demo", title: "Range", contentHash: "range", range: { start: 0, end: 20 } },
+          text: "range one", tokenCount: 4, score: 0.9 },
+        { source: { kind: "document_chunk", id: "c2", workspaceId: "w_demo", title: "Overlap", contentHash: "range", range: { start: 10, end: 30 } },
+          text: "range two", tokenCount: 4, score: 0.8 }
+      ],
+      recentEvents: []
+    });
+    expect(pack.items.filter((item) => item.source.contentHash === "same")).toHaveLength(1);
+    expect(pack.items.filter((item) => item.source.id === "c2")).toHaveLength(1);
+    expect(pack.estimatedTokens).toBeLessThanOrEqual(20);
+  });
 });

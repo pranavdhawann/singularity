@@ -1,15 +1,17 @@
-import { createId, sourceReferenceKey, type SourceReference } from "@future/core";
+import { createId, sourceReferenceKey, type RetrievalBreakdown, type SourceReference } from "@future/core";
 
 export interface ContextCandidate {
   source: SourceReference;
   text: string;
   tokenCount: number;
   score: number;
+  retrieval?: RetrievalBreakdown;
 }
 
 export interface BuildContextPackInput {
   command: string;
   budgetTokens: number;
+  reservedTokens?: number;
   workspaceId?: string;
   memories: ContextCandidate[];
   chunks: ContextCandidate[];
@@ -28,18 +30,17 @@ export interface BuiltContextPack {
 }
 
 export function buildContextPack(input: BuildContextPackInput): BuiltContextPack {
-  const deduplicated = new Map<string, BuiltContextPackItem>();
-  for (const candidate of [...input.memories, ...input.chunks, ...input.recentEvents]) {
-    const key = sourceReferenceKey(candidate.source);
-    const current = deduplicated.get(key);
-    if (!current || candidate.score > current.score) deduplicated.set(key, candidate);
-  }
-  const candidates = [...deduplicated.values()].sort(
+  const sorted = [...input.memories, ...input.chunks, ...input.recentEvents].sort(
     (a, b) => b.score - a.score || sourceReferenceKey(a.source).localeCompare(sourceReferenceKey(b.source))
   );
+  const candidates: BuiltContextPackItem[] = [];
+  for (const candidate of sorted) {
+    if (candidates.some((current) => isDuplicate(current, candidate))) continue;
+    candidates.push(candidate);
+  }
 
   const items: BuiltContextPackItem[] = [];
-  let estimatedTokens = estimateTokenCount(input.command);
+  let estimatedTokens = estimateTokenCount(input.command) + (input.reservedTokens ?? 0);
 
   for (const candidate of candidates) {
     if (estimatedTokens + candidate.tokenCount > input.budgetTokens) continue;
@@ -55,6 +56,13 @@ export function buildContextPack(input: BuildContextPackInput): BuiltContextPack
     estimatedTokens,
     createdAt: new Date()
   };
+}
+
+function isDuplicate(a: BuiltContextPackItem, b: BuiltContextPackItem): boolean {
+  if (a.source.contentHash === b.source.contentHash) return true;
+  if (a.source.kind !== b.source.kind || a.source.id !== b.source.id) return false;
+  if (!a.source.range || !b.source.range) return sourceReferenceKey(a.source) === sourceReferenceKey(b.source);
+  return a.source.range.start < b.source.range.end && b.source.range.start < a.source.range.end;
 }
 
 function estimateTokenCount(text: string): number {
