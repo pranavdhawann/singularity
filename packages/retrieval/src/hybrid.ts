@@ -16,6 +16,7 @@ export interface HybridRetrievalCandidate {
   pinned?: boolean;
   createdAt?: string;
   sourceRange?: { start: number; end: number };
+  compactionSources?: SourceReference[];
 }
 
 export interface RankedContextCandidate extends ContextCandidate {
@@ -84,7 +85,8 @@ function rank(candidate: HybridRetrievalCandidate, now: Date): RankedContextCand
       ...(candidate.vectorScore !== undefined ? { vectorScore: candidate.vectorScore } : {}),
       finalScore,
       reasons
-    }
+    },
+    ...(candidate.compactionSources ? { compactionSources: candidate.compactionSources } : {})
   };
 }
 

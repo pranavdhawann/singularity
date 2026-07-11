@@ -75,7 +75,14 @@ export class ContextService {
         lexicalScore: Math.max(current.lexicalScore, candidate.lexicalScore),
         ...((current.pinned || candidate.pinned) ? { pinned: true } : {}) } : candidate);
     }
-    return [...unique.values()];
+    return [...unique.values()].map((candidate) => {
+      if (candidate.kind !== "compaction") return candidate;
+      const compaction = this.dependencies.compactions?.get(candidate.id);
+      return { ...candidate, ...(compaction ? { compactionSources: compaction.sources.map((source) => ({
+        kind: source.kind, id: source.id, workspaceId: candidate.workspaceId,
+        title: "Compaction source", contentHash: source.contentHash
+      })) } : {}) };
+    });
   }
 
   private async addVectorScores(

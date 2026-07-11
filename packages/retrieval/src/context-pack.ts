@@ -6,6 +6,7 @@ export interface ContextCandidate {
   tokenCount: number;
   score: number;
   retrieval?: RetrievalBreakdown;
+  compactionSources?: SourceReference[];
 }
 
 export interface BuildContextPackInput {

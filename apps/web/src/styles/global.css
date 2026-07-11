@@ -612,6 +612,40 @@ h3 {
   font-size: 12px;
 }
 
+.retrieval-fallback {
+  padding: 8px;
+  border-radius: 6px;
+  color: #6d521d !important;
+  background: #fff4d8;
+}
+
+.retrieval-details {
+  display: grid;
+  gap: 5px;
+  margin: 10px 0 0;
+}
+
+.retrieval-details div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.retrieval-details dt {
+  color: #60737c;
+  font-size: 12px;
+}
+
+.retrieval-details dd {
+  margin: 0;
+  font-size: 12px;
+}
+
+.compaction-source {
+  display: block;
+  margin-top: 7px;
+}
+
 .source-list {
   display: flex;
   flex-wrap: wrap;

@@ -57,6 +57,7 @@ export interface ContextPackInspectionItem {
   tokenCount: number;
   score: number;
   retrieval?: RetrievalBreakdown;
+  compactionSources?: SourceReference[];
 }
 
 export interface RetrievalBreakdown {
