@@ -6,6 +6,15 @@ Phase 3 is complete. New work must extend the existing event, assistant-turn,
 source, memory, retrieval, context-pack, provider, and permission contracts rather
 than introduce parallel chat or retrieval flows.
 
+## Status
+
+- Complete: Phases 1-3, including the connected shell, durable assistant turns,
+  memory lifecycle, hybrid retrieval, citations, and context inspection.
+- Current: Phase 4, Imports and External Models.
+- Next: Phase 5, Proactive Assistance and Hardening.
+- Deferred: packaging, sync, teams, broad connectors, plugins, autonomous external
+  actions, and automatic provider-cost routing until V2 is complete.
+
 ## Immediate Priority: Phase 4, Imports and External Models
 
 Phase 4 completes the real source-ingestion and external-model path.
