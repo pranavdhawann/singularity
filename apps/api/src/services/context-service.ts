@@ -41,6 +41,10 @@ export class ContextService {
     this.search = new SearchRepository(dependencies.db);
   }
 
+  get(id: string): ContextPackInspection | undefined {
+    return this.dependencies.contextPacks.get(id);
+  }
+
   async buildForTurn(input: BuildTurnContextInput): Promise<ContextPackInspection> {
     const candidates = this.collectCandidates(input);
     const vector = await this.addVectorScores(input.profile, input.query, candidates, input.workspaceId);

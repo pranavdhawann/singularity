@@ -53,6 +53,9 @@ export async function registerV2PromptPreviewRoutes(
           request.body.decision,
           request.body.bindingHash
         );
+        if (decision.decision === "denied") {
+          deps.assistantService.denyTurnForPreview(preview.id);
+        }
         return reply.code(201).send(decision);
       } catch (error) {
         if (error instanceof PromptPreviewServiceError) {

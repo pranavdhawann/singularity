@@ -65,6 +65,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   const compactions = new CompactionRepository(db);
   const embeddings = new EmbeddingRepository(db);
   const providerService = new ProviderService(providers, modelProfiles);
+  const promptPreviewService = new PromptPreviewService({ previews: promptPreviews });
   const contextService = new ContextService({ db, events, contextPacks, embeddings, compactions,
     embeddingResolver: providerService });
   const cancellations = new TurnCancellationRegistry();
@@ -82,7 +83,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
     promptPreviews,
     modelProfiles,
     providerService,
-    promptPreviewService: new PromptPreviewService({ previews: promptPreviews }),
+    promptPreviewService,
     contextService,
     memoryService: new MemoryService({ db, memories, namespaces, compactions, embeddings, events }),
     importService: new ImportService({ db, jobs: importJobs, events }),
@@ -93,7 +94,8 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
       events,
       contextService,
       providerService,
-      cancellations
+      cancellations,
+      promptPreviewService
     })
   };
   const server = Fastify({

@@ -3,6 +3,7 @@ import {
   AssistantTurnRepository,
   ContextPackRepository,
   EventRepository,
+  PromptPreviewRepository,
   createTestDb,
   type TestDb
 } from "@future/db";
@@ -10,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AssistantService } from "./assistant-service";
 import { ContextService } from "./context-service";
 import { TurnCancellationRegistry } from "./turn-cancellation";
+import { PromptPreviewService } from "./prompt-preview-service";
 
 const profile: ModelProfile = {
   id: "profile_1",
@@ -123,9 +125,91 @@ describe("AssistantService", () => {
     expect(JSON.parse(cancelled)).toEqual(expect.objectContaining({ partialCharacters: 7 }));
     expect(db.client.prepare("SELECT COUNT(*) FROM events WHERE type = 'assistant.response.created'").pluck().get()).toBe(0);
   });
+
+  it("pauses an external turn for exact approval and resumes it once", async () => {
+    let providerCalls = 0;
+    const provider = {
+      ...providerFrom(async function* () {
+        providerCalls += 1;
+        yield { text: "Approved answer" };
+      }),
+      kind: "openai-compatible" as const
+    };
+    const previews = new PromptPreviewRepository(db.client);
+    const promptPreviewService = new PromptPreviewService({ previews });
+    const service = createService(db, provider, { isLocal: false, promptPreviewService });
+    const { turn } = service.createTurn({
+      workspaceId: "w_demo", modelProfileId: profile.id,
+      idempotencyKey: "key_external", message: "Email user@example.com"
+    });
+
+    const waitingFrames = await collect(service.streamTurn(turn.id));
+    const approvalFrame = waitingFrames.at(-1);
+    expect(waitingFrames.map((frame) => frame.type)).toEqual([
+      "started", "context", "approval_required"
+    ]);
+    expect(providerCalls).toBe(0);
+    expect(service.getTurn(turn.id)?.state).toBe("awaiting_approval");
+    if (approvalFrame?.type !== "approval_required") throw new Error("approval frame missing");
+    const preview = previews.get(approvalFrame.previewId)!;
+    expect(preview.redactedPrompt).not.toContain("user@example.com");
+
+    promptPreviewService.decide(preview.id, "approved", preview.bindingHash);
+    const completedFrames = await collect(service.streamTurn(turn.id));
+
+    expect(completedFrames.map((frame) => frame.type)).toEqual([
+      "started", "context", "delta", "completed"
+    ]);
+    expect(providerCalls).toBe(1);
+    expect(service.getTurn(turn.id)?.state).toBe("completed");
+    expect(db.client.prepare("SELECT prompt_preview_id FROM model_calls").pluck().get()).toBe(preview.id);
+    expect(db.client.prepare("SELECT prompt_decision_id FROM model_calls").pluck().get()).toEqual(expect.any(String));
+    const timelinePayloads = db.client.prepare(
+      "SELECT payload_json FROM events WHERE type <> 'user.message.created'"
+    ).pluck().all() as string[];
+    expect(timelinePayloads.join("\n")).not.toContain("user@example.com");
+  });
+
+  it("terminates denied and cancelled approval waits without a model call", async () => {
+    const provider = { ...providerFrom(async function* () { yield { text: "never" }; }), kind: "openai-compatible" as const };
+    const previews = new PromptPreviewRepository(db.client);
+    const promptPreviewService = new PromptPreviewService({ previews });
+    const service = createService(db, provider, { isLocal: false, promptPreviewService });
+
+    const deniedTurn = service.createTurn({
+      workspaceId: "w_demo", modelProfileId: profile.id,
+      idempotencyKey: "key_denied", message: "Do not send"
+    }).turn;
+    const deniedFrames = await collect(service.streamTurn(deniedTurn.id));
+    const deniedApproval = deniedFrames.at(-1);
+    if (deniedApproval?.type !== "approval_required") throw new Error("approval frame missing");
+    const deniedPreview = previews.get(deniedApproval.previewId)!;
+    promptPreviewService.decide(deniedPreview.id, "denied", deniedPreview.bindingHash);
+    const denied = service.denyTurnForPreview(deniedPreview.id);
+
+    expect(denied).toMatchObject({ state: "failed", errorCode: "grant_denied" });
+    expect(db.client.prepare("SELECT COUNT(*) FROM model_calls").pluck().get()).toBe(0);
+    expect(db.client.prepare("SELECT COUNT(*) FROM events WHERE type = 'prompt_preview.denied'").pluck().get()).toBe(1);
+
+    const cancelledTurn = service.createTurn({
+      workspaceId: "w_demo", modelProfileId: profile.id,
+      idempotencyKey: "key_cancel_wait", message: "Cancel approval"
+    }).turn;
+    const cancelledFrames = await collect(service.streamTurn(cancelledTurn.id));
+    const cancelledApproval = cancelledFrames.at(-1);
+    if (cancelledApproval?.type !== "approval_required") throw new Error("approval frame missing");
+    const cancelled = service.cancelTurn(cancelledTurn.id);
+
+    expect(cancelled.state).toBe("cancelled");
+    expect(previews.isInvalidated(cancelledApproval.previewId)).toBe(true);
+  });
 });
 
-function createService(db: TestDb, provider: ModelProvider): AssistantService {
+function createService(
+  db: TestDb,
+  provider: ModelProvider,
+  options: { isLocal?: boolean; promptPreviewService?: PromptPreviewService } = {}
+): AssistantService {
   const events = new EventRepository(db.client);
   const contextPacks = new ContextPackRepository(db.client);
   return new AssistantService({
@@ -133,7 +217,10 @@ function createService(db: TestDb, provider: ModelProvider): AssistantService {
     turns: new AssistantTurnRepository(db.client),
     events,
     contextService: new ContextService({ db: db.client, events, contextPacks }),
-    providerService: { getRuntime: () => ({ provider, profile }) },
+    providerService: { getRuntime: () => ({ provider, profile, isLocal: options.isLocal ?? true }) },
+    promptPreviewService: options.promptPreviewService ?? new PromptPreviewService({
+      previews: new PromptPreviewRepository(db.client)
+    }),
     cancellations: new TurnCancellationRegistry()
   });
 }

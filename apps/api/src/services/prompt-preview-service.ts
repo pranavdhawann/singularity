@@ -66,6 +66,14 @@ export class PromptPreviewService {
       : this.dependencies.previews.get(id);
   }
 
+  getForTurn(turnId: string): PromptPreviewDto | undefined {
+    return this.dependencies.previews.getForTurn(turnId);
+  }
+
+  getDecision(previewId: string): PromptDecisionDto | undefined {
+    return this.dependencies.previews.getDecision(previewId);
+  }
+
   decide(
     previewId: string,
     decision: "approved" | "denied",

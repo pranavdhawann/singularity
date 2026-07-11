@@ -27,7 +27,7 @@ export class ProviderService {
     private readonly profiles: ModelProfileRepository
   ) {}
 
-  getRuntime(profileId: string): { provider: ModelProvider; profile: ModelProfile } {
+  getRuntime(profileId: string): { provider: ModelProvider; profile: ModelProfile; isLocal: boolean } {
     const profile = this.profiles.get(profileId);
     if (!profile) {
       throw new ProviderServiceError("model_profile_not_found");
@@ -39,7 +39,7 @@ export class ProviderService {
     }
 
     if (config.kind === "mock") {
-      return { provider: new MockProvider(), profile };
+      return { provider: new MockProvider(), profile, isLocal: config.isLocal };
     }
 
     if (config.kind === "ollama") {
@@ -49,7 +49,8 @@ export class ProviderService {
           ...(config.baseUrl ? { baseUrl: config.baseUrl } : {}),
           model: profile.model
         }),
-        profile
+        profile,
+        isLocal: config.isLocal
       };
     }
 
@@ -71,7 +72,8 @@ export class ProviderService {
           apiKey,
           models: [{ id: profile.model, displayName: profile.model, contextWindow: profile.contextWindow }]
         }),
-        profile
+        profile,
+        isLocal: config.isLocal
       };
     }
 

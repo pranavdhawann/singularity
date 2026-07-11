@@ -66,6 +66,13 @@ export class PromptPreviewRepository {
     return row ? mapPreview(row) : undefined;
   }
 
+  getForTurn(turnId: string): PromptPreviewDto | undefined {
+    const row = this.db.prepare<{ turnId: string }, PromptPreviewRow>(
+      "SELECT * FROM prompt_previews WHERE turn_id = @turnId ORDER BY created_at DESC LIMIT 1"
+    ).get({ turnId });
+    return row ? mapPreview(row) : undefined;
+  }
+
   getDecision(previewId: string): PromptDecisionDto | undefined {
     const row = this.db.prepare<{ previewId: string }, PromptDecisionRow>(
       "SELECT * FROM prompt_decisions WHERE preview_id = @previewId"

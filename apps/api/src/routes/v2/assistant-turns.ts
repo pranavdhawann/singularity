@@ -52,7 +52,7 @@ export async function registerV2AssistantTurnRoutes(
     async (request, reply) => {
       const turn = deps.assistantService.getTurn(request.params.id);
       if (!turn) return sendApiError(reply, 404, "not_found", "Assistant turn not found");
-      if (turn.state !== "queued") {
+      if (turn.state !== "queued" && turn.state !== "awaiting_approval") {
         return sendApiError(reply, 409, "conflict", "Assistant turn is not streamable");
       }
 
