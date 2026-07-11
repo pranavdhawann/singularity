@@ -24,7 +24,10 @@ import { registerWorkspaceRoutes } from "../routes/workspaces";
 import { registerV2HealthRoutes } from "../routes/v2/health";
 import { registerV2AssistantTurnRoutes } from "../routes/v2/assistant-turns";
 import { registerV2ContextPackRoutes } from "../routes/v2/context-packs";
+import { registerV2MemoryRoutes } from "../routes/v2/memories";
+import { registerV2NamespaceRoutes } from "../routes/v2/namespaces";
 import { registerV2ProviderRoutes } from "../routes/v2/providers";
+import { registerV2SearchRoutes } from "../routes/v2/search";
 import { registerV2TimelineRoutes } from "../routes/v2/timeline";
 import { registerV2WorkspaceRoutes } from "../routes/v2/workspaces";
 import { AssistantService } from "../services/assistant-service";
@@ -108,6 +111,9 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   await registerV2AssistantTurnRoutes(server, deps);
   await registerV2TimelineRoutes(server, deps);
   await registerV2ContextPackRoutes(server, deps);
+  await registerV2MemoryRoutes(server, deps);
+  await registerV2NamespaceRoutes(server, deps);
+  await registerV2SearchRoutes(server, deps);
 
   await registerHealthRoutes(server);
   await registerWorkspaceRoutes(server, deps);

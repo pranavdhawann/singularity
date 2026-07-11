@@ -72,6 +72,7 @@ export async function registerV2ProviderRoutes(
             providerId: { type: "string", minLength: 1 },
             name: { type: "string", minLength: 1 },
             model: { type: "string", minLength: 1 },
+            embeddingModel: { type: "string", minLength: 1 },
             contextWindow: { type: "integer", minimum: 1 },
             purpose: { type: "string", minLength: 1 },
             temperature: { type: "number", minimum: 0, maximum: 2 },
