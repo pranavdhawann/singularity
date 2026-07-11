@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@fastify/cors": "11.2.0",
+    "@fastify/multipart": "10.1.0",
     "@future/core": "workspace:*",
     "@future/db": "workspace:*",
     "@future/importers": "workspace:*",
