@@ -6,6 +6,7 @@ import { useAssistantTurn } from "../features/assistant/use-assistant-turn";
 import { CommandPalette } from "../features/command-palette/CommandPalette";
 import { FirstRunSetup } from "../features/setup/FirstRunSetup";
 import { TimelineView } from "../features/timeline/TimelineView";
+import { MemoryWorkspace } from "../features/memory/MemoryWorkspace";
 import { useTimeline } from "../features/timeline/use-timeline";
 import { WorkspaceSwitcher } from "../features/workspaces/WorkspaceSwitcher";
 import "../styles/global.css";
@@ -57,6 +58,7 @@ function ReadyAssistantShell({
 }) {
   const [activeWorkspaceId, setActiveWorkspaceId] = useState(workspaces[0]?.id ?? "");
   const [selectedContextPackId, setSelectedContextPackId] = useState<string | undefined>(undefined);
+  const [activeLens, setActiveLens] = useState<"timeline" | "memory">("timeline");
   const activeProfile = modelProfiles[0];
   const timeline = useTimeline(api, activeWorkspaceId);
   const assistant = useAssistantTurn({
@@ -64,6 +66,15 @@ function ReadyAssistantShell({
     onTimelineChanged: timeline.refresh,
     onContextSelected: setSelectedContextPackId
   });
+  const composer = <AssistantComposer
+    status={assistant.status}
+    error={assistant.error}
+    onSubmit={(message) => {
+      if (!activeProfile) return;
+      return assistant.submit({ workspaceId: activeWorkspaceId, modelProfileId: activeProfile.id, message });
+    }}
+    onCancel={assistant.cancel}
+  />;
 
   return (
     <main className="app-shell">
@@ -73,7 +84,9 @@ function ReadyAssistantShell({
           <div><strong>Future</strong><span>Continuous local assistant</span></div>
         </div>
         <nav className="nav-list">
-          {navigationItems.map((item) => <button className="nav-item" type="button" key={item}>{item}</button>)}
+          {navigationItems.map((item) => <button className="nav-item" type="button" key={item}
+            aria-pressed={(item === "Memory" ? activeLens === "memory" : item === "Timeline" ? activeLens === "timeline" : false)}
+            onClick={() => { if (item === "Memory") setActiveLens("memory"); if (item === "Timeline") setActiveLens("timeline"); }}>{item}</button>)}
         </nav>
       </aside>
       <section className="workspace">
@@ -92,6 +105,7 @@ function ReadyAssistantShell({
           </div>
         </header>
         <div className="content-grid">
+          {activeLens === "memory" ? <MemoryWorkspace api={api} workspaceId={activeWorkspaceId} composer={composer} /> : <>
           <section className="main-column">
             <CommandPalette />
             {timeline.error ? <p className="turn-error" role="alert">{timeline.error}</p> : null}
@@ -100,21 +114,10 @@ function ReadyAssistantShell({
               streamedText={assistant.status === "streaming" ? assistant.streamedText : ""}
               onContextSelected={setSelectedContextPackId}
             />
-            <AssistantComposer
-              status={assistant.status}
-              error={assistant.error}
-              onSubmit={(message) => {
-                if (!activeProfile) return;
-                return assistant.submit({
-                  workspaceId: activeWorkspaceId,
-                  modelProfileId: activeProfile.id,
-                  message
-                });
-              }}
-              onCancel={assistant.cancel}
-            />
+            {composer}
           </section>
           <ContextInspector api={api} contextPackId={selectedContextPackId} />
+          </>}
         </div>
         <footer className="activity-strip">
           <span>Jobs: idle</span>

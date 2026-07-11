@@ -78,6 +78,15 @@ export interface MemoryListInput {
   limit?: number;
 }
 
+export interface CreateMemoryInput {
+  workspaceId: string;
+  type: MemoryType;
+  statement: string;
+  confidence: number;
+  reviewState: MemoryReviewState;
+  sourceIds: string[];
+}
+
 export interface MemoryMutationInput {
   expectedVersion: number;
   statement?: string;

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import {
   createId,
+  type CreateMemoryInput,
   type MemoryDto,
   type MemoryListInput,
   type MemoryMutationInput,
@@ -10,10 +11,7 @@ import {
 } from "@future/core";
 import type { SqliteDatabase } from "../connection";
 
-export interface CreateMemoryRecordInput {
-  workspaceId: string; type: MemoryType; statement: string; confidence: number;
-  reviewState: MemoryReviewState; sourceIds: string[];
-}
+export type CreateMemoryRecordInput = CreateMemoryInput;
 
 interface MemoryRow {
   id: string; workspace_id: string; type: MemoryType; statement: string; confidence: number;

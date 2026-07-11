@@ -94,4 +94,21 @@ describe("ApiClient local session", () => {
       "/api/v2/context-packs/ctx_1"
     ]);
   });
+
+  it("uses authenticated PATCH and DELETE for optimistic memory mutations", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ token: "test-token" }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: "mem_1", version: 2 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: "mem_1", version: 3 }), { status: 200 }));
+    vi.stubGlobal("fetch", fetch);
+    const client = new ApiClient();
+    await client.updateMemory("mem_1", { expectedVersion: 1, pinned: true, reason: "user_edit" });
+    await client.deleteMemory("mem_1", 2);
+    expect(fetch).toHaveBeenNthCalledWith(2, "/api/v2/memories/mem_1", expect.objectContaining({
+      method: "PATCH", headers: expect.objectContaining({ "x-future-session": "test-token" })
+    }));
+    expect(fetch).toHaveBeenNthCalledWith(3, "/api/v2/memories/mem_1", expect.objectContaining({
+      method: "DELETE", body: JSON.stringify({ expectedVersion: 2 })
+    }));
+  });
 });
