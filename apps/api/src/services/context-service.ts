@@ -43,7 +43,7 @@ export class ContextService {
 
   async buildForTurn(input: BuildTurnContextInput): Promise<ContextPackInspection> {
     const candidates = this.collectCandidates(input);
-    const vector = await this.addVectorScores(input.profile, input.query, candidates);
+    const vector = await this.addVectorScores(input.profile, input.query, candidates, input.workspaceId);
     const ranked = rankHybridCandidates({ workspaceId: input.workspaceId, candidates: vector.candidates,
       suppressedSourceKeys: this.dependencies.compactions?.activeSourceKeys(input.workspaceId) ?? [] });
     const built = buildContextPack({ workspaceId: input.workspaceId, command: input.query,
@@ -88,16 +88,18 @@ export class ContextService {
   private async addVectorScores(
     profile: ModelProfile,
     query: string,
-    candidates: HybridRetrievalCandidate[]
+    candidates: HybridRetrievalCandidate[],
+    workspaceId: string
   ): Promise<{ candidates: HybridRetrievalCandidate[]; mode: "lexical" | "hybrid"; fallbackReason: string | null }> {
     const runtime = this.dependencies.embeddingResolver?.getEmbeddingRuntime(profile);
-    if (!runtime || candidates.length === 0) return { candidates, mode: "lexical", fallbackReason: "not_configured" };
+    if (!runtime) return { candidates, mode: "lexical", fallbackReason: "not_configured" };
     try {
-      const result = await runtime.adapter.embed({ model: runtime.model, texts: [query, ...candidates.map((item) => item.text)] });
+      const vectorPool = mergeCandidates(candidates, this.search.listAuthorized(workspaceId));
+      const result = await runtime.adapter.embed({ model: runtime.model, texts: [query, ...vectorPool.map((item) => item.text)] });
       if (!result.available) return { candidates, mode: "lexical", fallbackReason: "adapter_unavailable" };
       const [queryVector, ...vectors] = result.vectors;
       if (!queryVector) return { candidates, mode: "lexical", fallbackReason: "invalid_response" };
-      const scored = candidates.map((candidate, index) => {
+      const scored = vectorPool.map((candidate, index) => {
         const vector = vectors[index]!;
         this.dependencies.embeddings?.upsert({ workspaceId: candidate.workspaceId, sourceKind: candidate.kind,
           sourceId: candidate.id, contentHash: candidate.contentHash, adapter: runtime.adapter.id,
@@ -145,3 +147,16 @@ function cosine(a: readonly number[], b: readonly number[]): number {
 }
 function hash(text: string): string { return createHash("sha256").update(text).digest("hex"); }
 function estimateTokens(text: string): number { return Math.max(1, Math.ceil(text.trim().split(/\s+/).length * 1.3)); }
+function mergeCandidates(
+  primary: readonly HybridRetrievalCandidate[],
+  additional: readonly HybridRetrievalCandidate[]
+): HybridRetrievalCandidate[] {
+  const merged = new Map<string, HybridRetrievalCandidate>();
+  for (const candidate of [...additional, ...primary]) {
+    const key = `${candidate.kind}:${candidate.id}:${candidate.contentHash}`;
+    const current = merged.get(key);
+    merged.set(key, current ? { ...current, ...candidate,
+      lexicalScore: Math.max(current.lexicalScore ?? 0, candidate.lexicalScore ?? 0) } : candidate);
+  }
+  return [...merged.values()];
+}

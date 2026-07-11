@@ -29,6 +29,7 @@ export interface MemoryDto {
   namespaceIds: string[];
   primaryNamespaceId?: string;
   sourceIds: string[];
+  contentHash?: string;
   createdAt: string;
   updatedAt: string;
   outdatedAt?: string;

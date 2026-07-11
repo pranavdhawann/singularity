@@ -69,6 +69,9 @@ export function MemoryWorkspace({ api, workspaceId, composer }: { api: FutureApi
     <MemoryInspector memory={selected} namespaces={state.namespaces} revisions={revisions}
       onSave={async (input) => { if (!selected) return; await run(async () => { const next = await state.update(selected.id, input); setSelected(next); }); }}
       onDelete={async () => { if (!selected) return; await run(async () => { await state.remove(selected.id, selected.version);
-        setSelectedId(undefined); setSelected(undefined); setRevisions([]); }); }} />
+        setSelectedId(undefined); setSelected(undefined); setRevisions([]); }); }}
+      onCompact={async (summary) => { if (!selected?.contentHash) return; await run(async () => {
+        await api.createCompaction({ workspaceId, summary,
+          sources: [{ kind: "memory", id: selected.id, contentHash: selected.contentHash! }] }); }); }} />
   </>;
 }

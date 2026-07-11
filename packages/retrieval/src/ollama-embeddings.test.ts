@@ -23,4 +23,14 @@ describe("OllamaEmbeddingAdapter", () => {
       expect(String(error)).not.toContain("secret provider body");
     }
   });
+
+  it("propagates aborts", async () => {
+    const controller = new AbortController(); controller.abort();
+    const fetch = vi.fn(async (_url: string, init?: RequestInit) => {
+      init?.signal?.throwIfAborted(); return new Response();
+    });
+    const adapter = new OllamaEmbeddingAdapter({ baseUrl: "http://localhost:11434", fetch });
+    await expect(adapter.embed({ model: "embed", texts: ["a"], signal: controller.signal }))
+      .rejects.toMatchObject({ name: "AbortError" });
+  });
 });

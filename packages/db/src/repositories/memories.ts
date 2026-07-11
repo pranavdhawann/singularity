@@ -17,6 +17,7 @@ interface MemoryRow {
   id: string; workspace_id: string; type: MemoryType; statement: string; confidence: number;
   review_state: MemoryReviewState; pinned: 0 | 1; version: number;
   outdated_at: string | null; deleted_at: string | null; created_at: string; updated_at: string;
+  content_hash: string;
 }
 interface MembershipRow { namespace_id: string; is_primary: 0 | 1 }
 interface SourceRow { source_id: string }
@@ -155,6 +156,7 @@ export class MemoryRepository {
       confidence: row.confidence, reviewState: row.review_state, pinned: row.pinned === 1,
       version: row.version, namespaceIds: memberships.map((membership) => membership.namespace_id),
       ...(primary ? { primaryNamespaceId: primary } : {}), sourceIds,
+      ...(row.content_hash ? { contentHash: row.content_hash } : {}),
       createdAt: row.created_at, updatedAt: row.updated_at,
       ...(row.outdated_at ? { outdatedAt: row.outdated_at } : {}),
       ...(row.deleted_at ? { deletedAt: row.deleted_at } : {}) };

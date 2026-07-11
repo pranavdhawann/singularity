@@ -1,18 +1,20 @@
 import type { MemoryDto, MemoryMutationInput, MemoryNamespaceDto, MemoryRevisionDto } from "@future/core";
 import { useEffect, useState } from "react";
 
-export function MemoryInspector({ memory, namespaces, revisions, onSave, onDelete }: {
+export function MemoryInspector({ memory, namespaces, revisions, onSave, onDelete, onCompact }: {
   memory: MemoryDto | undefined; namespaces: MemoryNamespaceDto[]; revisions: MemoryRevisionDto[];
-  onSave(input: MemoryMutationInput): Promise<void>; onDelete(): Promise<void>;
+  onSave(input: MemoryMutationInput): Promise<void>; onDelete(): Promise<void>; onCompact(summary: string): Promise<void>;
 }) {
   const [statement, setStatement] = useState("");
   const [reviewState, setReviewState] = useState<MemoryDto["reviewState"]>("proposed");
   const [pinned, setPinned] = useState(false);
   const [primaryNamespaceId, setPrimaryNamespaceId] = useState("");
+  const [compactionSummary, setCompactionSummary] = useState("");
   useEffect(() => {
     if (!memory) return;
     setStatement(memory.statement); setReviewState(memory.reviewState); setPinned(memory.pinned);
     setPrimaryNamespaceId(memory.primaryNamespaceId ?? "");
+    setCompactionSummary("");
   }, [memory]);
 
   if (!memory) return <aside className="inspector memory-inspector" aria-label="Memory inspector"><p>Select a memory to inspect it.</p></aside>;
@@ -37,6 +39,12 @@ export function MemoryInspector({ memory, namespaces, revisions, onSave, onDelet
       <div className="inspector-group"><span>Provenance</span><p>{memory.sourceIds.length} linked sources</p>
         {memory.sourceIds.map((sourceId) => <code key={sourceId}>{sourceId}</code>)}
         <p>Confidence {memory.confidence}</p></div>
+      <form className="compaction-form" onSubmit={(event) => { event.preventDefault();
+        if (compactionSummary.trim()) void onCompact(compactionSummary.trim()).then(() => setCompactionSummary("")); }}>
+        <label>Compaction summary<textarea aria-label="Compaction summary" value={compactionSummary}
+          onChange={(event) => setCompactionSummary(event.target.value)} /></label>
+        <button type="submit" disabled={!memory.contentHash}>Create compaction</button>
+      </form>
       <div className="revision-list"><h3>Revision history</h3>
         {revisions.length === 0 ? <p>No revisions yet.</p> : revisions.map((revision) => <article key={revision.id}>
           <strong>Version {revision.version}</strong><p>{revision.reason}</p><small>{revision.createdAt}</small>

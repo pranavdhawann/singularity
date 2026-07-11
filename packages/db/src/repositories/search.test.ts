@@ -36,6 +36,12 @@ describe("SearchRepository", () => {
       expect(results.every((result) => result.workspaceId === "w_1")).toBe(true);
       expect(results.some((result) => result.text.includes("proposal"))).toBe(false);
       expect(results.every((result) => result.contentHash.length === 64)).toBe(true);
+      const authorized = new SearchRepository(db.client).listAuthorized("w_1");
+      expect(new Set(authorized.map((result) => result.kind))).toEqual(
+        new Set(["document_chunk", "memory", "timeline_event"])
+      );
+      expect(authorized.some((result) => result.text.includes("proposal"))).toBe(false);
+      expect(authorized.every((result) => result.workspaceId === "w_1")).toBe(true);
     } finally { db.close(); }
   });
 

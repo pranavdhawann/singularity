@@ -32,6 +32,47 @@ export class SearchRepository {
       .slice(0, input.limit ?? 20);
   }
 
+  listAuthorized(workspaceId: string, limit = 200): UnifiedSearchCandidate[] {
+    interface DocumentRow { id: string; title: string; text: string; token_count: number; source_range_json: string | null }
+    interface MemoryRow { id: string; statement: string; confidence: number; pinned: 0 | 1; content_hash: string; created_at: string }
+    interface EventRow { id: string; title: string; payload_json: string; created_at: string }
+    interface CompactionRow { id: string; summary: string; content_hash: string; created_at: string }
+    const documents = this.db.prepare<{ workspaceId: string }, DocumentRow>(
+      `SELECT dc.id, d.title, dc.text, dc.token_count, dc.source_range_json
+       FROM document_chunks dc JOIN documents d ON d.id = dc.document_id
+       WHERE d.workspace_id = @workspaceId ORDER BY dc.id`
+    ).all({ workspaceId }).map((row): UnifiedSearchCandidate => ({ kind: "document_chunk", id: row.id,
+      workspaceId, title: row.title, text: row.text, tokenCount: row.token_count,
+      contentHash: hash(row.text), lexicalScore: 0,
+      ...(row.source_range_json ? { sourceRange: JSON.parse(row.source_range_json) as { start: number; end: number } } : {}) }));
+    const memories = this.db.prepare<{ workspaceId: string }, MemoryRow>(
+      `SELECT id, statement, confidence, pinned, content_hash, created_at FROM memories
+       WHERE workspace_id = @workspaceId AND review_state = 'approved'
+         AND outdated_at IS NULL AND deleted_at IS NULL ORDER BY id`
+    ).all({ workspaceId }).map((row): UnifiedSearchCandidate => ({ kind: "memory", id: row.id,
+      workspaceId, title: row.pinned ? "Pinned memory" : "Approved memory", text: row.statement,
+      tokenCount: estimateTokens(row.statement), contentHash: row.content_hash || hash(row.statement),
+      lexicalScore: 0, confidence: row.confidence, pinned: row.pinned === 1, createdAt: row.created_at }));
+    const events = this.db.prepare<{ workspaceId: string }, EventRow>(
+      `SELECT id, title, payload_json, created_at FROM events WHERE workspace_id = @workspaceId ORDER BY id`
+    ).all({ workspaceId }).flatMap((row): UnifiedSearchCandidate[] => {
+      const payload = JSON.parse(row.payload_json) as Record<string, unknown>;
+      const text = typeof payload.text === "string" ? payload.text
+        : typeof payload.responseText === "string" ? payload.responseText : undefined;
+      return text?.trim() ? [{ kind: "timeline_event", id: row.id, workspaceId, title: row.title,
+        text, tokenCount: estimateTokens(text), contentHash: hash(text), lexicalScore: 0,
+        createdAt: row.created_at }] : [];
+    });
+    const compactions = this.db.prepare<{ workspaceId: string }, CompactionRow>(
+      `SELECT id, summary, content_hash, created_at FROM compactions
+       WHERE workspace_id = @workspaceId AND invalidated_at IS NULL ORDER BY id`
+    ).all({ workspaceId }).map((row): UnifiedSearchCandidate => ({ kind: "compaction", id: row.id,
+      workspaceId, title: "Memory compaction", text: row.summary, tokenCount: estimateTokens(row.summary),
+      contentHash: row.content_hash || hash(row.summary), lexicalScore: 0, createdAt: row.created_at }));
+    return [...documents, ...memories, ...events, ...compactions]
+      .sort((a, b) => a.kind.localeCompare(b.kind) || a.id.localeCompare(b.id)).slice(0, limit);
+  }
+
   private searchDocuments(workspaceId: string, query: string): RankedCandidate[] {
     interface Row { id: string; title: string; text: string; token_count: number; source_range_json: string | null; rank: number }
     return this.db.prepare<{ workspaceId: string; query: string }, Row>(

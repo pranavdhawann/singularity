@@ -3,6 +3,7 @@ import type {
   AssistantTurnDto,
   ApiErrorResponse,
   ContextPackInspection,
+  CreateCompactionInput,
   CreateMemoryInput,
   CreateNamespaceInput,
   CreateAssistantTurnInput,
@@ -12,6 +13,7 @@ import type {
   LocalSessionResponse,
   ModelProfile,
   MemoryDto,
+  MemoryCompactionDto,
   MemoryMutationInput,
   MemoryNamespaceDto,
   MemoryRevisionDto,
@@ -141,6 +143,9 @@ export class ApiClient implements FutureApi {
   }
   async createNamespace(input: CreateNamespaceInput): Promise<MemoryNamespaceDto> {
     return this.mutate("/namespaces", input);
+  }
+  async createCompaction(input: CreateCompactionInput): Promise<MemoryCompactionDto> {
+    return this.mutate("/memory-compactions", input);
   }
 
   private async get<T>(path: string): Promise<T> {

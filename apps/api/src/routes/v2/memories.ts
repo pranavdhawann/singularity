@@ -8,6 +8,7 @@ import { MemoryServiceError } from "../../services/memory-service";
 interface MemoryParams { id: string }
 interface MemoryQuery { workspaceId: string; reviewState?: MemoryReviewState; namespaceId?: string; cursor?: string; limit?: number }
 interface DeleteBody { expectedVersion: number }
+interface MemoryDetailQuery { includeDeleted?: boolean }
 
 const memoryTypes = ["fact", "episode", "procedure", "decision", "task", "summary"];
 const reviewStates = ["proposed", "approved", "rejected", "outdated"];
@@ -27,12 +28,15 @@ export async function registerV2MemoryRoutes(server: FastifyInstance, deps: ApiD
     return deps.memories.list(input);
   });
 
-  server.get<{ Params: MemoryParams }>("/api/v2/memories/:id", async (request, reply) => {
-    const memory = deps.memories.get(request.params.id);
+  server.get<{ Params: MemoryParams; Querystring: MemoryDetailQuery }>("/api/v2/memories/:id", {
+    schema: { querystring: { type: "object", additionalProperties: false,
+      properties: { includeDeleted: { type: "boolean" } } } }
+  }, async (request, reply) => {
+    const memory = deps.memories.get(request.params.id, { includeDeleted: request.query.includeDeleted === true });
     return memory ?? sendApiError(reply, 404, "not_found", "Memory not found");
   });
   server.get<{ Params: MemoryParams }>("/api/v2/memories/:id/revisions", async (request, reply) => {
-    if (!deps.memories.get(request.params.id)) return sendApiError(reply, 404, "not_found", "Memory not found");
+    if (!deps.memories.get(request.params.id, { includeDeleted: true })) return sendApiError(reply, 404, "not_found", "Memory not found");
     return { revisions: deps.memories.listRevisions(request.params.id) };
   });
 

@@ -33,6 +33,10 @@ describe("V2 memory routes", () => {
       payload: { expectedVersion: revised.version } });
     expect(remove.statusCode).toBe(200);
     expect((await server.inject({ method: "GET", url: `/api/v2/memories/${created.id}` })).statusCode).toBe(404);
+    const tombstone = await server.inject({ method: "GET", url: `/api/v2/memories/${created.id}?includeDeleted=true` });
+    expect(tombstone.json()).toEqual(expect.objectContaining({ id: created.id, deletedAt: expect.any(String) }));
+    const deletedRevisions = await server.inject({ method: "GET", url: `/api/v2/memories/${created.id}/revisions` });
+    expect(deletedRevisions.json<{ revisions: unknown[] }>().revisions).toHaveLength(2);
     await server.close();
   });
 });

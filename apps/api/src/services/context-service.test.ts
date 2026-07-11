@@ -95,7 +95,7 @@ describe("ContextService", () => {
       const memories = new MemoryRepository(db.client);
       memories.create({ workspaceId: "w_demo", type: "fact", statement: "shared ordinary fact",
         confidence: 1, reviewState: "approved", sourceIds: [] });
-      memories.create({ workspaceId: "w_demo", type: "fact", statement: "shared preferred fact",
+      memories.create({ workspaceId: "w_demo", type: "fact", statement: "semantic preferred answer",
         confidence: 1, reviewState: "approved", sourceIds: [] });
       const contextPacks = new ContextPackRepository(db.client);
       const events = new EventRepository(db.client);
@@ -115,7 +115,8 @@ describe("ContextService", () => {
       const hybrid = await service.buildForTurn({ turnId: "t1", workspaceId: "w_demo", userEventId: "current",
         query: "shared fact", providerId: "provider_1", profile });
       expect(hybrid.retrieval).toEqual({ mode: "hybrid", fallbackReason: null });
-      expect(hybrid.items.filter((item) => item.source.kind === "memory")[0]?.text).toContain("preferred");
+      expect(hybrid.items.some((item) => item.text.includes("preferred"))).toBe(true);
+      expect(hybrid.items.find((item) => item.text.includes("preferred"))?.retrieval?.vectorScore).toBe(1);
       expect(hybrid.items[0]?.retrieval?.vectorScore).toBeDefined();
 
       const failing = new ContextService({ db: db.client, events, contextPacks,

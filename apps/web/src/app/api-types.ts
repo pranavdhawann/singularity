@@ -2,6 +2,7 @@ import type {
   AssistantStreamFrame,
   AssistantTurnDto,
   ContextPackInspection,
+  CreateCompactionInput,
   CreateMemoryInput,
   CreateNamespaceInput,
   CreateAssistantTurnInput,
@@ -10,6 +11,7 @@ import type {
   CreateWorkspaceInput,
   ModelProfile,
   MemoryDto,
+  MemoryCompactionDto,
   MemoryMutationInput,
   MemoryNamespaceDto,
   MemoryRevisionDto,
@@ -22,6 +24,7 @@ export type {
   AssistantStreamFrame,
   AssistantTurnDto,
   ContextPackInspection,
+  CreateCompactionInput,
   CreateMemoryInput,
   CreateNamespaceInput,
   CreateAssistantTurnInput,
@@ -30,6 +33,7 @@ export type {
   CreateWorkspaceInput,
   ModelProfile,
   MemoryDto,
+  MemoryCompactionDto,
   MemoryMutationInput,
   MemoryNamespaceDto,
   MemoryRevisionDto,
@@ -58,4 +62,5 @@ export interface FutureApi {
   deleteMemory(id: string, expectedVersion: number): Promise<MemoryDto>;
   listNamespaces(workspaceId: string): Promise<{ namespaces: MemoryNamespaceDto[] }>;
   createNamespace(input: CreateNamespaceInput): Promise<MemoryNamespaceDto>;
+  createCompaction(input: CreateCompactionInput): Promise<MemoryCompactionDto>;
 }

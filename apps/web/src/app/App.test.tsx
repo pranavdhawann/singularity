@@ -25,6 +25,7 @@ function createApi(overrides: Partial<FutureApi> = {}): FutureApi {
     deleteMemory: vi.fn(),
     listNamespaces: vi.fn(async () => ({ namespaces: [] })),
     createNamespace: vi.fn(),
+    createCompaction: vi.fn(),
     ...overrides
   };
 }
