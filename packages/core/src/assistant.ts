@@ -3,6 +3,7 @@ import type { TimelineEvent } from "./events";
 export type AssistantTurnState =
   | "queued"
   | "building_context"
+  | "awaiting_approval"
   | "running"
   | "completed"
   | "failed"
@@ -89,6 +90,7 @@ export interface ContextPackInspection {
 export type AssistantStreamFrame =
   | { type: "started"; turn: AssistantTurnDto }
   | { type: "context"; contextPackId: string; sourceCount: number }
+  | { type: "approval_required"; turnId: string; previewId: string }
   | { type: "delta"; text: string }
   | {
       type: "completed";

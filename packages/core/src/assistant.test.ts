@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ContextPackInspection } from "./assistant";
+import type { AssistantStreamFrame, ContextPackInspection } from "./assistant";
 import { createEvent } from "./events";
 import { serializeTimelineEvent, sourceReferenceKey } from "./assistant";
 
@@ -57,5 +57,19 @@ describe("assistant contracts", () => {
       createdAt: "2026-07-11T12:00:00.000Z"
     } satisfies ContextPackInspection;
     expect(pack.items[0]?.retrieval.reasons).toEqual(["lexical", "pinned"]);
+  });
+
+  it("represents an external turn waiting for immutable approval", () => {
+    const frame = {
+      type: "approval_required",
+      turnId: "turn_1",
+      previewId: "preview_1"
+    } satisfies AssistantStreamFrame;
+
+    expect(frame).toEqual({
+      type: "approval_required",
+      turnId: "turn_1",
+      previewId: "preview_1"
+    });
   });
 });

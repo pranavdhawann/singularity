@@ -2,12 +2,14 @@ import type { SqliteDatabase } from "../connection";
 import { initialMigration } from "./0001-initial";
 import { continuousAssistantMigration } from "./0002-continuous-assistant";
 import { memoryHybridRetrievalMigration } from "./0003-memory-hybrid-retrieval";
+import { importsExternalModelsMigration } from "./0004-imports-external-models";
 import type { Migration, MigrationRecord } from "./types";
 
 export const migrations: readonly Migration[] = [
   initialMigration,
   continuousAssistantMigration,
-  memoryHybridRetrievalMigration
+  memoryHybridRetrievalMigration,
+  importsExternalModelsMigration
 ];
 
 export function runMigrations(db: SqliteDatabase): MigrationRecord[] {

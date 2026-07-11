@@ -12,9 +12,14 @@ describe("SearchRepository", () => {
       db.client.prepare(`INSERT INTO documents VALUES (?, ?, NULL, ?, ?, ?, ?, NULL, ?)`).run(
         "doc_1", "w_1", "Architecture", "memory://doc_1", "text/plain", "doc_hash", "2026-07-11T00:00:00.000Z"
       );
-      db.client.prepare(`INSERT INTO document_chunks VALUES (?, ?, ?, ?, ?, NULL, 'pending', ?)`).run(
-        "chunk_1", "doc_1", 0, "SQLite stores local documents", 4, "2026-07-11T00:00:00.000Z"
-      );
+      db.client.prepare(`INSERT INTO document_chunks (
+        id, document_id, chunk_index, text, token_count, source_range_json,
+        embedding_status, created_at, content_hash
+      ) VALUES (?, ?, ?, ?, ?, NULL, 'pending', ?, ?)`)
+        .run(
+          "chunk_1", "doc_1", 0, "SQLite stores local documents", 4,
+          "2026-07-11T00:00:00.000Z", "chunk_hash_1"
+        );
       db.client.prepare(`INSERT INTO document_chunks_fts VALUES (?, ?, ?)`).run(
         "chunk_1", "Architecture", "SQLite stores local documents"
       );
