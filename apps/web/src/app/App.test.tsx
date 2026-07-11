@@ -73,5 +73,6 @@ describe("App", () => {
     expect(await screen.findByText("Live Workspace")).toBeInTheDocument();
     expect(screen.getByText("Model: Offline Default")).toBeInTheDocument();
     expect(screen.getByText("No activity recorded yet.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Message Future")).toBeInTheDocument();
   });
 });

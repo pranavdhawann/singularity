@@ -16,7 +16,8 @@ body {
 
 button,
 select,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -401,6 +402,126 @@ h3 {
   background: #ffffff;
 }
 
+.assistant-workspace {
+  display: grid;
+  min-height: 320px;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.timeline-scroll {
+  max-height: 52vh;
+  overflow-y: auto;
+}
+
+.user-event {
+  margin: 10px 14px;
+  border-radius: 10px;
+  background: #eff5f4;
+}
+
+.assistant-event .assistant-response {
+  padding: 0;
+  border: 0;
+}
+
+.streaming-response {
+  border-left: 3px solid #4c9b88;
+  background: #f6fbfa;
+}
+
+.assistant-composer {
+  display: grid;
+  gap: 8px;
+  position: sticky;
+  bottom: 0;
+  padding: 14px;
+  border: 1px solid #cbd8d8;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 -6px 20px rgb(24 36 45 / 8%);
+}
+
+.assistant-composer > label {
+  color: #52636b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.composer-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.composer-row textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid #c8d2d5;
+  border-radius: 9px;
+}
+
+.composer-row button,
+.citation-button {
+  border: 1px solid #2d6d5e;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #2d6d5e;
+}
+
+.composer-row button {
+  min-width: 82px;
+  padding: 10px 14px;
+}
+
+.composer-row .cancel-button {
+  border-color: #a44949;
+  background: #a44949;
+}
+
+.composer-status,
+.turn-cancelled,
+.turn-error {
+  margin: 0;
+  font-size: 13px;
+}
+
+.composer-status,
+.turn-cancelled {
+  color: #52636b;
+}
+
+.turn-error {
+  color: #9b3030;
+}
+
+.citation-button {
+  padding: 5px 8px;
+  color: #27584d;
+  background: #e8f2ef;
+  font-size: 12px;
+}
+
+.context-source-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.context-source-card {
+  padding: 12px;
+  border: 1px solid #d8e0e2;
+  border-radius: 8px;
+  background: #f8faf9;
+}
+
+.context-source-card > span,
+.context-source-card small {
+  color: #60737c;
+  font-size: 12px;
+}
+
 .source-list {
   display: flex;
   flex-wrap: wrap;
@@ -428,5 +549,9 @@ h3 {
   .activity-strip {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .composer-row {
+    grid-template-columns: 1fr;
   }
 }
