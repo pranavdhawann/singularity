@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import type { ModelProfile, ProviderConfig, WorkspaceDto } from "@future/core";
+import type { ModelProfile, ProviderConfig, ProviderConnectionTestResult, WorkspaceDto } from "@future/core";
 import type { FutureApi } from "../../app/api-types";
 
 export interface FirstRunSetupProps {
@@ -19,7 +19,41 @@ export function FirstRunSetup({ api, workspaces, providers, modelProfiles, onCom
   const [model, setModel] = useState("mock");
   const [secretEnvironmentVariable, setSecretEnvironmentVariable] = useState("FUTURE_OPENAI_API_KEY");
   const [submitting, setSubmitting] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [connectionResult, setConnectionResult] = useState<ProviderConnectionTestResult>();
+  const [testedFingerprint, setTestedFingerprint] = useState<string>();
   const [error, setError] = useState<string>();
+  const connectionFingerprint = `${baseUrl}\n${secretEnvironmentVariable}`;
+
+  function clearConnectionResult() {
+    setConnectionResult(undefined);
+    setTestedFingerprint(undefined);
+  }
+
+  async function testConnection(): Promise<boolean> {
+    setTesting(true);
+    setError(undefined);
+    try {
+      const result = await api.testProviderConnection({
+        kind: "openai-compatible",
+        baseUrl,
+        secretEnvironmentVariable,
+      });
+      setConnectionResult(result);
+      if (result.status === "ok") {
+        setTestedFingerprint(connectionFingerprint);
+        return true;
+      }
+      setTestedFingerprint(undefined);
+      return false;
+    } catch (caught) {
+      clearConnectionResult();
+      setError(caught instanceof Error ? caught.message : "Connection test failed");
+      return false;
+    } finally {
+      setTesting(false);
+    }
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -27,6 +61,11 @@ export function FirstRunSetup({ api, workspaces, providers, modelProfiles, onCom
     setError(undefined);
 
     try {
+      if (providerKind === "openai-compatible" && testedFingerprint !== connectionFingerprint) {
+        const connected = await testConnection();
+        if (!connected) return;
+      }
+
       if (workspaces.length === 0) {
         await api.createWorkspace({ name: workspaceName, privacyMode });
       }
@@ -84,6 +123,7 @@ export function FirstRunSetup({ api, workspaces, providers, modelProfiles, onCom
             onChange={(event) => {
               const next = event.target.value as typeof providerKind;
               setProviderKind(next);
+              clearConnectionResult();
               setProviderName(
                 next === "mock" ? "Mock" : next === "ollama" ? "Local Ollama" : "External OpenAI-compatible",
               );
@@ -103,7 +143,14 @@ export function FirstRunSetup({ api, workspaces, providers, modelProfiles, onCom
         {providerKind !== "mock" ? (
           <label>
             Base URL
-            <input value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} required />
+            <input
+              value={baseUrl}
+              onChange={(event) => {
+                setBaseUrl(event.target.value);
+                clearConnectionResult();
+              }}
+              required
+            />
           </label>
         ) : null}
         {providerKind === "openai-compatible" ? (
@@ -111,10 +158,21 @@ export function FirstRunSetup({ api, workspaces, providers, modelProfiles, onCom
             Secret environment variable
             <input
               value={secretEnvironmentVariable}
-              onChange={(event) => setSecretEnvironmentVariable(event.target.value)}
+              onChange={(event) => {
+                setSecretEnvironmentVariable(event.target.value);
+                clearConnectionResult();
+              }}
               required
             />
           </label>
+        ) : null}
+        {providerKind === "openai-compatible" ? (
+          <div className="connection-test">
+            <button type="button" disabled={testing || submitting} onClick={() => void testConnection()}>
+              {testing ? "Testing..." : "Test connection"}
+            </button>
+            {connectionResult ? <p role="status">{connectionMessage(connectionResult)}</p> : null}
+          </div>
         ) : null}
         <label>
           Model
@@ -127,4 +185,9 @@ export function FirstRunSetup({ api, workspaces, providers, modelProfiles, onCom
       </form>
     </section>
   );
+}
+
+function connectionMessage(result: ProviderConnectionTestResult): string {
+  if (result.status !== "ok") return result.message;
+  return `Connected. ${result.models.length} model${result.models.length === 1 ? "" : "s"} available.`;
 }

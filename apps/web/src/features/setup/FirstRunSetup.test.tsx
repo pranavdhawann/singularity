@@ -65,7 +65,8 @@ describe("FirstRunSetup", () => {
     const createWorkspace = vi.fn(async () => ({ id: "w_1" }));
     const createProvider = vi.fn(async () => ({ id: "provider_external" }));
     const createModelProfile = vi.fn(async () => ({ id: "profile_external" }));
-    const api = { createWorkspace, createProvider, createModelProfile } as unknown as FutureApi;
+    const testProviderConnection = vi.fn(async () => ({ status: "ok" as const, models: ["phase4-model"] }));
+    const api = { createWorkspace, createProvider, createModelProfile, testProviderConnection } as unknown as FutureApi;
     render(<FirstRunSetup api={api} workspaces={[]} providers={[]} modelProfiles={[]} onComplete={vi.fn()} />);
 
     fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "openai-compatible" } });
@@ -90,6 +91,75 @@ describe("FirstRunSetup", () => {
         model: "phase4-model",
         privacyPolicy: "prompt_preview",
       }),
+    );
+    expect(testProviderConnection).toHaveBeenCalledTimes(1);
+  });
+
+  it("tests an external connection without persisting setup", async () => {
+    const testProviderConnection = vi.fn(async () => ({ status: "ok" as const, models: ["model-a"] }));
+    const createWorkspace = vi.fn(async () => ({ id: "w_1" }));
+    const createProvider = vi.fn(async () => ({ id: "provider_external" }));
+    const createModelProfile = vi.fn(async () => ({ id: "profile_external" }));
+    const api = { testProviderConnection, createWorkspace, createProvider, createModelProfile } as unknown as FutureApi;
+
+    render(<FirstRunSetup api={api} workspaces={[]} providers={[]} modelProfiles={[]} onComplete={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "openai-compatible" } });
+    fireEvent.change(screen.getByLabelText("Secret environment variable"), {
+      target: { value: "FUTURE_TEST_KEY" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
+
+    expect(await screen.findByText("Connected. 1 model available.")).toBeInTheDocument();
+    expect(testProviderConnection).toHaveBeenCalledWith({
+      kind: "openai-compatible",
+      baseUrl: "http://127.0.0.1:4180/v1",
+      secretEnvironmentVariable: "FUTURE_TEST_KEY",
+    });
+    expect(createWorkspace).not.toHaveBeenCalled();
+    expect(createProvider).not.toHaveBeenCalled();
+    expect(createModelProfile).not.toHaveBeenCalled();
+  });
+
+  it("does not persist external setup when the connection test fails", async () => {
+    const testProviderConnection = vi.fn(async () => ({
+      status: "missing_key" as const,
+      message: "Set the configured environment variable and restart Singularity.",
+    }));
+    const createWorkspace = vi.fn();
+    const createProvider = vi.fn();
+    const createModelProfile = vi.fn();
+    const api = { testProviderConnection, createWorkspace, createProvider, createModelProfile } as unknown as FutureApi;
+
+    render(<FirstRunSetup api={api} workspaces={[]} providers={[]} modelProfiles={[]} onComplete={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "openai-compatible" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create local assistant" }));
+
+    expect(await screen.findByText("Set the configured environment variable and restart Singularity.")).toBeVisible();
+    expect(createWorkspace).not.toHaveBeenCalled();
+    expect(createProvider).not.toHaveBeenCalled();
+    expect(createModelProfile).not.toHaveBeenCalled();
+  });
+
+  it("retests changed external connection details before persisting", async () => {
+    const testProviderConnection = vi.fn(async () => ({ status: "ok" as const, models: ["model-a", "model-b"] }));
+    const createWorkspace = vi.fn(async () => ({ id: "w_1" }));
+    const createProvider = vi.fn(async () => ({ id: "provider_external" }));
+    const createModelProfile = vi.fn(async () => ({ id: "profile_external" }));
+    const api = { testProviderConnection, createWorkspace, createProvider, createModelProfile } as unknown as FutureApi;
+
+    render(<FirstRunSetup api={api} workspaces={[]} providers={[]} modelProfiles={[]} onComplete={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "openai-compatible" } });
+    fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
+    expect(await screen.findByText("Connected. 2 models available.")).toBeVisible();
+
+    fireEvent.change(screen.getByLabelText("Base URL"), { target: { value: "https://second.example/v1" } });
+    expect(screen.queryByText("Connected. 2 models available.")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Create local assistant" }));
+
+    await waitFor(() => expect(createProvider).toHaveBeenCalledTimes(1));
+    expect(testProviderConnection).toHaveBeenCalledTimes(2);
+    expect(testProviderConnection).toHaveBeenLastCalledWith(
+      expect.objectContaining({ baseUrl: "https://second.example/v1" }),
     );
   });
 });
