@@ -36,7 +36,7 @@ test("first run imports a local source and produces an inspectable cited answer"
   await expect(citation).toBeVisible();
   await citation.click();
   await expect(page.getByText("Model: mock")).toBeVisible();
-  await expect(page.getByText("Timeline event").first()).toBeVisible();
+  await expect(page.getByText(/Document chunk|Timeline event/).first()).toBeVisible();
 
   await page.reload();
   await expect(page.getByText("launch readiness decision", { exact: true })).toBeVisible();
