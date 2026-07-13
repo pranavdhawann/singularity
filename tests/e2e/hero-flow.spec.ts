@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
+import path from "node:path";
 
-test("browser drives the persistent cited assistant flow", async ({ page }) => {
+test("first run imports a local source and produces an inspectable cited answer", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Set up Future" })).toBeVisible();
   await page.getByLabel("Workspace name").fill("Browser Workspace");
@@ -11,12 +12,25 @@ test("browser drives the persistent cited assistant flow", async ({ page }) => {
   await expect(page.getByRole("button", { name: /command palette/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Timeline" })).toBeVisible();
 
-  const composer = page.getByLabel("Message Future");
-  await composer.fill("Remember this first browser question");
-  await page.getByRole("button", { name: "Send" }).click();
-  await expect(page.getByText(/Mock response for: Remember this first browser question/)).toBeVisible();
+  await page.getByRole("button", { name: "Imports", exact: true }).click();
+  await page.getByLabel("Choose import files").setInputFiles(path.resolve("examples/future-demo.md"));
+  await page.getByRole("button", { name: "Import selected files" }).click();
+  const imported = page.locator("article").filter({ hasText: "future-demo.md" });
+  await expect(imported.getByText("failed", { exact: true })).toBeVisible();
+  await imported.getByRole("button", { name: "Retry future-demo.md" }).click();
+  await expect(imported.getByText("completed", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Timeline", exact: true }).click();
 
-  await composer.fill("What did I just ask?");
+  const composer = page.getByLabel("Message Future");
+  await composer.fill("launch readiness decision");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(page.getByText(/Mock response for: launch readiness decision/)).toBeVisible();
+  const importedCitation = page.getByRole("button", { name: /Citation \d+:.*future-demo\.md/ }).last();
+  await expect(importedCitation).toBeVisible();
+  await importedCitation.click();
+  await expect(page.getByText("Document chunk").first()).toBeVisible();
+
+  await composer.fill("What did I just ask about launch readiness?");
   await page.getByRole("button", { name: "Send" }).click();
   const citation = page.getByRole("button", { name: /Citation 1:/ }).last();
   await expect(citation).toBeVisible();
@@ -25,8 +39,8 @@ test("browser drives the persistent cited assistant flow", async ({ page }) => {
   await expect(page.getByText("Timeline event").first()).toBeVisible();
 
   await page.reload();
-  await expect(page.getByText("Remember this first browser question", { exact: true })).toBeVisible();
-  await expect(page.getByText("What did I just ask?", { exact: true })).toBeVisible();
+  await expect(page.getByText("launch readiness decision", { exact: true })).toBeVisible();
+  await expect(page.getByText("What did I just ask about launch readiness?", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Message Future")).toBeVisible();
 });
 

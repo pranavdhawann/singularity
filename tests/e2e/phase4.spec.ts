@@ -99,4 +99,26 @@ test("browser imports, resumes indexing, approves an exact external prompt, and 
   expect(((await storedPreview.json()) as { redactedPrompt: string }).redactedPrompt).not.toContain(
     "phase4-owner@example.com",
   );
+
+  const callsBeforeDenial = await page.request.get("http://127.0.0.1:4280/calls");
+  expect(await callsBeforeDenial.json()).toEqual({ callCount: 1 });
+  await composer.fill("resumable import decision denied externally");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(preview).toBeVisible();
+  await preview.getByRole("button", { name: "Deny external prompt" }).click();
+  await expect(page.getByRole("alert")).toContainText("External prompt denied");
+
+  const callsAfterDenial = await page.request.get("http://127.0.0.1:4280/calls");
+  expect(await callsAfterDenial.json()).toEqual({ callCount: 1 });
+  const deniedTimeline = await page.request.get(`/api/v2/timeline?workspaceId=${workspaceId}`);
+  const deniedEvents = ((await deniedTimeline.json()) as { events: Array<{ type: string; payload: unknown }> }).events;
+  expect(deniedEvents).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ type: "prompt_preview.denied" }),
+      expect.objectContaining({
+        type: "assistant.turn.failed",
+        payload: expect.objectContaining({ errorCode: "grant_denied" }),
+      }),
+    ]),
+  );
 });
