@@ -12,7 +12,18 @@ export const migrations: readonly Migration[] = [
   importsExternalModelsMigration,
 ];
 
+export function validateMigrationOrder(candidateMigrations: readonly Migration[] = migrations): void {
+  for (let index = 1; index < candidateMigrations.length; index += 1) {
+    const previous = candidateMigrations[index - 1];
+    const current = candidateMigrations[index];
+    if (previous && current && current.id <= previous.id) {
+      throw new Error(`Migration IDs must be strictly increasing: ${current.id} follows ${previous.id}`);
+    }
+  }
+}
+
 export function runMigrations(db: SqliteDatabase): MigrationRecord[] {
+  validateMigrationOrder();
   db.exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
     id TEXT PRIMARY KEY,
     checksum TEXT NOT NULL,

@@ -4,6 +4,12 @@ All notable user-visible changes to Singularity are documented here. The project
 
 ## [Unreleased]
 
+### Added
+
+- safer Windows demo shutdown, explicit seeded-demo reset, and startup prerequisite diagnostics;
+- deterministic repository Markdown link checking in CI;
+- an isolated migration smoke command and a synthetic-data external-provider privacy checklist.
+
 ## [0.1.0] - 2026-07-13
 
 ### Added

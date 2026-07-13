@@ -1,5 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
-import { seedDemo } from "./demo.mjs";
+import {
+  checkPrerequisites,
+  createDevLaunch,
+  getDemoDatabasePath,
+  parseDemoArgs,
+  resetDemoDatabase,
+  seedDemo,
+  stopProcessTree,
+} from "./demo.mjs";
 
 function jsonResponse(value: unknown, status = 200): Response {
   return new Response(JSON.stringify(value), {
@@ -69,5 +77,97 @@ describe("seedDemo", () => {
       }),
     ).resolves.toEqual({ seeded: false, workspaceId: "w_existing" });
     expect(request).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("demo launcher", () => {
+  it("constructs a shell-free Windows Corepack launch", () => {
+    const launch = createDevLaunch({
+      platform: "win32",
+      execPath: "C:\\Program Files\\nodejs\\node.exe",
+      pathExists: (candidate) => candidate.endsWith("node_modules\\corepack\\dist\\corepack.js"),
+    });
+
+    expect(launch).toEqual({
+      command: "C:\\Program Files\\nodejs\\node.exe",
+      args: ["C:\\Program Files\\nodejs\\node_modules\\corepack\\dist\\corepack.js", "pnpm", "dev"],
+    });
+  });
+
+  it("terminates the complete Windows child process tree", () => {
+    const killTree = vi.fn(() => ({ status: 0 }));
+    const child = { pid: 4312, kill: vi.fn() };
+
+    stopProcessTree(child, { platform: "win32", killTree });
+
+    expect(killTree).toHaveBeenCalledWith("taskkill", ["/pid", "4312", "/t", "/f"], {
+      shell: false,
+      stdio: "ignore",
+    });
+    expect(child.kill).not.toHaveBeenCalled();
+  });
+
+  it("rejects Node versions below 24 with remediation", () => {
+    expect(() => checkPrerequisites({ nodeVersion: "22.18.0" })).toThrow(
+      "Singularity requires Node.js 24 or newer. Install Node.js 24 and retry.",
+    );
+  });
+
+  it("rejects unavailable Corepack with remediation", () => {
+    expect(() =>
+      checkPrerequisites({
+        nodeVersion: "24.4.0",
+        platform: "win32",
+        execPath: "C:\\Program Files\\nodejs\\node.exe",
+        pathExists: () => false,
+      }),
+    ).toThrow("Corepack is unavailable. Install or enable Corepack, then retry with `corepack pnpm demo`.");
+  });
+
+  it("parses reset and non-reset invocations explicitly", () => {
+    expect(parseDemoArgs([])).toEqual({ reset: false });
+    expect(parseDemoArgs(["--reset"])).toEqual({ reset: true });
+  });
+
+  it("removes only the demo database and its SQLite sidecars on reset", async () => {
+    const removed: string[] = [];
+    const root = "C:\\repo";
+
+    await resetDemoDatabase({
+      root,
+      pathExists: () => true,
+      resolveRealPath: async (candidate) => candidate,
+      removeFile: async (candidate) => {
+        removed.push(candidate);
+      },
+    });
+
+    expect(removed).toEqual([
+      "C:\\repo\\.future\\demo.sqlite",
+      "C:\\repo\\.future\\demo.sqlite-wal",
+      "C:\\repo\\.future\\demo.sqlite-shm",
+      "C:\\repo\\.future\\demo.sqlite-journal",
+    ]);
+    expect(getDemoDatabasePath(root)).toBe("C:\\repo\\.future\\demo.sqlite");
+  });
+
+  it("refuses reset through a .future junction outside the repository", async () => {
+    const removeFile = vi.fn();
+
+    await expect(
+      resetDemoDatabase({
+        root: "C:\\repo",
+        pathExists: () => true,
+        resolveRealPath: async (candidate) => (candidate.endsWith(".future") ? "D:\\shared-data" : "C:\\repo"),
+        removeFile,
+      }),
+    ).rejects.toThrow("Refusing to reset a demo database through .future outside C:\\repo");
+    expect(removeFile).not.toHaveBeenCalled();
+  });
+
+  it("refuses a demo database target outside .future", () => {
+    expect(() => getDemoDatabasePath("C:\\repo", "..\\future.sqlite")).toThrow(
+      "Refusing to use a demo database outside C:\\repo\\.future",
+    );
   });
 });

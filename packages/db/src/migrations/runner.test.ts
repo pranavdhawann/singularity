@@ -3,9 +3,32 @@ import { describe, expect, it } from "vitest";
 import { schemaStatements } from "../schema";
 import { initialMigration } from "./0001-initial";
 import { continuousAssistantMigration } from "./0002-continuous-assistant";
-import { runMigrations } from "./runner";
+import { runMigrations, validateMigrationOrder } from "./runner";
 
 describe("runMigrations", () => {
+  it("rejects duplicate or out-of-order migration IDs", () => {
+    const migration = (id: string) => ({ id, checksum: `checksum-${id}`, up: () => undefined });
+
+    expect(() => validateMigrationOrder([migration("0001_initial"), migration("0001_initial")])).toThrow(
+      "Migration IDs must be strictly increasing: 0001_initial follows 0001_initial",
+    );
+    expect(() => validateMigrationOrder([migration("0002_second"), migration("0001_first")])).toThrow(
+      "Migration IDs must be strictly increasing: 0001_first follows 0002_second",
+    );
+  });
+
+  it("rejects a checksum mismatch for an applied migration", () => {
+    const db = new Database(":memory:");
+    try {
+      runMigrations(db);
+      db.prepare("UPDATE schema_migrations SET checksum = 'tampered' WHERE id = '0002_continuous_assistant'").run();
+
+      expect(() => runMigrations(db)).toThrow("Migration checksum mismatch: 0002_continuous_assistant");
+    } finally {
+      db.close();
+    }
+  });
+
   it("applies the ordered migrations exactly once", () => {
     const db = new Database(":memory:");
 

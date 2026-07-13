@@ -5,6 +5,8 @@ Use this checklist before treating the local MVP as releasable.
 ## Required Commands
 
 - [ ] `corepack pnpm install --frozen-lockfile` completes.
+- [ ] `corepack pnpm --filter @future/db migration:smoke` prints migrations 0001
+      through 0004 in order and removes its temporary database.
 - [ ] `corepack pnpm check` passes.
 - [ ] `corepack pnpm test:e2e` passes.
 - [ ] `corepack pnpm --filter @future/web build` passes.
@@ -113,4 +115,7 @@ Use this checklist before treating the local MVP as releasable.
       or `playwright-report/` are tracked.
 - [ ] No environment files, SQLite files, logs, raw prompts, provider responses,
       keys, tokens, or private user data are tracked.
+- [ ] The [manual external-provider privacy boundary](10-build-runbook.md#manual-external-provider-privacy-boundary)
+      passes with synthetic data for both denial and approval, including endpoint
+      call counts and database/timeline leakage checks.
 - [ ] The annotated release tag targets the same commit that passed CI.
