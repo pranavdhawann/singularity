@@ -17,9 +17,11 @@ import type {
   MemoryNamespaceDto,
   MemoryRevisionDto,
   ProviderConfig,
+  ProviderConnectionTestResult,
   PromptDecisionDto,
   PromptPreviewDto,
   TimelineEventDto,
+  TestProviderConnectionInput,
   WorkspaceDto,
 } from "@future/core";
 
@@ -42,9 +44,11 @@ export type {
   MemoryNamespaceDto,
   MemoryRevisionDto,
   ProviderConfig,
+  ProviderConnectionTestResult,
   PromptDecisionDto,
   PromptPreviewDto,
   TimelineEventDto,
+  TestProviderConnectionInput,
   WorkspaceDto,
 } from "@future/core";
 
@@ -53,6 +57,7 @@ export interface FutureApi {
   createWorkspace(input: CreateWorkspaceInput): Promise<WorkspaceDto>;
   listProviders(): Promise<{ providers: ProviderConfig[] }>;
   createProvider(input: CreateProviderInput): Promise<ProviderConfig>;
+  testProviderConnection(input: TestProviderConnectionInput): Promise<ProviderConnectionTestResult>;
   listModelProfiles(providerId?: string): Promise<{ modelProfiles: ModelProfile[] }>;
   createModelProfile(input: CreateModelProfileInput): Promise<ModelProfile>;
   createAssistantTurn(input: CreateAssistantTurnInput): Promise<{ turn: AssistantTurnDto; replayed: boolean }>;

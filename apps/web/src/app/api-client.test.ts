@@ -145,6 +145,32 @@ describe("ApiClient local session", () => {
     );
   });
 
+  it("uses the protected provider connection-test path", async () => {
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ token: "test-token" }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ status: "ok", models: ["model-a"] }), { status: 200 }));
+    vi.stubGlobal("fetch", fetch);
+    const client = new ApiClient();
+
+    await expect(
+      client.testProviderConnection({
+        kind: "openai-compatible",
+        baseUrl: "https://models.example/v1",
+        secretEnvironmentVariable: "FUTURE_OPENAI_API_KEY",
+      }),
+    ).resolves.toEqual({ status: "ok", models: ["model-a"] });
+
+    expect(fetch).toHaveBeenNthCalledWith(
+      2,
+      "/api/v2/providers/connection-test",
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({ "x-future-session": "test-token" }),
+      }),
+    );
+  });
+
   it("uploads multipart imports without overriding the browser content type", async () => {
     const fetch = vi
       .fn<typeof globalThis.fetch>()

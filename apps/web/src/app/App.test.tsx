@@ -10,6 +10,7 @@ function createApi(overrides: Partial<FutureApi> = {}): FutureApi {
     createWorkspace: vi.fn(),
     listProviders: vi.fn(async () => ({ providers: [] })),
     createProvider: vi.fn(),
+    testProviderConnection: vi.fn(async () => ({ status: "ok" as const, models: [] })),
     listModelProfiles: vi.fn(async () => ({ modelProfiles: [] })),
     createModelProfile: vi.fn(),
     createAssistantTurn: vi.fn(),

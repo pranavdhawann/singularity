@@ -39,6 +39,7 @@ import { ContextService } from "../services/context-service";
 import { MemoryService } from "../services/memory-service";
 import { ImportService } from "../services/import-service";
 import { ProviderService } from "../services/provider-service";
+import { ProviderConnectionService } from "../services/provider-connection-service";
 import { PromptPreviewService } from "../services/prompt-preview-service";
 import { TurnCancellationRegistry } from "../services/turn-cancellation";
 import type { ApiDependencies } from "./dependencies";
@@ -65,6 +66,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   const compactions = new CompactionRepository(db);
   const embeddings = new EmbeddingRepository(db);
   const providerService = new ProviderService(providers, modelProfiles);
+  const providerConnectionService = new ProviderConnectionService();
   const promptPreviewService = new PromptPreviewService({ previews: promptPreviews });
   const contextService = new ContextService({
     db,
@@ -89,6 +91,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
     promptPreviews,
     modelProfiles,
     providerService,
+    providerConnectionService,
     promptPreviewService,
     contextService,
     memoryService: new MemoryService({ db, memories, namespaces, compactions, embeddings, events }),
