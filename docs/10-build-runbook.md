@@ -27,6 +27,16 @@ provider, and `examples/singularity-demo.md`:
 corepack pnpm demo
 ```
 
+The launcher checks for Node.js 24+ and Corepack before starting. To discard only
+the seeded demo database and run the normal seed flow again:
+
+```powershell
+corepack pnpm demo --reset
+```
+
+The reset removes `.future/demo.sqlite` and its SQLite sidecars only. It does not
+remove `.future/future.sqlite` or other local application data.
+
 Open `http://127.0.0.1:4173` and ask `launch readiness decision`.
 
 For an unseeded development database, start API and web together:
@@ -52,6 +62,17 @@ model name.
 V2 database startup applies ordered migrations recorded in `schema_migrations`.
 Existing MVP databases are adopted by the idempotent baseline migration without
 deleting their records.
+
+Contributors can smoke-test the complete migration sequence against a unique
+operating-system temporary database:
+
+```powershell
+corepack pnpm --filter @future/db migration:smoke
+```
+
+The command prints `0001_initial` through `0004_imports_external_models` in order,
+then closes and removes its temporary database. It never opens `.future` or a
+configured application database.
 
 ## Useful Environment Variables
 
@@ -201,6 +222,52 @@ For custom dev origins, set a comma-separated allowlist:
 ```powershell
 $env:FUTURE_ALLOWED_ORIGINS = "http://127.0.0.1:4173"
 ```
+
+## Manual External-Provider Privacy Boundary
+
+Run this checklist before a release that changes external-provider, prompt,
+permission, citation, or failure behavior. Any OpenAI-compatible endpoint is
+suitable, including a local request recorder; no paid service is required. Use a
+fresh temporary database and only the synthetic values below. Never substitute
+personal data or a production credential.
+
+Synthetic fixture content:
+
+```text
+PRIVACY_TEST_ACCOUNT=demo.user@example.test
+PRIVACY_TEST_PRIVATE=sk-test-singularity-not-a-real-secret
+```
+
+- [ ] Start Singularity with a temporary `FUTURE_DB_PATH`. Configure an
+      OpenAI-compatible provider whose secret reference is
+      `env:FUTURE_PRIVACY_TEST_KEY`, set that environment variable to a disposable
+      test credential, and confirm the provider reports that a key resolves without
+      displaying or returning its value.
+- [ ] Import a text file containing the synthetic fixture. Ask a question that
+      selects it, then inspect the exact prompt preview. Confirm the account remains
+      visible as context, the `PRIVACY_TEST_PRIVATE` value is replaced by a redaction
+      marker, excluded/selected sources and ranges are present, and the provider,
+      model, context-pack hash, prompt hash, and binding hash match the pending turn.
+- [ ] Record the endpoint request count, choose **Deny**, and confirm the count does
+      not change. Confirm the timeline records `grant_denied` for that turn and no
+      completed model call or assistant answer.
+- [ ] Create the same turn again, choose **Approve**, and confirm exactly one request
+      reaches the endpoint. Confirm the answer completes with citations and its
+      context inspector opens the immutable source ranges used by the approved
+      preview.
+- [ ] Configure the endpoint—not the imported fixture—to return a synthetic failure
+      whose body contains `synthetic-provider-body-must-not-persist`, approve one
+      more turn, and confirm the UI and timeline show only the safe provider failure
+      code rather than the raw response body.
+- [ ] Inspect `prompt_previews.redacted_prompt`, `events.payload_json`,
+      `model_calls.error_message`, and the timeline/API response. The real value of
+      `FUTURE_PRIVACY_TEST_KEY`, the unredacted `PRIVACY_TEST_PRIVATE` value, and the
+      raw synthetic provider-error marker must have zero matches in those fields.
+      The imported fixture may remain in import/document storage by design; this
+      check is specifically for outbound previews, audit events, failures, and keys.
+- [ ] Stop Singularity and remove the temporary test database. Preserve only the
+      pass/fail observations, endpoint call counts, hashes, and safe error codes;
+      do not retain request bodies or the disposable credential.
 
 ## Reset Local Data
 

@@ -1,10 +1,123 @@
-import { spawn } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { spawn, spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { readFile, realpath, rm } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const DEFAULT_API_BASE = "http://127.0.0.1:4174/api/v2";
 const DEFAULT_WEB_ORIGIN = "http://127.0.0.1:4173";
+
+export function parseDemoArgs(args) {
+  const unknown = args.filter((argument) => argument !== "--reset");
+  if (unknown.length > 0) {
+    throw new Error(`Unknown demo option: ${unknown[0]}`);
+  }
+  return { reset: args.includes("--reset") };
+}
+
+function platformPath(platform) {
+  return platform === "win32" ? path.win32 : path.posix;
+}
+
+function corepackInvocation({
+  platform = process.platform,
+  execPath = process.execPath,
+  pathExists = existsSync,
+} = {}) {
+  if (platform !== "win32") {
+    return { command: "corepack", args: [] };
+  }
+
+  const pathApi = platformPath(platform);
+  const corepackCli = pathApi.join(pathApi.dirname(execPath), "node_modules", "corepack", "dist", "corepack.js");
+  if (!pathExists(corepackCli)) {
+    throw new Error("Corepack is unavailable. Install or enable Corepack, then retry with `corepack pnpm demo`.");
+  }
+  return { command: execPath, args: [corepackCli] };
+}
+
+export function createDevLaunch(options = {}) {
+  const corepack = corepackInvocation(options);
+  return { command: corepack.command, args: [...corepack.args, "pnpm", "dev"] };
+}
+
+export function checkPrerequisites({
+  nodeVersion = process.versions.node,
+  spawnCheck = spawnSync,
+  ...launchOptions
+} = {}) {
+  const nodeMajor = Number.parseInt(nodeVersion.split(".")[0] ?? "", 10);
+  if (!Number.isInteger(nodeMajor) || nodeMajor < 24) {
+    throw new Error("Singularity requires Node.js 24 or newer. Install Node.js 24 and retry.");
+  }
+
+  const corepack = corepackInvocation(launchOptions);
+  const result = spawnCheck(corepack.command, [...corepack.args, "--version"], {
+    shell: false,
+    stdio: "ignore",
+  });
+  if (result.error || result.status !== 0) {
+    throw new Error("Corepack is unavailable. Install or enable Corepack, then retry with `corepack pnpm demo`.");
+  }
+  return corepack;
+}
+
+function pathForRoot(root) {
+  return /^[A-Za-z]:[\\/]/.test(root) ? path.win32 : path;
+}
+
+export function getDemoDatabasePath(root, databaseName = "demo.sqlite") {
+  const pathApi = pathForRoot(root);
+  const dataDirectory = pathApi.resolve(root, ".future");
+  const databasePath = pathApi.resolve(dataDirectory, databaseName);
+  const relative = pathApi.relative(dataDirectory, databasePath);
+  if (!relative || relative.startsWith(`..${pathApi.sep}`) || relative === ".." || pathApi.isAbsolute(relative)) {
+    throw new Error(`Refusing to use a demo database outside ${dataDirectory}`);
+  }
+  return databasePath;
+}
+
+export async function resetDemoDatabase({
+  root,
+  pathExists = existsSync,
+  resolveRealPath = realpath,
+  removeFile = rm,
+} = {}) {
+  const databasePath = getDemoDatabasePath(root);
+  const pathApi = pathForRoot(root);
+  const dataDirectory = pathApi.dirname(databasePath);
+  if (!pathExists(dataDirectory)) return;
+
+  const [realRoot, realDataDirectory] = await Promise.all([
+    resolveRealPath(pathApi.resolve(root)),
+    resolveRealPath(dataDirectory),
+  ]);
+  const relativeDataDirectory = pathApi.relative(realRoot, realDataDirectory);
+  if (
+    !relativeDataDirectory ||
+    relativeDataDirectory.startsWith(`..${pathApi.sep}`) ||
+    relativeDataDirectory === ".." ||
+    pathApi.isAbsolute(relativeDataDirectory)
+  ) {
+    throw new Error(`Refusing to reset a demo database through .future outside ${pathApi.resolve(root)}`);
+  }
+
+  for (const candidate of [databasePath, `${databasePath}-wal`, `${databasePath}-shm`, `${databasePath}-journal`]) {
+    await removeFile(candidate, { force: true });
+  }
+}
+
+export function stopProcessTree(child, { platform = process.platform, killTree = spawnSync } = {}) {
+  if (!child.pid) return;
+  if (platform === "win32") {
+    killTree("taskkill", ["/pid", String(child.pid), "/t", "/f"], {
+      shell: false,
+      stdio: "ignore",
+    });
+    return;
+  }
+  child.kill("SIGTERM");
+}
 
 export async function seedDemo({
   request = fetch,
@@ -86,19 +199,31 @@ async function waitForApi(request = fetch, apiBase = DEFAULT_API_BASE) {
   throw new Error("Singularity API did not become ready within 30 seconds");
 }
 
-async function run() {
+export async function runDemo({ args = process.argv.slice(2) } = {}) {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-  const child = spawn("corepack", ["pnpm", "dev"], {
+  const options = parseDemoArgs(args);
+  checkPrerequisites();
+  if (options.reset) {
+    await resetDemoDatabase({ root });
+  }
+
+  const launch = createDevLaunch();
+  const child = spawn(launch.command, launch.args, {
     cwd: root,
     env: {
       ...process.env,
-      FUTURE_DB_PATH: path.join(root, ".future", "demo.sqlite"),
+      FUTURE_DB_PATH: getDemoDatabasePath(root),
     },
-    shell: process.platform === "win32",
+    shell: false,
     stdio: "inherit",
   });
 
-  const stop = () => child.kill();
+  let stopping = false;
+  const stop = () => {
+    if (stopping) return;
+    stopping = true;
+    stopProcessTree(child);
+  };
   process.once("SIGINT", stop);
   process.once("SIGTERM", stop);
 
@@ -111,7 +236,7 @@ async function run() {
         : `\nSingularity demo already exists. Open ${DEFAULT_WEB_ORIGIN}\n`,
     );
   } catch (error) {
-    child.kill();
+    stop();
     throw error;
   }
 
@@ -122,5 +247,10 @@ async function run() {
 
 const invokedPath = process.argv[1] ? path.resolve(process.argv[1]) : "";
 if (invokedPath === fileURLToPath(import.meta.url)) {
-  await run();
+  try {
+    await runDemo();
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  }
 }

@@ -24,3 +24,9 @@ Include affected versions, reproduction steps, impact, and a minimal proof of co
 - Secret environment-variable names may be stored; secret values are resolved at call time and should not be persisted.
 
 Never use production credentials or irreplaceable sensitive data while evaluating this early release.
+
+Release testing of the external-provider boundary must follow the
+[synthetic-data privacy checklist](docs/10-build-runbook.md#manual-external-provider-privacy-boundary).
+It covers exact redacted prompt previews, deny-without-call behavior, approval,
+citations, safe provider failures, and database/timeline leakage checks without
+requiring a paid provider.

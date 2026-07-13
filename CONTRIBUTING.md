@@ -17,12 +17,13 @@ Use a focused branch. For behavior changes, add the smallest failing unit or bro
 
 ```powershell
 corepack pnpm check
+corepack pnpm check:links
 corepack pnpm --filter @future/web build
 corepack pnpm test:e2e
 git diff --check
 ```
 
-`pnpm check` runs TypeScript, ESLint, Prettier verification, and unit/integration tests. Do not commit `.future`, environment files, SQLite databases, logs, Playwright reports, or dependency/build output.
+`pnpm check` runs TypeScript, ESLint, Prettier verification, and unit/integration tests. `pnpm check:links` verifies repository-relative links in root community files and `docs/**/*.md`; anchors and external URLs are intentionally ignored. Do not commit `.future`, environment files, SQLite databases, logs, Playwright reports, or dependency/build output.
 
 ## Pull requests
 
