@@ -11,5 +11,5 @@ export const initialMigration: Migration = {
     for (const statement of schemaStatements) {
       db.exec(statement);
     }
-  }
+  },
 };

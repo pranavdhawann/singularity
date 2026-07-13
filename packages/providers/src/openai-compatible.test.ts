@@ -13,7 +13,9 @@ describe("OpenAiCompatibleProvider", () => {
     let receivedBody = "";
     const server = createServer((request, response) => {
       receivedAuthorization = String(request.headers.authorization ?? "");
-      request.on("data", (chunk) => { receivedBody += chunk.toString(); });
+      request.on("data", (chunk) => {
+        receivedBody += chunk.toString();
+      });
       request.on("end", () => {
         response.writeHead(200, { "content-type": "text/event-stream" });
         response.write('data: {"choices":[{"delta":{"content":"Hello "}}]}\n\n');
@@ -24,8 +26,10 @@ describe("OpenAiCompatibleProvider", () => {
     servers.push(server);
     const baseUrl = await listen(server);
     const provider = new OpenAiCompatibleProvider({
-      id: "external", baseUrl, apiKey: "test-secret",
-      models: [{ id: "model-1", displayName: "Model 1", contextWindow: 8192 }]
+      id: "external",
+      baseUrl,
+      apiKey: "test-secret",
+      models: [{ id: "model-1", displayName: "Model 1", contextWindow: 8192 }],
     });
 
     const chunks: string[] = [];
@@ -45,8 +49,10 @@ describe("OpenAiCompatibleProvider", () => {
     });
     servers.push(server);
     const provider = new OpenAiCompatibleProvider({
-      id: "external", baseUrl: await listen(server), apiKey: "secret-marker",
-      models: [{ id: "model-1", displayName: "Model 1", contextWindow: 8192 }]
+      id: "external",
+      baseUrl: await listen(server),
+      apiKey: "secret-marker",
+      models: [{ id: "model-1", displayName: "Model 1", contextWindow: 8192 }],
     });
 
     let error: unknown;

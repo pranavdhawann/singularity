@@ -14,13 +14,13 @@ describe("runMigrations", () => {
         "0001_initial",
         "0002_continuous_assistant",
         "0003_memory_hybrid_retrieval",
-        "0004_imports_external_models"
+        "0004_imports_external_models",
       ]);
       expect(runMigrations(db).map((row) => row.id)).toEqual([
         "0001_initial",
         "0002_continuous_assistant",
         "0003_memory_hybrid_retrieval",
-        "0004_imports_external_models"
+        "0004_imports_external_models",
       ]);
 
       const rows = db.prepare("SELECT id FROM schema_migrations").all();
@@ -28,26 +28,29 @@ describe("runMigrations", () => {
         { id: "0001_initial" },
         { id: "0002_continuous_assistant" },
         { id: "0003_memory_hybrid_retrieval" },
-        { id: "0004_imports_external_models" }
+        { id: "0004_imports_external_models" },
       ]);
 
       const columns = db.prepare("PRAGMA table_info(assistant_turns)").all() as Array<{
         name: string;
       }>;
       expect(columns.map((column) => column.name)).toEqual(
-        expect.arrayContaining(["idempotency_key", "context_pack_id", "assistant_event_id"])
+        expect.arrayContaining(["idempotency_key", "context_pack_id", "assistant_event_id"]),
       );
       const profileColumns = db.prepare("PRAGMA table_info(model_profiles)").all() as Array<{ name: string }>;
       expect(profileColumns.map((column) => column.name)).toContain("embedding_model");
 
-      const phase3Tables = db.prepare(
-        `SELECT name FROM sqlite_master
+      const phase3Tables = db
+        .prepare(
+          `SELECT name FROM sqlite_master
          WHERE name IN (
            'memory_namespaces', 'memory_namespace_memberships',
            'memory_compaction_sources', 'source_embeddings',
            'memories_fts', 'events_fts', 'compactions_fts'
-         ) ORDER BY name`
-      ).pluck().all();
+         ) ORDER BY name`,
+        )
+        .pluck()
+        .all();
       expect(phase3Tables).toEqual([
         "compactions_fts",
         "events_fts",
@@ -55,23 +58,22 @@ describe("runMigrations", () => {
         "memory_compaction_sources",
         "memory_namespace_memberships",
         "memory_namespaces",
-        "source_embeddings"
+        "source_embeddings",
       ]);
 
-      const phase4Tables = db.prepare(
-        `SELECT name FROM sqlite_master
+      const phase4Tables = db
+        .prepare(
+          `SELECT name FROM sqlite_master
          WHERE name IN ('import_job_checkpoints', 'prompt_previews', 'prompt_decisions')
-         ORDER BY name`
-      ).pluck().all();
-      expect(phase4Tables).toEqual([
-        "import_job_checkpoints",
-        "prompt_decisions",
-        "prompt_previews"
-      ]);
+         ORDER BY name`,
+        )
+        .pluck()
+        .all();
+      expect(phase4Tables).toEqual(["import_job_checkpoints", "prompt_decisions", "prompt_previews"]);
 
       const modelCallColumns = db.prepare("PRAGMA table_info(model_calls)").all() as Array<{ name: string }>;
       expect(modelCallColumns.map((column) => column.name)).toEqual(
-        expect.arrayContaining(["prompt_preview_id", "prompt_decision_id"])
+        expect.arrayContaining(["prompt_preview_id", "prompt_decision_id"]),
       );
     } finally {
       db.close();
@@ -94,19 +96,12 @@ describe("runMigrations", () => {
           privacy_mode,
           created_at,
           updated_at
-        ) VALUES (?, ?, 'project', 'standard', ?, ?)`
-      ).run(
-        "w_existing",
-        "Existing",
-        "2026-07-10T00:00:00.000Z",
-        "2026-07-10T00:00:00.000Z"
-      );
+        ) VALUES (?, ?, 'project', 'standard', ?, ?)`,
+      ).run("w_existing", "Existing", "2026-07-10T00:00:00.000Z", "2026-07-10T00:00:00.000Z");
 
       runMigrations(db);
 
-      expect(
-        db.prepare("SELECT name FROM workspaces WHERE id = ?").pluck().get("w_existing")
-      ).toBe("Existing");
+      expect(db.prepare("SELECT name FROM workspaces WHERE id = ?").pluck().get("w_existing")).toBe("Existing");
       expect(db.prepare("SELECT COUNT(*) FROM schema_migrations").pluck().get()).toBe(4);
     } finally {
       db.close();
@@ -121,31 +116,53 @@ describe("runMigrations", () => {
       db.exec(`CREATE TABLE schema_migrations (
         id TEXT PRIMARY KEY, checksum TEXT NOT NULL, applied_at TEXT NOT NULL
       )`);
-      const recordMigration = db.prepare(
-        "INSERT INTO schema_migrations (id, checksum, applied_at) VALUES (?, ?, ?)"
-      );
+      const recordMigration = db.prepare("INSERT INTO schema_migrations (id, checksum, applied_at) VALUES (?, ?, ?)");
       recordMigration.run(initialMigration.id, initialMigration.checksum, "2026-07-10T00:00:00.000Z");
       recordMigration.run(
         continuousAssistantMigration.id,
         continuousAssistantMigration.checksum,
-        "2026-07-10T00:00:01.000Z"
+        "2026-07-10T00:00:01.000Z",
       );
       db.prepare(`INSERT INTO events VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(
-        "evt_1", "w_1", "user.message.created", "user", "Message",
-        JSON.stringify({ text: "Remember SQLite" }), JSON.stringify({ labels: ["local"] }),
-        "2026-07-11T00:00:00.000Z"
+        "evt_1",
+        "w_1",
+        "user.message.created",
+        "user",
+        "Message",
+        JSON.stringify({ text: "Remember SQLite" }),
+        JSON.stringify({ labels: ["local"] }),
+        "2026-07-11T00:00:00.000Z",
       );
       db.prepare(`INSERT INTO assistant_turns VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
-        "turn_1", "w_1", "profile_1", "key_1", "completed", "evt_1",
-        "ctx_1", "call_1", "evt_answer", null,
-        "2026-07-11T00:00:00.000Z", "2026-07-11T00:00:01.000Z"
+        "turn_1",
+        "w_1",
+        "profile_1",
+        "key_1",
+        "completed",
+        "evt_1",
+        "ctx_1",
+        "call_1",
+        "evt_answer",
+        null,
+        "2026-07-11T00:00:00.000Z",
+        "2026-07-11T00:00:01.000Z",
       );
       db.prepare(`INSERT INTO context_packs VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(
-        "ctx_1", "w_1", "evt_1", "profile_1", "{}", "[]", "[]",
-        "2026-07-11T00:00:00.000Z"
+        "ctx_1",
+        "w_1",
+        "evt_1",
+        "profile_1",
+        "{}",
+        "[]",
+        "[]",
+        "2026-07-11T00:00:00.000Z",
       );
       db.prepare(`INSERT INTO assistant_response_sources VALUES (?, ?, ?, ?, ?)`).run(
-        "evt_answer", "memory", "mem_1", "{}", 0
+        "evt_answer",
+        "memory",
+        "mem_1",
+        "{}",
+        0,
       );
 
       runMigrations(db);

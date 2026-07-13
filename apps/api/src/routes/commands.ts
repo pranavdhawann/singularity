@@ -17,10 +17,7 @@ interface MemoryCandidateRow {
   confidence: number;
 }
 
-export async function registerCommandRoutes(
-  server: FastifyInstance,
-  deps: ApiDependencies
-): Promise<void> {
+export async function registerCommandRoutes(server: FastifyInstance, deps: ApiDependencies): Promise<void> {
   server.post<{ Body: CommandBody }>(
     "/api/commands",
     {
@@ -33,10 +30,10 @@ export async function registerCommandRoutes(
             workspaceId: { type: "string", minLength: 1 },
             command: { type: "string", enum: ["ask_with_memory"] },
             input: { type: "string", minLength: 1 },
-            providerId: { type: "string", minLength: 1 }
-          }
-        }
-      }
+            providerId: { type: "string", minLength: 1 },
+          },
+        },
+      },
     },
     async (request, reply) => {
       const providerId = request.body.providerId ?? "mock";
@@ -64,14 +61,14 @@ export async function registerCommandRoutes(
               NULL,
               @createdAt,
               NULL
-            )`
+            )`,
             )
             .run({
               id: permissionRequestId,
               workspaceId: request.body.workspaceId,
               reason: "External model calls require approval",
               dataAccessJson: JSON.stringify({ providerId }),
-              createdAt: now
+              createdAt: now,
             });
 
           deps.events.appendInCurrentTransaction(
@@ -81,15 +78,15 @@ export async function registerCommandRoutes(
               actor: "assistant",
               title: "Requested use_external_models",
               payload: { permissionRequestId, providerId },
-              privacy: { labels: ["local"] }
-            })
+              privacy: { labels: ["local"] },
+            }),
           );
         });
 
         createPermissionRequest();
         return reply.code(403).send({
           error: "permission_required",
-          permissionRequestId
+          permissionRequestId,
         });
       }
 
@@ -100,7 +97,7 @@ export async function registerCommandRoutes(
          WHERE workspace_id = @workspaceId
            AND review_state = 'approved'
          ORDER BY pinned DESC, confidence DESC
-         LIMIT 12`
+         LIMIT 12`,
         )
         .all({ workspaceId: request.body.workspaceId })
         .map((memory) => ({
@@ -109,11 +106,11 @@ export async function registerCommandRoutes(
             id: memory.id,
             workspaceId: request.body.workspaceId,
             title: "Approved memory",
-            contentHash: createHash("sha256").update(memory.statement).digest("hex")
+            contentHash: createHash("sha256").update(memory.statement).digest("hex"),
           },
           text: memory.statement,
           tokenCount: estimateTokenCount(memory.statement),
-          score: memory.confidence * 10
+          score: memory.confidence * 10,
         }));
 
       const result = await runCommand({
@@ -121,7 +118,7 @@ export async function registerCommandRoutes(
         command: request.body.command,
         input: request.body.input,
         providerId,
-        memories
+        memories,
       });
 
       const appendEvents = deps.db.transaction(() => {
@@ -132,7 +129,7 @@ export async function registerCommandRoutes(
       appendEvents();
 
       return reply.code(201).send(result);
-    }
+    },
   );
 }
 

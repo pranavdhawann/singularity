@@ -21,16 +21,11 @@ export class ProviderRepository {
   constructor(private readonly db: SqliteDatabase) {}
 
   list(): ProviderConfig[] {
-    return this.db
-      .prepare<[], ProviderRow>("SELECT * FROM providers ORDER BY display_name")
-      .all()
-      .map(rowToProvider);
+    return this.db.prepare<[], ProviderRow>("SELECT * FROM providers ORDER BY display_name").all().map(rowToProvider);
   }
 
   get(id: string): ProviderConfig | undefined {
-    const row = this.db
-      .prepare<{ id: string }, ProviderRow>("SELECT * FROM providers WHERE id = @id")
-      .get({ id });
+    const row = this.db.prepare<{ id: string }, ProviderRow>("SELECT * FROM providers WHERE id = @id").get({ id });
     return row ? rowToProvider(row) : undefined;
   }
 
@@ -47,17 +42,15 @@ export class ProviderRepository {
       kind: input.kind,
       display_name: input.displayName,
       base_url: input.baseUrl ?? null,
-      api_key_ref: input.secretEnvironmentVariable
-        ? `env:${input.secretEnvironmentVariable}`
-        : null,
+      api_key_ref: input.secretEnvironmentVariable ? `env:${input.secretEnvironmentVariable}` : null,
       is_local: input.isLocal ? 1 : 0,
       capabilities_json: JSON.stringify({
         streaming: true,
         text: true,
-        embeddings: input.kind !== "mock"
+        embeddings: input.kind !== "mock",
       }),
       created_at: now,
-      updated_at: now
+      updated_at: now,
     };
 
     this.db
@@ -82,7 +75,7 @@ export class ProviderRepository {
           @capabilities_json,
           @created_at,
           @updated_at
-        )`
+        )`,
       )
       .run(row);
 
@@ -100,6 +93,6 @@ function rowToProvider(row: ProviderRow): ProviderConfig {
     hasSecret: row.api_key_ref !== null,
     capabilities: JSON.parse(row.capabilities_json) as ProviderConfig["capabilities"],
     createdAt: row.created_at,
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
   };
 }

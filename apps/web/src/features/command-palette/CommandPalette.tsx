@@ -1,10 +1,4 @@
-const commands = [
-  "Ask with memory",
-  "Search workspace",
-  "Import files",
-  "Review memories",
-  "Prompt preview"
-];
+const commands = ["Ask with memory", "Search workspace", "Import files", "Review memories", "Prompt preview"];
 
 export function CommandPalette() {
   return (

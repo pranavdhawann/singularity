@@ -10,7 +10,7 @@ import {
   ProviderRepository,
   PromptPreviewRepository,
   NamespaceRepository,
-  openDatabase
+  openDatabase,
 } from "@future/db";
 import { randomUUID } from "node:crypto";
 import Fastify, { type FastifyInstance } from "fastify";
@@ -66,8 +66,14 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   const embeddings = new EmbeddingRepository(db);
   const providerService = new ProviderService(providers, modelProfiles);
   const promptPreviewService = new PromptPreviewService({ previews: promptPreviews });
-  const contextService = new ContextService({ db, events, contextPacks, embeddings, compactions,
-    embeddingResolver: providerService });
+  const contextService = new ContextService({
+    db,
+    events,
+    contextPacks,
+    embeddings,
+    compactions,
+    embeddingResolver: providerService,
+  });
   const cancellations = new TurnCancellationRegistry();
   const deps: ApiDependencies = {
     db,
@@ -92,7 +98,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
       events,
       ...(process.env.FUTURE_TEST_IMPORT_FAILURE_AFTER_CHUNK
         ? { failAfterChunks: Number.parseInt(process.env.FUTURE_TEST_IMPORT_FAILURE_AFTER_CHUNK, 10) }
-        : {})
+        : {}),
     }),
     cancellations,
     assistantService: new AssistantService({
@@ -102,22 +108,22 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
       contextService,
       providerService,
       cancellations,
-      promptPreviewService
-    })
+      promptPreviewService,
+    }),
   };
   const server = Fastify({
     logger: false,
     ajv: {
       customOptions: {
-        removeAdditional: false
-      }
-    }
+        removeAdditional: false,
+      },
+    },
   });
   registerApiErrorHandler(server);
   await registerLocalSession(
     server,
     options.sessionToken ?? randomUUID(),
-    options.allowedOrigins ?? ["http://127.0.0.1:4173"]
+    options.allowedOrigins ?? ["http://127.0.0.1:4173"],
   );
 
   server.addHook("onClose", async () => {

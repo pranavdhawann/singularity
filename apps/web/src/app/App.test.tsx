@@ -32,7 +32,7 @@ function createApi(overrides: Partial<FutureApi> = {}): FutureApi {
     retryImport: vi.fn(),
     getPromptPreview: vi.fn(),
     decidePromptPreview: vi.fn(),
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -47,40 +47,46 @@ describe("App", () => {
   it("renders live workspace and model data when setup is complete", async () => {
     const api = createApi({
       listWorkspaces: vi.fn(async () => ({
-        workspaces: [{
-          id: "w_live",
-          name: "Live Workspace",
-          kind: "project",
-          privacyMode: "standard" as const,
-          createdAt: "2026-07-10T00:00:00.000Z",
-          updatedAt: "2026-07-10T00:00:00.000Z"
-        }]
+        workspaces: [
+          {
+            id: "w_live",
+            name: "Live Workspace",
+            kind: "project",
+            privacyMode: "standard" as const,
+            createdAt: "2026-07-10T00:00:00.000Z",
+            updatedAt: "2026-07-10T00:00:00.000Z",
+          },
+        ],
       })),
       listProviders: vi.fn(async () => ({
-        providers: [{
-          id: "prov_live",
-          kind: "mock" as const,
-          displayName: "Offline Mock",
-          isLocal: true,
-          hasSecret: false,
-          capabilities: { streaming: true, text: true, embeddings: false },
-          createdAt: "2026-07-10T00:00:00.000Z",
-          updatedAt: "2026-07-10T00:00:00.000Z"
-        }]
+        providers: [
+          {
+            id: "prov_live",
+            kind: "mock" as const,
+            displayName: "Offline Mock",
+            isLocal: true,
+            hasSecret: false,
+            capabilities: { streaming: true, text: true, embeddings: false },
+            createdAt: "2026-07-10T00:00:00.000Z",
+            updatedAt: "2026-07-10T00:00:00.000Z",
+          },
+        ],
       })),
       listModelProfiles: vi.fn(async () => ({
-        modelProfiles: [{
-          id: "profile_live",
-          providerId: "prov_live",
-          name: "Offline Default",
-          model: "mock",
-          contextWindow: 4096,
-          purpose: "general",
-          privacyPolicy: "local_only" as const,
-          createdAt: "2026-07-10T00:00:00.000Z",
-          updatedAt: "2026-07-10T00:00:00.000Z"
-        }]
-      }))
+        modelProfiles: [
+          {
+            id: "profile_live",
+            providerId: "prov_live",
+            name: "Offline Default",
+            model: "mock",
+            contextWindow: 4096,
+            purpose: "general",
+            privacyPolicy: "local_only" as const,
+            createdAt: "2026-07-10T00:00:00.000Z",
+            updatedAt: "2026-07-10T00:00:00.000Z",
+          },
+        ],
+      })),
     });
 
     render(<App api={api} />);

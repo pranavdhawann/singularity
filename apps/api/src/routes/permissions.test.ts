@@ -8,7 +8,7 @@ describe("permission routes", () => {
     const workspaceResponse = await server.inject({
       method: "POST",
       url: "/api/workspaces",
-      payload: { name: "Permission Validation Demo" }
+      payload: { name: "Permission Validation Demo" },
     });
     const workspace = workspaceResponse.json<{ id: string }>();
 
@@ -18,8 +18,8 @@ describe("permission routes", () => {
       payload: {
         workspaceId: workspace.id,
         capability: "use_external_models",
-        reason: "Prompt preview approved"
-      }
+        reason: "Prompt preview approved",
+      },
     });
     const permissionRequest = requestResponse.json<{ id: string }>();
 
@@ -27,8 +27,8 @@ describe("permission routes", () => {
       method: "POST",
       url: `/api/permission-requests/${permissionRequest.id}/decide`,
       payload: {
-        decision: "maybe"
-      }
+        decision: "maybe",
+      },
     });
 
     await server.close();
@@ -42,7 +42,7 @@ describe("permission routes", () => {
     const workspaceResponse = await server.inject({
       method: "POST",
       url: "/api/workspaces",
-      payload: { name: "Permission Demo" }
+      payload: { name: "Permission Demo" },
     });
     const workspace = workspaceResponse.json<{ id: string }>();
 
@@ -53,8 +53,8 @@ describe("permission routes", () => {
         workspaceId: workspace.id,
         capability: "use_external_models",
         reason: "Prompt preview approved",
-        dataAccess: { provider: "mock" }
-      }
+        dataAccess: { provider: "mock" },
+      },
     });
     const permissionRequest = requestResponse.json<{ id: string }>();
 
@@ -63,13 +63,13 @@ describe("permission routes", () => {
       url: `/api/permission-requests/${permissionRequest.id}/decide`,
       payload: {
         decision: "granted",
-        state: "allow_for_workspace"
-      }
+        state: "allow_for_workspace",
+      },
     });
 
     const listResponse = await server.inject({
       method: "GET",
-      url: `/api/permissions?workspaceId=${workspace.id}`
+      url: `/api/permissions?workspaceId=${workspace.id}`,
     });
 
     await server.close();
@@ -79,8 +79,8 @@ describe("permission routes", () => {
     expect(listResponse.json<{ rules: Array<{ capability: string; state: string }> }>().rules).toEqual([
       expect.objectContaining({
         capability: "use_external_models",
-        state: "allow_for_workspace"
-      })
+        state: "allow_for_workspace",
+      }),
     ]);
   });
 });

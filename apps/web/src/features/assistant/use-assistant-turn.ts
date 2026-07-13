@@ -3,13 +3,7 @@ import { useCallback, useRef, useState } from "react";
 import type { FutureApi } from "../../app/api-types";
 
 export type AssistantTurnStatus =
-  | "idle"
-  | "creating"
-  | "streaming"
-  | "awaiting_approval"
-  | "completed"
-  | "failed"
-  | "cancelled";
+  "idle" | "creating" | "streaming" | "awaiting_approval" | "completed" | "failed" | "cancelled";
 
 interface UseAssistantTurnOptions {
   api: FutureApi;
@@ -32,7 +26,8 @@ export function useAssistantTurn(options: UseAssistantTurnOptions) {
   const activeTurn = useRef<string | undefined>(undefined);
   const workspaceRef = useRef<string | undefined>(undefined);
 
-  const consume = useCallback(async (id: string): Promise<"approval" | "terminal"> => {
+  const consume = useCallback(
+    async (id: string): Promise<"approval" | "terminal"> => {
       for await (const frame of options.api.streamAssistantTurn(id)) {
         if (frame.type === "delta") {
           setStreamedText((current) => current + frame.text);
@@ -56,39 +51,47 @@ export function useAssistantTurn(options: UseAssistantTurnOptions) {
         }
       }
       return "terminal";
-  }, [options]);
+    },
+    [options],
+  );
 
-  const submit = useCallback(async (input: SubmitAssistantTurnInput) => {
-    if (activeTurn.current) return;
-    setStatus("creating");
-    setStreamedText("");
-    setError(undefined);
-    setPromptPreview(undefined);
-    workspaceRef.current = input.workspaceId;
-    let result: "approval" | "terminal" = "terminal";
-    try {
-      const created = await options.api.createAssistantTurn({
-        ...input,
-        idempotencyKey: crypto.randomUUID()
-      });
-      activeTurn.current = created.turn.id;
-      setTurnId(created.turn.id);
-      setStatus("streaming");
-      result = await consume(created.turn.id);
-    } catch (cause) {
-      setStatus("failed");
-      setError(cause instanceof Error ? cause.message : "Assistant turn failed");
-      await options.onTimelineChanged();
-    } finally {
-      if (result !== "approval") activeTurn.current = undefined;
-    }
-  }, [consume, options]);
+  const submit = useCallback(
+    async (input: SubmitAssistantTurnInput) => {
+      if (activeTurn.current) return;
+      setStatus("creating");
+      setStreamedText("");
+      setError(undefined);
+      setPromptPreview(undefined);
+      workspaceRef.current = input.workspaceId;
+      let result: "approval" | "terminal" = "terminal";
+      try {
+        const created = await options.api.createAssistantTurn({
+          ...input,
+          idempotencyKey: crypto.randomUUID(),
+        });
+        activeTurn.current = created.turn.id;
+        setTurnId(created.turn.id);
+        setStatus("streaming");
+        result = await consume(created.turn.id);
+      } catch (cause) {
+        setStatus("failed");
+        setError(cause instanceof Error ? cause.message : "Assistant turn failed");
+        await options.onTimelineChanged();
+      } finally {
+        if (result !== "approval") activeTurn.current = undefined;
+      }
+    },
+    [consume, options],
+  );
 
   const approvePrompt = useCallback(async () => {
     if (!promptPreview || !activeTurn.current || !workspaceRef.current) return;
     try {
       await options.api.decidePromptPreview(
-        promptPreview.id, workspaceRef.current, "approved", promptPreview.bindingHash
+        promptPreview.id,
+        workspaceRef.current,
+        "approved",
+        promptPreview.bindingHash,
       );
       setPromptPreview(undefined);
       setStatus("streaming");
@@ -105,7 +108,10 @@ export function useAssistantTurn(options: UseAssistantTurnOptions) {
     if (!promptPreview || !workspaceRef.current) return;
     try {
       await options.api.decidePromptPreview(
-        promptPreview.id, workspaceRef.current, "denied", promptPreview.bindingHash
+        promptPreview.id,
+        workspaceRef.current,
+        "denied",
+        promptPreview.bindingHash,
       );
       setStatus("failed");
       setError("External prompt denied.");

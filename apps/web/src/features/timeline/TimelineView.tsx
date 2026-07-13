@@ -7,11 +7,7 @@ interface TimelineViewProps {
   onContextSelected?: ((contextPackId: string) => void) | undefined;
 }
 
-export function TimelineView({
-  events = [],
-  streamedText = "",
-  onContextSelected
-}: TimelineViewProps) {
+export function TimelineView({ events = [], streamedText = "", onContextSelected }: TimelineViewProps) {
   return (
     <section className="timeline-panel assistant-workspace" aria-labelledby="timeline-heading">
       <div className="panel-heading">
@@ -24,11 +20,7 @@ export function TimelineView({
       <div className="timeline-list timeline-scroll">
         {events.length === 0 && !streamedText ? <p className="empty-state">No activity recorded yet.</p> : null}
         {events.map((event) => (
-          <TimelineEvent
-            event={event}
-            key={event.id}
-            onContextSelected={onContextSelected}
-          />
+          <TimelineEvent event={event} key={event.id} onContextSelected={onContextSelected} />
         ))}
         {streamedText ? (
           <article className="timeline-event streaming-response" aria-label="Streaming assistant response">
@@ -44,18 +36,14 @@ export function TimelineView({
 
 function TimelineEvent({
   event,
-  onContextSelected
+  onContextSelected,
 }: {
   event: TimelineEventDto;
   onContextSelected?: ((contextPackId: string) => void) | undefined;
 }) {
   if (event.type === "assistant.response.created") {
-    const responseText = typeof event.payload.responseText === "string"
-      ? event.payload.responseText
-      : "";
-    const contextPackId = typeof event.payload.contextPackId === "string"
-      ? event.payload.contextPackId
-      : undefined;
+    const responseText = typeof event.payload.responseText === "string" ? event.payload.responseText : "";
+    const contextPackId = typeof event.payload.contextPackId === "string" ? event.payload.contextPackId : undefined;
     return (
       <article className="timeline-event assistant-event">
         <span className="event-type">Assistant</span>
@@ -71,9 +59,8 @@ function TimelineEvent({
     );
   }
 
-  const userText = event.type === "user.message.created" && typeof event.payload.text === "string"
-    ? event.payload.text
-    : undefined;
+  const userText =
+    event.type === "user.message.created" && typeof event.payload.text === "string" ? event.payload.text : undefined;
   return (
     <article className={`timeline-event ${userText ? "user-event" : "system-event"}`}>
       <span className="event-type">{userText ? "You" : event.type}</span>

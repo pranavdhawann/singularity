@@ -60,7 +60,7 @@ const statements = [
     decision TEXT NOT NULL,
     binding_hash TEXT NOT NULL,
     decided_at TEXT NOT NULL
-  )`
+  )`,
 ] as const;
 
 export const importsExternalModelsMigration: Migration = {
@@ -68,5 +68,5 @@ export const importsExternalModelsMigration: Migration = {
   checksum: createHash("sha256").update(statements.join("\n")).digest("hex"),
   up(db) {
     for (const statement of statements) db.exec(statement);
-  }
+  },
 };

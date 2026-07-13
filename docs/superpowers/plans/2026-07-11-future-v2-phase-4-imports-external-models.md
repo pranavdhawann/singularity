@@ -43,6 +43,7 @@
 ### Task 1: Add Phase 4 contracts and migration
 
 **Files:**
+
 - Create: `packages/core/src/imports.ts`
 - Create: `packages/core/src/prompt-preview.ts`
 - Modify: `packages/core/src/assistant.ts`
@@ -52,6 +53,7 @@
 - Modify: `packages/db/src/migrations/runner.test.ts`
 
 **Interfaces:**
+
 - Produces: `ImportJobDto`, `PromptPreviewDto`, `PromptDecisionDto`, `PromptBindingInput`, `AssistantTurnState` including `awaiting_approval`, and `AssistantStreamFrame` including `approval_required`.
 - Consumes: existing ID, source citation, assistant-turn, provider, and context-pack types.
 
@@ -65,7 +67,7 @@ Add assertions that a migrated database contains `import_job_checkpoints`,
 const frame: AssistantStreamFrame = {
   type: "approval_required",
   turnId: "turn_1",
-  previewId: "preview_1"
+  previewId: "preview_1",
 };
 expect(frame.type).toBe("approval_required");
 ```
@@ -80,26 +82,50 @@ Implement these stable shapes:
 ```ts
 export type ImportJobState = "queued" | "parsing" | "indexing" | "embedding" | "completed" | "failed";
 export interface ImportJobDto {
-  id: string; importId: string; workspaceId: string; filename: string;
-  mediaType: string; byteSize: number; state: ImportJobState;
-  documentIndex: number; nextChunkIndex: number; documentCount: number;
-  completedDocumentCount: number; errorCode?: string;
-  createdAt: string; updatedAt: string;
+  id: string;
+  importId: string;
+  workspaceId: string;
+  filename: string;
+  mediaType: string;
+  byteSize: number;
+  state: ImportJobState;
+  documentIndex: number;
+  nextChunkIndex: number;
+  documentCount: number;
+  completedDocumentCount: number;
+  errorCode?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 export interface PromptBindingInput {
-  turnId: string; providerId: string; modelProfileId: string; model: string;
-  contextPackId: string; contextPackHash: string; promptHash: string;
+  turnId: string;
+  providerId: string;
+  modelProfileId: string;
+  model: string;
+  contextPackId: string;
+  contextPackHash: string;
+  promptHash: string;
 }
 export interface PromptPreviewDto extends PromptBindingInput {
-  id: string; workspaceId: string; endpointClassification: "external";
-  redactedPrompt: string; estimatedTokens: number;
-  privacyLabels: string[]; redactionCounts: Record<string, number>;
-  selectedSources: SourceCitation[]; excludedSources: SourceCitation[];
-  bindingHash: string; createdAt: string; expiresAt: string;
+  id: string;
+  workspaceId: string;
+  endpointClassification: "external";
+  redactedPrompt: string;
+  estimatedTokens: number;
+  privacyLabels: string[];
+  redactionCounts: Record<string, number>;
+  selectedSources: SourceCitation[];
+  excludedSources: SourceCitation[];
+  bindingHash: string;
+  createdAt: string;
+  expiresAt: string;
 }
 export interface PromptDecisionDto {
-  id: string; previewId: string; decision: "approved" | "denied";
-  bindingHash: string; decidedAt: string;
+  id: string;
+  previewId: string;
+  decision: "approved" | "denied";
+  bindingHash: string;
+  decidedAt: string;
 }
 ```
 
@@ -124,12 +150,14 @@ git commit -m "feat: add phase 4 contracts and persistence"
 ### Task 2: Implement immutable prompt construction and binding
 
 **Files:**
+
 - Create: `packages/permissions/src/prompt-preview.ts`
 - Create: `packages/permissions/src/prompt-preview.test.ts`
 - Modify: `packages/permissions/src/index.ts`
 - Modify: `packages/permissions/src/redaction.ts`
 
 **Interfaces:**
+
 - Consumes: `PromptBindingInput`, context-pack items, provider/profile metadata, system instructions, and user text.
 - Produces: `buildExternalPromptPreview(input): ExternalPromptPreviewResult` and `hashPromptBinding(input): string`.
 
@@ -141,11 +169,15 @@ redaction failure that throws `PromptRedactionError`:
 
 ```ts
 const result = buildExternalPromptPreview({
-  turnId: "turn_1", providerId: "provider_1", modelProfileId: "profile_1",
-  model: "test-model", contextPackId: "pack_1", contextPackHash: "pack-hash",
+  turnId: "turn_1",
+  providerId: "provider_1",
+  modelProfileId: "profile_1",
+  model: "test-model",
+  contextPackId: "pack_1",
+  contextPackHash: "pack-hash",
   instructions: "Never expose sk-system-secret123",
   userText: "Email me at user@example.com",
-  segments: [{ source: { type: "document", id: "doc_1" }, text: "Bearer abcdefghijk", privacyLabels: ["private"] }]
+  segments: [{ source: { type: "document", id: "doc_1" }, text: "Bearer abcdefghijk", privacyLabels: ["private"] }],
 });
 expect(result.redactedPrompt).not.toMatch(/sk-system|user@example|abcdefghijk/);
 expect(result.redactionCounts).toEqual({ email: 1, secret: 2 });
@@ -175,6 +207,7 @@ git commit -m "feat: build immutable redacted prompt previews"
 ### Task 3: Add resumable import repositories and service
 
 **Files:**
+
 - Create: `packages/db/src/repositories/import-jobs.ts`
 - Create: `packages/db/src/repositories/import-jobs.test.ts`
 - Modify: `packages/db/src/index.ts`
@@ -184,6 +217,7 @@ git commit -m "feat: build immutable redacted prompt previews"
 - Modify: `apps/api/src/server/create-server.ts`
 
 **Interfaces:**
+
 - Produces: `ImportJobRepository.createFile`, `get`, `listForWorkspace`, `advance`, `fail`, `retry`; `ImportService.enqueueFile`, `run`, and `retry`.
 - Consumes: pure parsers/chunker, `EventRepository`, `EmbeddingRepository`, SQLite, and the existing retrieval index function.
 
@@ -230,6 +264,7 @@ git commit -m "feat: add resumable import indexing jobs"
 ### Task 4: Add protected multipart import resources
 
 **Files:**
+
 - Modify: `apps/api/package.json`
 - Modify: `pnpm-lock.yaml`
 - Create: `apps/api/src/routes/v2/imports.ts`
@@ -237,6 +272,7 @@ git commit -m "feat: add resumable import indexing jobs"
 - Modify: `apps/api/src/server/create-server.ts`
 
 **Interfaces:**
+
 - Produces: `POST /api/v2/imports`, `GET /api/v2/imports?workspaceId=`, `GET /api/v2/imports/:id`, `POST /api/v2/imports/:id/retry`.
 - Consumes: `ImportService` and existing local-session/origin protection.
 
@@ -276,12 +312,14 @@ git commit -m "feat: add protected browser import api"
 ### Task 5: Stream OpenAI-compatible text with call-time secrets
 
 **Files:**
+
 - Modify: `packages/providers/src/openai-compatible.ts`
 - Create: `packages/providers/src/openai-compatible.test.ts`
 - Modify: `apps/api/src/services/provider-service.ts`
 - Modify: `apps/api/src/services/provider-service.test.ts`
 
 **Interfaces:**
+
 - Produces: `OpenAiCompatibleProvider` yielding incremental `ModelTextChunk`; `ProviderService.getRuntime` supporting `openai-compatible`.
 - Consumes: persisted base URL, model profile, `env:NAME` reference, and abort signal.
 
@@ -321,6 +359,7 @@ git commit -m "feat: stream openai compatible model responses"
 ### Task 6: Persist previews and immutable decisions
 
 **Files:**
+
 - Create: `packages/db/src/repositories/prompt-previews.ts`
 - Create: `packages/db/src/repositories/prompt-previews.test.ts`
 - Modify: `packages/db/src/index.ts`
@@ -332,6 +371,7 @@ git commit -m "feat: stream openai compatible model responses"
 - Modify: `apps/api/src/server/create-server.ts`
 
 **Interfaces:**
+
 - Produces: `PromptPreviewRepository.create/get/decide`, `PromptPreviewService.createForTurn/decide/requireGrant`, protected preview GET and decision POST routes.
 - Consumes: Task 2 preview builder and Task 1 binding DTOs.
 
@@ -371,6 +411,7 @@ git commit -m "feat: add immutable prompt preview grants"
 ### Task 7: Pause and resume external assistant turns
 
 **Files:**
+
 - Modify: `packages/db/src/repositories/assistant-turns.ts`
 - Modify: `packages/db/src/repositories/assistant-turns.test.ts`
 - Modify: `apps/api/src/services/assistant-service.ts`
@@ -379,6 +420,7 @@ git commit -m "feat: add immutable prompt preview grants"
 - Modify: `apps/api/src/routes/v2/assistant-turns.test.ts`
 
 **Interfaces:**
+
 - Consumes: `PromptPreviewService`, external/local provider classification, existing context service and cancellation registry.
 - Produces: external turns that emit `approval_required`, persist `awaiting_approval`, resume exactly once after approval, and preserve existing local behavior.
 
@@ -421,6 +463,7 @@ git commit -m "feat: gate external assistant turns on prompt approval"
 ### Task 8: Build the browser Import lens
 
 **Files:**
+
 - Modify: `apps/web/src/app/api-types.ts`
 - Modify: `apps/web/src/app/api-client.ts`
 - Modify: `apps/web/src/app/api-client.test.ts`
@@ -432,6 +475,7 @@ git commit -m "feat: gate external assistant turns on prompt approval"
 - Modify: `apps/web/src/styles/global.css`
 
 **Interfaces:**
+
 - Produces: multipart upload, persisted job polling, per-file progress/failure/retry, and document/source-range inspection.
 - Consumes: Task 4 V2 resources and active workspace state.
 
@@ -471,6 +515,7 @@ git commit -m "feat: add browser import and retry workflow"
 ### Task 9: Build exact prompt-preview approval UI
 
 **Files:**
+
 - Modify: `apps/web/src/app/api-types.ts`
 - Modify: `apps/web/src/app/api-client.ts`
 - Modify: `apps/web/src/features/assistant/use-assistant-turn.ts`
@@ -481,6 +526,7 @@ git commit -m "feat: add browser import and retry workflow"
 - Modify: `apps/web/src/styles/global.css`
 
 **Interfaces:**
+
 - Produces: exact redacted-prompt display, metadata, approve/deny actions, and same-turn SSE reconnect.
 - Consumes: Task 6 preview resources and Task 7 approval-required frame.
 
@@ -515,6 +561,7 @@ git commit -m "feat: add immutable external prompt approval ui"
 ### Task 10: Prove the Phase 4 browser acceptance gate and update docs
 
 **Files:**
+
 - Create: `tests/fixtures/imports/phase4-notes.md`
 - Create: `tests/fixtures/imports/chatgpt-export.json`
 - Create: `tests/e2e/support/openai-compatible-server.ts`
@@ -526,6 +573,7 @@ git commit -m "feat: add immutable external prompt approval ui"
 - Modify: `README.md`
 
 **Interfaces:**
+
 - Produces: deterministic end-to-end evidence for every Phase 4 acceptance criterion and current operator docs.
 - Consumes: the complete Phase 4 implementation.
 
@@ -590,4 +638,3 @@ git status --short --branch
 Expected: clean working tree on the local branch, ahead of its remote only by the
 Phase 4 design, plan, and implementation commits; do not push or merge unless the
 user explicitly requests it.
-

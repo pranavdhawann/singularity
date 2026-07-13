@@ -24,7 +24,7 @@ describe("EventRepository", () => {
       title: "Created Demo",
       payload: { name: "Demo" },
       privacy: { labels: ["local"] },
-      createdAt: new Date("2026-07-04T12:00:00.000Z")
+      createdAt: new Date("2026-07-04T12:00:00.000Z"),
     });
 
     repo.append({
@@ -35,7 +35,7 @@ describe("EventRepository", () => {
       title: "Asked With Memory",
       payload: { command: "ask_with_memory" },
       privacy: { labels: ["local"] },
-      createdAt: new Date("2026-07-04T12:01:00.000Z")
+      createdAt: new Date("2026-07-04T12:01:00.000Z"),
     });
 
     const events = repo.list({ workspaceId: "w_demo" });
@@ -45,7 +45,11 @@ describe("EventRepository", () => {
 
   it("lists new events after a cursor in ascending order", () => {
     const repo = new EventRepository(db.client);
-    for (const [id, minute] of [["evt_one", "00"], ["evt_two", "01"], ["evt_three", "02"]] as const) {
+    for (const [id, minute] of [
+      ["evt_one", "00"],
+      ["evt_two", "01"],
+      ["evt_three", "02"],
+    ] as const) {
       repo.append({
         id,
         workspaceId: "w_demo",
@@ -54,13 +58,14 @@ describe("EventRepository", () => {
         title: id,
         payload: { text: id },
         privacy: { labels: ["local"] },
-        createdAt: new Date(`2026-07-10T12:${minute}:00.000Z`)
+        createdAt: new Date(`2026-07-10T12:${minute}:00.000Z`),
       });
     }
 
-    expect(
-      repo.list({ workspaceId: "w_demo", after: "evt_one", order: "asc" }).map((event) => event.id)
-    ).toEqual(["evt_two", "evt_three"]);
+    expect(repo.list({ workspaceId: "w_demo", after: "evt_one", order: "asc" }).map((event) => event.id)).toEqual([
+      "evt_two",
+      "evt_three",
+    ]);
   });
 
   it("attaches and returns ordered normalized sources", () => {
@@ -73,7 +78,7 @@ describe("EventRepository", () => {
       title: "Answer",
       payload: { responseText: "SQLite" },
       privacy: { labels: ["local"] },
-      createdAt: new Date("2026-07-10T12:00:00.000Z")
+      createdAt: new Date("2026-07-10T12:00:00.000Z"),
     });
     const sources = [
       {
@@ -81,7 +86,7 @@ describe("EventRepository", () => {
         id: "mem_1",
         workspaceId: "w_demo",
         title: "Decision",
-        contentHash: "a"
+        contentHash: "a",
       },
       {
         kind: "document_chunk" as const,
@@ -89,8 +94,8 @@ describe("EventRepository", () => {
         workspaceId: "w_demo",
         title: "Notes",
         contentHash: "b",
-        range: { start: 0, end: 20 }
-      }
+        range: { start: 0, end: 20 },
+      },
     ];
 
     repo.attachSources("evt_answer", sources);

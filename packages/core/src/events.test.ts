@@ -9,7 +9,7 @@ describe("createEvent", () => {
       actor: "user",
       title: "Created Demo",
       payload: { name: "Demo" },
-      privacy: { labels: ["local"] }
+      privacy: { labels: ["local"] },
     });
 
     expect(event.id).toMatch(/^evt_/);

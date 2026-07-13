@@ -12,36 +12,47 @@ describe("V2 prompt preview routes", () => {
     const previews = new PromptPreviewRepository(db.client);
     const service = new PromptPreviewService({
       previews,
-      now: () => new Date("2026-07-11T00:00:00.000Z")
+      now: () => new Date("2026-07-11T00:00:00.000Z"),
     });
     const preview = service.createForTurn({
-      workspaceId: "w_1", turnId: "turn_1", providerId: "provider_1",
-      modelProfileId: "profile_1", model: "model-1", contextPackId: "pack_1",
-      contextPackHash: "pack-hash", instructions: "Be useful", userText: "hello", segments: []
+      workspaceId: "w_1",
+      turnId: "turn_1",
+      providerId: "provider_1",
+      modelProfileId: "profile_1",
+      model: "model-1",
+      contextPackId: "pack_1",
+      contextPackHash: "pack-hash",
+      instructions: "Be useful",
+      userText: "hello",
+      segments: [],
     });
     const server = Fastify({ logger: false });
     await registerLocalSession(server, "test-token", ["http://127.0.0.1:4173"]);
     await registerV2PromptPreviewRoutes(server, {
       promptPreviews: previews,
-      promptPreviewService: service
+      promptPreviewService: service,
     } as ApiDependencies);
 
     const get = await server.inject({
-      method: "GET", url: `/api/v2/prompt-previews/${preview.id}?workspaceId=w_1`
+      method: "GET",
+      url: `/api/v2/prompt-previews/${preview.id}?workspaceId=w_1`,
     });
     const unauthorized = await server.inject({
-      method: "POST", url: `/api/v2/prompt-previews/${preview.id}/decision`,
-      payload: { workspaceId: "w_1", decision: "approved", bindingHash: preview.bindingHash }
+      method: "POST",
+      url: `/api/v2/prompt-previews/${preview.id}/decision`,
+      payload: { workspaceId: "w_1", decision: "approved", bindingHash: preview.bindingHash },
     });
     const approve = await server.inject({
-      method: "POST", url: `/api/v2/prompt-previews/${preview.id}/decision`,
+      method: "POST",
+      url: `/api/v2/prompt-previews/${preview.id}/decision`,
       headers: { "x-future-session": "test-token" },
-      payload: { workspaceId: "w_1", decision: "approved", bindingHash: preview.bindingHash }
+      payload: { workspaceId: "w_1", decision: "approved", bindingHash: preview.bindingHash },
     });
     const duplicate = await server.inject({
-      method: "POST", url: `/api/v2/prompt-previews/${preview.id}/decision`,
+      method: "POST",
+      url: `/api/v2/prompt-previews/${preview.id}/decision`,
       headers: { "x-future-session": "test-token" },
-      payload: { workspaceId: "w_1", decision: "denied", bindingHash: preview.bindingHash }
+      payload: { workspaceId: "w_1", decision: "denied", bindingHash: preview.bindingHash },
     });
 
     expect(get.statusCode).toBe(200);

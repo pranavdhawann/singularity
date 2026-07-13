@@ -26,8 +26,8 @@ export function chunkDocument(text: string, options: ChunkDocumentOptions = {}):
         tokenCount: estimateTokenCount(slice),
         sourceRange: {
           start: cursor,
-          end
-        }
+          end,
+        },
       });
     }
 

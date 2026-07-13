@@ -5,17 +5,17 @@ export default defineConfig({
   timeout: 30_000,
   workers: 1,
   expect: {
-    timeout: 5_000
+    timeout: 5_000,
   },
   use: {
     baseURL: "http://127.0.0.1:4273",
-    trace: "on-first-retry"
+    trace: "on-first-retry",
   },
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] }
-    }
+      use: { ...devices["Desktop Chrome"] },
+    },
   ],
   webServer: [
     {
@@ -23,7 +23,7 @@ export default defineConfig({
       url: "http://127.0.0.1:4280/health",
       env: { PHASE4_OPENAI_PORT: "4280" },
       reuseExistingServer: false,
-      timeout: 30_000
+      timeout: 30_000,
     },
     {
       command: "corepack pnpm --filter @future/api dev",
@@ -33,17 +33,17 @@ export default defineConfig({
         PORT: "4274",
         FUTURE_ALLOWED_ORIGINS: "http://127.0.0.1:4273",
         FUTURE_TEST_OPENAI_KEY: "phase4-test-secret",
-        FUTURE_TEST_IMPORT_FAILURE_AFTER_CHUNK: "1"
+        FUTURE_TEST_IMPORT_FAILURE_AFTER_CHUNK: "1",
       },
       reuseExistingServer: false,
-      timeout: 30_000
+      timeout: 30_000,
     },
     {
       command: "corepack pnpm --filter @future/web exec vite --host 127.0.0.1 --port 4273",
       url: "http://127.0.0.1:4273",
       env: { FUTURE_API_PROXY: "http://127.0.0.1:4274" },
       reuseExistingServer: false,
-      timeout: 30_000
-    }
-  ]
+      timeout: 30_000,
+    },
+  ],
 });

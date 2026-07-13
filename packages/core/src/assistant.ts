@@ -1,13 +1,7 @@
 import type { TimelineEvent } from "./events";
 
 export type AssistantTurnState =
-  | "queued"
-  | "building_context"
-  | "awaiting_approval"
-  | "running"
-  | "completed"
-  | "failed"
-  | "cancelled";
+  "queued" | "building_context" | "awaiting_approval" | "running" | "completed" | "failed" | "cancelled";
 
 export interface SourceReference {
   kind: "memory" | "document_chunk" | "timeline_event" | "compaction";
@@ -104,7 +98,7 @@ export type AssistantStreamFrame =
 export function serializeTimelineEvent(event: TimelineEvent): TimelineEventDto {
   return {
     ...event,
-    createdAt: event.createdAt.toISOString()
+    createdAt: event.createdAt.toISOString(),
   };
 }
 

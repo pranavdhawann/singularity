@@ -5,11 +5,20 @@ import type { FutureApi, ImportJobDto } from "../../app/api-types";
 import { ImportWorkspace } from "./ImportWorkspace";
 
 const failedJob: ImportJobDto = {
-  id: "job_1", importId: "import_1", workspaceId: "w_1",
-  filename: "notes.md", mediaType: "text/markdown", byteSize: 20,
-  state: "failed", documentIndex: 0, nextChunkIndex: 1,
-  documentCount: 1, completedDocumentCount: 0, errorCode: "index_failed",
-  createdAt: "2026-07-11T00:00:00.000Z", updatedAt: "2026-07-11T00:00:01.000Z"
+  id: "job_1",
+  importId: "import_1",
+  workspaceId: "w_1",
+  filename: "notes.md",
+  mediaType: "text/markdown",
+  byteSize: 20,
+  state: "failed",
+  documentIndex: 0,
+  nextChunkIndex: 1,
+  documentCount: 1,
+  completedDocumentCount: 0,
+  errorCode: "index_failed",
+  createdAt: "2026-07-11T00:00:00.000Z",
+  updatedAt: "2026-07-11T00:00:01.000Z",
 };
 
 describe("ImportWorkspace", () => {

@@ -13,7 +13,7 @@ describe("ProviderRepository", () => {
         displayName: "OpenAI compatible",
         baseUrl: "https://models.example/v1",
         secretEnvironmentVariable: "FUTURE_MODEL_KEY",
-        isLocal: false
+        isLocal: false,
       });
 
       expect(provider).toEqual(
@@ -22,18 +22,16 @@ describe("ProviderRepository", () => {
           displayName: "OpenAI compatible",
           baseUrl: "https://models.example/v1",
           isLocal: false,
-          hasSecret: true
-        })
+          hasSecret: true,
+        }),
       );
       expect(provider).not.toHaveProperty("apiKeyRef");
       expect(repository.list()).toEqual([provider]);
       expect(repository.get(provider.id)).toEqual(provider);
 
-      expect(
-        db.client
-          .prepare("SELECT api_key_ref FROM providers WHERE id = ?")
-          .get(provider.id)
-      ).toEqual({ api_key_ref: "env:FUTURE_MODEL_KEY" });
+      expect(db.client.prepare("SELECT api_key_ref FROM providers WHERE id = ?").get(provider.id)).toEqual({
+        api_key_ref: "env:FUTURE_MODEL_KEY",
+      });
     } finally {
       db.close();
     }

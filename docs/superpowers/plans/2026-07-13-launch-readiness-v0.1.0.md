@@ -22,6 +22,7 @@
 ### Task 1: Real linting, formatting, and CI
 
 **Files:**
+
 - Modify: `package.json`
 - Modify: `pnpm-lock.yaml`
 - Modify: workspace `package.json` files to remove TypeScript-only lint placeholders
@@ -30,6 +31,7 @@
 - Create: `.github/workflows/ci.yml`
 
 **Interfaces:**
+
 - Produces root commands `lint`, `format`, `format:check`, and `check` used locally and in CI.
 
 - [ ] Install pinned ESLint, TypeScript-ESLint, React lint plugins, globals, and Prettier at the workspace root.
@@ -42,6 +44,7 @@
 ### Task 2: Deterministic demo and first-run acceptance
 
 **Files:**
+
 - Create: `scripts/demo.mjs`
 - Create: `scripts/demo.test.ts`
 - Create: `examples/future-demo.md`
@@ -50,6 +53,7 @@
 - Create: `tests/e2e/first-run.spec.ts`
 
 **Interfaces:**
+
 - Produces `corepack pnpm demo`, which starts the app and idempotently seeds an offline workspace through protected APIs.
 
 - [ ] Write failing tests for empty-database seeding, idempotent reruns, protected request headers, and bundled source upload.
@@ -64,6 +68,7 @@
 ### Task 3: Public repository documentation and launch assets
 
 **Files:**
+
 - Rewrite: `README.md`
 - Modify: `docs/context.md`
 - Modify: `docs/10-build-runbook.md`
@@ -83,6 +88,7 @@
 - Create: `docs/launch/github-topics.md`
 
 **Interfaces:**
+
 - README commands must exactly match package scripts and documented environment variables.
 
 - [ ] Rewrite the README around the approved promise, wedge, 60-second demo, Ollama path, external-provider path, exact current capabilities, privacy, architecture, roadmap, naming relationship, and contribution links.
@@ -95,6 +101,7 @@
 ### Task 4: Community health and release metadata
 
 **Files:**
+
 - Create: `SECURITY.md`
 - Create: `CONTRIBUTING.md`
 - Create: `CODE_OF_CONDUCT.md`
@@ -105,6 +112,7 @@
 - Create: `.github/PULL_REQUEST_TEMPLATE.md`
 
 **Interfaces:**
+
 - Security reporting uses GitHub private vulnerability reporting and never asks reporters to publish sensitive details.
 
 - [ ] Add scoped security, contribution, conduct, changelog, issue, and pull-request documents.
@@ -115,10 +123,12 @@
 ### Task 5: Verification, GitHub setup, issues, and v0.1.0
 
 **Files:**
+
 - Inspect every changed file and all generated/tracked-file lists.
 - Update GitHub description, topics, labels, issues, branch, tag, and release after local gates pass.
 
 **Interfaces:**
+
 - Produces branch `codex/launch-readiness-v0.1.0`, tag/release `v0.1.0`, and 10–15 actionable issues.
 
 - [ ] Run `corepack pnpm install --frozen-lockfile`.
@@ -131,4 +141,3 @@
 - [ ] Update description and approved topics; create labels and 10–15 issues with context, expected behavior, likely files, and acceptance criteria.
 - [ ] Create annotated tag and GitHub release `v0.1.0` only after the pushed commit and GitHub Actions succeed.
 - [ ] Report exact branch, commit, URL, gates, remaining risks, and 30-day launch sequence.
-

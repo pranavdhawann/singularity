@@ -6,7 +6,7 @@ describe("transitionMemory", () => {
     const next = transitionMemory({
       reviewState: "proposed",
       action: "approve",
-      actor: "user"
+      actor: "user",
     });
 
     expect(next.reviewState).toBe("approved");

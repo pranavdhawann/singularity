@@ -21,11 +21,13 @@
 ### Task 1: Consolidate Current Documentation
 
 **Files:**
+
 - Modify: `README.md`
 - Modify: `docs/context.md`
 - Modify: `docs/12-next-steps.md`
 
 **Interfaces:**
+
 - Consumes: implemented Phase 3 behavior described by the canonical V2 design and current source tree
 - Produces: a root product guide, contributor orientation, and ordered remaining-work roadmap
 
@@ -54,6 +56,7 @@ Expected: exit code 0 with no whitespace errors.
 ### Task 2: Remove Superseded Documentation and Disposable Output
 
 **Files:**
+
 - Delete: `docs/00-vision.md`
 - Delete: `docs/01-market-research.md`
 - Delete: `docs/02-product-principles.md`
@@ -75,6 +78,7 @@ Expected: exit code 0 with no whitespace errors.
 - Remove locally: `test-results/`
 
 **Interfaces:**
+
 - Consumes: the updated canonical-document links from Task 1
 - Produces: a smaller repository with no tracked references to deleted documents
 
@@ -97,9 +101,11 @@ Run a local Markdown-link checker that inspects relative links in every tracked 
 ### Task 3: Full Verification
 
 **Files:**
+
 - Verify: entire workspace
 
 **Interfaces:**
+
 - Consumes: consolidated documentation and unchanged application source
 - Produces: fresh evidence that cleanup did not break the repository
 

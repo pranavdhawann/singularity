@@ -1,10 +1,5 @@
 export type ApiErrorCode =
-  | "validation_error"
-  | "unauthorized"
-  | "forbidden"
-  | "not_found"
-  | "conflict"
-  | "internal_error";
+  "validation_error" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "internal_error";
 
 export interface ApiErrorResponse {
   error: {
@@ -40,14 +35,14 @@ export function apiError(
   code: ApiErrorCode,
   message: string,
   requestId: string,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
 ): ApiErrorResponse {
   return {
     error: {
       code,
       message,
       requestId,
-      ...(details ? { details } : {})
-    }
+      ...(details ? { details } : {}),
+    },
   };
 }

@@ -7,13 +7,9 @@ import {
   type AssistantTurnDto,
   type CreateAssistantTurnInput,
   type ModelProfile,
-  type ModelProvider
+  type ModelProvider,
 } from "@future/core";
-import type {
-  AssistantTurnRepository,
-  EventRepository,
-  SqliteDatabase
-} from "@future/db";
+import type { AssistantTurnRepository, EventRepository, SqliteDatabase } from "@future/db";
 import type { ContextService } from "./context-service";
 import type { TurnCancellationRegistry } from "./turn-cancellation";
 import { PromptPreviewServiceError, type PromptPreviewService } from "./prompt-preview-service";
@@ -36,11 +32,7 @@ interface UserEventRow {
   payload_json: string;
 }
 
-export type AssistantServiceErrorCode =
-  | "turn_not_found"
-  | "turn_not_streamable"
-  | "turn_terminal"
-  | "turn_not_active";
+export type AssistantServiceErrorCode = "turn_not_found" | "turn_not_streamable" | "turn_terminal" | "turn_not_active";
 
 export class AssistantServiceError extends Error {
   constructor(readonly code: AssistantServiceErrorCode) {
@@ -77,16 +69,14 @@ export class AssistantService {
       yield { type: "started", turn: initial };
       const building = this.dependencies.turns.updateState(turnId, "building_context");
       const message = this.getUserMessage(building.userEventId);
-      const { provider, profile, isLocal } = this.dependencies.providerService.getRuntime(
-        building.modelProfileId
-      );
+      const { provider, profile, isLocal } = this.dependencies.providerService.getRuntime(building.modelProfileId);
       const contextPack = await this.dependencies.contextService.buildForTurn({
         turnId,
         workspaceId: building.workspaceId,
         userEventId: building.userEventId,
         query: message,
         providerId: profile.providerId,
-        profile
+        profile,
       });
 
       if (!isLocal) {
@@ -103,33 +93,37 @@ export class AssistantService {
           segments: contextPack.items.map((item) => ({
             source: item.source,
             text: item.text,
-            privacyLabels: ["private"]
-          }))
+            privacyLabels: ["private"],
+          })),
         });
         const waitForApproval = this.dependencies.db.transaction(() => {
-          this.dependencies.events.appendInCurrentTransaction(createEvent({
-            workspaceId: building.workspaceId,
-            type: "context_pack.created",
-            actor: "system",
-            title: "Built local context",
-            payload: { turnId, contextPackId: contextPack.id, sourceCount: contextPack.items.length },
-            privacy: { labels: ["local"] }
-          }));
-          this.dependencies.events.appendInCurrentTransaction(createEvent({
-            workspaceId: building.workspaceId,
-            type: "prompt_preview.required",
-            actor: "system",
-            title: "External prompt approval required",
-            payload: {
-              turnId,
-              previewId: preview.id,
-              bindingHash: preview.bindingHash,
-              redactionCounts: preview.redactionCounts
-            },
-            privacy: { labels: ["local"] }
-          }));
+          this.dependencies.events.appendInCurrentTransaction(
+            createEvent({
+              workspaceId: building.workspaceId,
+              type: "context_pack.created",
+              actor: "system",
+              title: "Built local context",
+              payload: { turnId, contextPackId: contextPack.id, sourceCount: contextPack.items.length },
+              privacy: { labels: ["local"] },
+            }),
+          );
+          this.dependencies.events.appendInCurrentTransaction(
+            createEvent({
+              workspaceId: building.workspaceId,
+              type: "prompt_preview.required",
+              actor: "system",
+              title: "External prompt approval required",
+              payload: {
+                turnId,
+                previewId: preview.id,
+                bindingHash: preview.bindingHash,
+                redactionCounts: preview.redactionCounts,
+              },
+              privacy: { labels: ["local"] },
+            }),
+          );
           this.dependencies.turns.updateState(turnId, "awaiting_approval", {
-            contextPackId: contextPack.id
+            contextPackId: contextPack.id,
           });
         });
         waitForApproval();
@@ -141,23 +135,25 @@ export class AssistantService {
       modelCallId = activeModelCallId;
       const now = new Date().toISOString();
       const beginModelCall = this.dependencies.db.transaction(() => {
-        this.dependencies.db.prepare(
-          `INSERT INTO model_calls (
+        this.dependencies.db
+          .prepare(
+            `INSERT INTO model_calls (
             id, workspace_id, provider_id, model_profile_id, context_pack_id,
             status, input_tokens, output_tokens, error_message, created_at, finished_at
           ) VALUES (
             @id, @workspaceId, @providerId, @modelProfileId, @contextPackId,
             'running', @inputTokens, NULL, NULL, @createdAt, NULL
-          )`
-        ).run({
-          id: activeModelCallId,
-          workspaceId: building.workspaceId,
-          providerId: profile.providerId,
-          modelProfileId: profile.id,
-          contextPackId: contextPack.id,
-          inputTokens: contextPack.estimatedTokens,
-          createdAt: now
-        });
+          )`,
+          )
+          .run({
+            id: activeModelCallId,
+            workspaceId: building.workspaceId,
+            providerId: profile.providerId,
+            modelProfileId: profile.id,
+            contextPackId: contextPack.id,
+            inputTokens: contextPack.estimatedTokens,
+            createdAt: now,
+          });
         this.dependencies.events.appendInCurrentTransaction(
           createEvent({
             workspaceId: building.workspaceId,
@@ -167,14 +163,14 @@ export class AssistantService {
             payload: {
               turnId,
               contextPackId: contextPack.id,
-              sourceCount: contextPack.items.length
+              sourceCount: contextPack.items.length,
             },
-            privacy: { labels: ["local"] }
-          })
+            privacy: { labels: ["local"] },
+          }),
         );
         this.dependencies.turns.updateState(turnId, "running", {
           contextPackId: contextPack.id,
-          modelCallId: activeModelCallId
+          modelCallId: activeModelCallId,
         });
       });
       beginModelCall();
@@ -182,14 +178,14 @@ export class AssistantService {
       yield {
         type: "context",
         contextPackId: contextPack.id,
-        sourceCount: contextPack.items.length
+        sourceCount: contextPack.items.length,
       };
 
       const prompt = buildPrompt(message, contextPack.items);
       for await (const chunk of provider.streamText({
         prompt,
         model: profile.model,
-        signal
+        signal,
       })) {
         signal.throwIfAborted();
         partialText += chunk.text;
@@ -205,21 +201,23 @@ export class AssistantService {
         payload: {
           turnId,
           responseText: partialText,
-          contextPackId: contextPack.id
+          contextPackId: contextPack.id,
         },
-        privacy: { labels: ["local"] }
+        privacy: { labels: ["local"] },
       });
       let completedTurn: AssistantTurnDto | undefined;
       const complete = this.dependencies.db.transaction(() => {
-        this.dependencies.db.prepare(
-          `UPDATE model_calls SET
+        this.dependencies.db
+          .prepare(
+            `UPDATE model_calls SET
             status = 'completed', output_tokens = @outputTokens,
-            finished_at = @finishedAt WHERE id = @id`
-        ).run({
-          id: modelCallId,
-          outputTokens: estimateOutputTokens(partialText),
-          finishedAt: new Date().toISOString()
-        });
+            finished_at = @finishedAt WHERE id = @id`,
+          )
+          .run({
+            id: modelCallId,
+            outputTokens: estimateOutputTokens(partialText),
+            finishedAt: new Date().toISOString(),
+          });
         this.dependencies.events.appendInCurrentTransaction(
           createEvent({
             workspaceId: building.workspaceId,
@@ -231,18 +229,18 @@ export class AssistantService {
               modelCallId,
               providerId: profile.providerId,
               model: profile.model,
-              outputCharacters: partialText.length
+              outputCharacters: partialText.length,
             },
-            privacy: { labels: ["local"] }
-          })
+            privacy: { labels: ["local"] },
+          }),
         );
         this.dependencies.events.appendInCurrentTransaction(assistantEvent);
         this.dependencies.events.attachSourcesInCurrentTransaction(
           assistantEvent.id,
-          contextPack.items.map((item) => item.source)
+          contextPack.items.map((item) => item.source),
         );
         completedTurn = this.dependencies.turns.updateState(turnId, "completed", {
-          assistantEventId: assistantEvent.id
+          assistantEventId: assistantEvent.id,
         });
       });
       complete();
@@ -253,7 +251,7 @@ export class AssistantService {
         type: "completed",
         turn: completedTurn,
         event: { ...serializeTimelineEvent(assistantEvent), citations },
-        citations
+        citations,
       };
     } catch (error) {
       const cancelled = isAbortError(error);
@@ -266,18 +264,20 @@ export class AssistantService {
       let terminalTurn: AssistantTurnDto | undefined;
       const finish = this.dependencies.db.transaction(() => {
         if (modelCallId) {
-          this.dependencies.db.prepare(
-            `UPDATE model_calls SET
+          this.dependencies.db
+            .prepare(
+              `UPDATE model_calls SET
               status = @status, output_tokens = @outputTokens,
               error_message = @errorMessage, finished_at = @finishedAt
-             WHERE id = @id`
-          ).run({
-            id: modelCallId,
-            status: cancelled ? "cancelled" : "failed",
-            outputTokens: estimateOutputTokens(partialText),
-            errorMessage: cancelled ? null : "provider_error",
-            finishedAt: new Date().toISOString()
-          });
+             WHERE id = @id`,
+            )
+            .run({
+              id: modelCallId,
+              status: cancelled ? "cancelled" : "failed",
+              outputTokens: estimateOutputTokens(partialText),
+              errorMessage: cancelled ? null : "provider_error",
+              finishedAt: new Date().toISOString(),
+            });
           this.dependencies.events.appendInCurrentTransaction(
             createEvent({
               workspaceId: current.workspaceId,
@@ -288,10 +288,10 @@ export class AssistantService {
                 turnId,
                 modelCallId,
                 partialCharacters: partialText.length,
-                ...(!cancelled ? { errorCode: "provider_error" } : {})
+                ...(!cancelled ? { errorCode: "provider_error" } : {}),
               },
-              privacy: { labels: ["local"] }
-            })
+              privacy: { labels: ["local"] },
+            }),
           );
         }
         this.dependencies.events.appendInCurrentTransaction(
@@ -303,15 +303,15 @@ export class AssistantService {
             payload: {
               turnId,
               partialCharacters: partialText.length,
-              ...(!cancelled ? { errorCode: "provider_error" } : {})
+              ...(!cancelled ? { errorCode: "provider_error" } : {}),
             },
-            privacy: { labels: ["local"] }
-          })
+            privacy: { labels: ["local"] },
+          }),
         );
         terminalTurn = this.dependencies.turns.updateState(
           turnId,
           cancelled ? "cancelled" : "failed",
-          cancelled ? {} : { errorCode: "provider_error" }
+          cancelled ? {} : { errorCode: "provider_error" },
         );
       });
       finish();
@@ -323,7 +323,7 @@ export class AssistantService {
         yield {
           type: "failed",
           turn: terminalTurn,
-          message: "The model provider could not complete this turn."
+          message: "The model provider could not complete this turn.",
         };
       }
     } finally {
@@ -333,9 +333,7 @@ export class AssistantService {
 
   private async *resumeApprovedTurn(initial: AssistantTurnDto): AsyncIterable<AssistantStreamFrame> {
     const preview = this.dependencies.promptPreviewService.getForTurn(initial.id);
-    const contextPack = initial.contextPackId
-      ? this.dependencies.contextService.get(initial.contextPackId)
-      : undefined;
+    const contextPack = initial.contextPackId ? this.dependencies.contextService.get(initial.contextPackId) : undefined;
     if (!preview || !contextPack) throw new AssistantServiceError("turn_not_streamable");
 
     yield { type: "started", turn: initial };
@@ -350,7 +348,7 @@ export class AssistantService {
         model: preview.model,
         contextPackId: preview.contextPackId,
         contextPackHash: preview.contextPackHash,
-        promptHash: preview.promptHash
+        promptHash: preview.promptHash,
       });
     } catch (error) {
       if (error instanceof PromptPreviewServiceError && error.code === "grant_required") {
@@ -367,8 +365,9 @@ export class AssistantService {
 
     try {
       const begin = this.dependencies.db.transaction(() => {
-        this.dependencies.db.prepare(
-          `INSERT INTO model_calls (
+        this.dependencies.db
+          .prepare(
+            `INSERT INTO model_calls (
             id, workspace_id, provider_id, model_profile_id, context_pack_id,
             status, input_tokens, output_tokens, error_message, created_at, finished_at,
             prompt_preview_id, prompt_decision_id
@@ -376,31 +375,34 @@ export class AssistantService {
             @id, @workspaceId, @providerId, @modelProfileId, @contextPackId,
             'running', @inputTokens, NULL, NULL, @createdAt, NULL,
             @promptPreviewId, @promptDecisionId
-          )`
-        ).run({
-          id: modelCallId,
-          workspaceId: initial.workspaceId,
-          providerId: profile.providerId,
-          modelProfileId: profile.id,
-          contextPackId: contextPack.id,
-          inputTokens: preview.estimatedTokens,
-          createdAt: new Date().toISOString(),
-          promptPreviewId: preview.id,
-          promptDecisionId: decision.id
-        });
-        this.dependencies.events.appendInCurrentTransaction(createEvent({
-          workspaceId: initial.workspaceId,
-          type: "prompt_preview.approved",
-          actor: "user",
-          title: "External prompt approved",
-          payload: {
-            turnId: initial.id,
-            previewId: preview.id,
-            decisionId: decision.id,
-            bindingHash: preview.bindingHash
-          },
-          privacy: { labels: ["local"] }
-        }));
+          )`,
+          )
+          .run({
+            id: modelCallId,
+            workspaceId: initial.workspaceId,
+            providerId: profile.providerId,
+            modelProfileId: profile.id,
+            contextPackId: contextPack.id,
+            inputTokens: preview.estimatedTokens,
+            createdAt: new Date().toISOString(),
+            promptPreviewId: preview.id,
+            promptDecisionId: decision.id,
+          });
+        this.dependencies.events.appendInCurrentTransaction(
+          createEvent({
+            workspaceId: initial.workspaceId,
+            type: "prompt_preview.approved",
+            actor: "user",
+            title: "External prompt approved",
+            payload: {
+              turnId: initial.id,
+              previewId: preview.id,
+              decisionId: decision.id,
+              bindingHash: preview.bindingHash,
+            },
+            privacy: { labels: ["local"] },
+          }),
+        );
         this.dependencies.turns.updateState(initial.id, "running", { modelCallId });
       });
       begin();
@@ -408,7 +410,7 @@ export class AssistantService {
       for await (const chunk of provider.streamText({
         prompt: preview.redactedPrompt,
         model: profile.model,
-        signal
+        signal,
       })) {
         signal.throwIfAborted();
         partialText += chunk.text;
@@ -422,37 +424,45 @@ export class AssistantService {
         actor: "assistant",
         title: "Future answered",
         payload: { turnId: initial.id, responseText: partialText, contextPackId: contextPack.id },
-        privacy: { labels: ["local"] }
+        privacy: { labels: ["local"] },
       });
       let completedTurn: AssistantTurnDto | undefined;
       const complete = this.dependencies.db.transaction(() => {
-        this.dependencies.db.prepare(
-          `UPDATE model_calls SET status = 'completed', output_tokens = @outputTokens,
-           finished_at = @finishedAt WHERE id = @id`
-        ).run({ id: modelCallId, outputTokens: estimateOutputTokens(partialText), finishedAt: new Date().toISOString() });
-        this.dependencies.events.appendInCurrentTransaction(createEvent({
-          workspaceId: initial.workspaceId,
-          type: "model_call.completed",
-          actor: "assistant",
-          title: "Model call completed",
-          payload: {
-            turnId: initial.id,
-            modelCallId,
-            providerId: profile.providerId,
-            model: profile.model,
-            previewId: preview.id,
-            decisionId: decision.id,
-            outputCharacters: partialText.length
-          },
-          privacy: { labels: ["local"] }
-        }));
+        this.dependencies.db
+          .prepare(
+            `UPDATE model_calls SET status = 'completed', output_tokens = @outputTokens,
+           finished_at = @finishedAt WHERE id = @id`,
+          )
+          .run({
+            id: modelCallId,
+            outputTokens: estimateOutputTokens(partialText),
+            finishedAt: new Date().toISOString(),
+          });
+        this.dependencies.events.appendInCurrentTransaction(
+          createEvent({
+            workspaceId: initial.workspaceId,
+            type: "model_call.completed",
+            actor: "assistant",
+            title: "Model call completed",
+            payload: {
+              turnId: initial.id,
+              modelCallId,
+              providerId: profile.providerId,
+              model: profile.model,
+              previewId: preview.id,
+              decisionId: decision.id,
+              outputCharacters: partialText.length,
+            },
+            privacy: { labels: ["local"] },
+          }),
+        );
         this.dependencies.events.appendInCurrentTransaction(assistantEvent);
         this.dependencies.events.attachSourcesInCurrentTransaction(
           assistantEvent.id,
-          contextPack.items.map((item) => item.source)
+          contextPack.items.map((item) => item.source),
         );
         completedTurn = this.dependencies.turns.updateState(initial.id, "completed", {
-          assistantEventId: assistantEvent.id
+          assistantEventId: assistantEvent.id,
         });
       });
       complete();
@@ -462,7 +472,7 @@ export class AssistantService {
         type: "completed",
         turn: completedTurn,
         event: { ...serializeTimelineEvent(assistantEvent), citations },
-        citations
+        citations,
       };
     } catch (error) {
       const cancelled = isAbortError(error);
@@ -470,32 +480,36 @@ export class AssistantService {
       if (!current || ["completed", "failed", "cancelled"].includes(current.state)) throw error;
       let terminalTurn: AssistantTurnDto | undefined;
       const finish = this.dependencies.db.transaction(() => {
-        this.dependencies.db.prepare(
-          `UPDATE model_calls SET status = @status, output_tokens = @outputTokens,
-           error_message = @errorMessage, finished_at = @finishedAt WHERE id = @id`
-        ).run({
-          id: modelCallId,
-          status: cancelled ? "cancelled" : "failed",
-          outputTokens: estimateOutputTokens(partialText),
-          errorMessage: cancelled ? null : "provider_error",
-          finishedAt: new Date().toISOString()
-        });
-        this.dependencies.events.appendInCurrentTransaction(createEvent({
-          workspaceId: initial.workspaceId,
-          type: cancelled ? "assistant.turn.cancelled" : "assistant.turn.failed",
-          actor: "assistant",
-          title: cancelled ? "Assistant turn cancelled" : "Assistant turn failed",
-          payload: {
-            turnId: initial.id,
-            partialCharacters: partialText.length,
-            ...(!cancelled ? { errorCode: "provider_error" } : {})
-          },
-          privacy: { labels: ["local"] }
-        }));
+        this.dependencies.db
+          .prepare(
+            `UPDATE model_calls SET status = @status, output_tokens = @outputTokens,
+           error_message = @errorMessage, finished_at = @finishedAt WHERE id = @id`,
+          )
+          .run({
+            id: modelCallId,
+            status: cancelled ? "cancelled" : "failed",
+            outputTokens: estimateOutputTokens(partialText),
+            errorMessage: cancelled ? null : "provider_error",
+            finishedAt: new Date().toISOString(),
+          });
+        this.dependencies.events.appendInCurrentTransaction(
+          createEvent({
+            workspaceId: initial.workspaceId,
+            type: cancelled ? "assistant.turn.cancelled" : "assistant.turn.failed",
+            actor: "assistant",
+            title: cancelled ? "Assistant turn cancelled" : "Assistant turn failed",
+            payload: {
+              turnId: initial.id,
+              partialCharacters: partialText.length,
+              ...(!cancelled ? { errorCode: "provider_error" } : {}),
+            },
+            privacy: { labels: ["local"] },
+          }),
+        );
         terminalTurn = this.dependencies.turns.updateState(
           initial.id,
           cancelled ? "cancelled" : "failed",
-          cancelled ? {} : { errorCode: "provider_error" }
+          cancelled ? {} : { errorCode: "provider_error" },
         );
       });
       finish();
@@ -531,8 +545,8 @@ export class AssistantService {
           actor: "assistant",
           title: "Assistant turn cancelled",
           payload: { turnId, partialCharacters: 0 },
-          privacy: { labels: ["local"] }
-        })
+          privacy: { labels: ["local"] },
+        }),
       );
       return this.dependencies.turns.updateState(turnId, "cancelled");
     });
@@ -551,29 +565,33 @@ export class AssistantService {
     }
     let deniedTurn: AssistantTurnDto | undefined;
     const deny = this.dependencies.db.transaction(() => {
-      this.dependencies.events.appendInCurrentTransaction(createEvent({
-        workspaceId: turn.workspaceId,
-        type: "prompt_preview.denied",
-        actor: "user",
-        title: "External prompt denied",
-        payload: {
-          turnId: turn.id,
-          previewId,
-          decisionId: decision.id,
-          bindingHash: decision.bindingHash
-        },
-        privacy: { labels: ["local"] }
-      }));
-      this.dependencies.events.appendInCurrentTransaction(createEvent({
-        workspaceId: turn.workspaceId,
-        type: "assistant.turn.failed",
-        actor: "assistant",
-        title: "Assistant turn denied",
-        payload: { turnId: turn.id, errorCode: "grant_denied" },
-        privacy: { labels: ["local"] }
-      }));
+      this.dependencies.events.appendInCurrentTransaction(
+        createEvent({
+          workspaceId: turn.workspaceId,
+          type: "prompt_preview.denied",
+          actor: "user",
+          title: "External prompt denied",
+          payload: {
+            turnId: turn.id,
+            previewId,
+            decisionId: decision.id,
+            bindingHash: decision.bindingHash,
+          },
+          privacy: { labels: ["local"] },
+        }),
+      );
+      this.dependencies.events.appendInCurrentTransaction(
+        createEvent({
+          workspaceId: turn.workspaceId,
+          type: "assistant.turn.failed",
+          actor: "assistant",
+          title: "Assistant turn denied",
+          payload: { turnId: turn.id, errorCode: "grant_denied" },
+          privacy: { labels: ["local"] },
+        }),
+      );
       deniedTurn = this.dependencies.turns.updateState(turn.id, "failed", {
-        errorCode: "grant_denied"
+        errorCode: "grant_denied",
       });
     });
     deny();
@@ -582,19 +600,16 @@ export class AssistantService {
   }
 
   private getUserMessage(eventId: string): string {
-    const row = this.dependencies.db.prepare<{ id: string }, UserEventRow>(
-      "SELECT payload_json FROM events WHERE id = @id"
-    ).get({ id: eventId });
-    const payload = row ? JSON.parse(row.payload_json) as Record<string, unknown> : undefined;
+    const row = this.dependencies.db
+      .prepare<{ id: string }, UserEventRow>("SELECT payload_json FROM events WHERE id = @id")
+      .get({ id: eventId });
+    const payload = row ? (JSON.parse(row.payload_json) as Record<string, unknown>) : undefined;
     if (typeof payload?.text !== "string") throw new Error("assistant user message missing");
     return payload.text;
   }
 }
 
-function buildPrompt(
-  message: string,
-  items: Array<{ text: string }>
-): string {
+function buildPrompt(message: string, items: Array<{ text: string }>): string {
   if (items.length === 0) return message;
   const context = items.map((item, index) => `[${index + 1}] ${item.text}`).join("\n");
   return `${message}\n\nLocal context:\n${context}`;

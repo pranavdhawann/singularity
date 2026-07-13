@@ -51,4 +51,3 @@ Local and CI gates are the same: frozen install, `check`, web build, Playwright,
 and `git diff --check`. The release checklist also verifies workflow syntax,
 README commands, tracked-file hygiene, GitHub metadata, and the final tag. The
 release is described as early and functional, never production-ready.
-

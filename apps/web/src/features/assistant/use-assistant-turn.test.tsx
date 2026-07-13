@@ -12,7 +12,7 @@ const turn: AssistantTurnDto = {
   state: "queued",
   userEventId: "evt_user",
   createdAt: "2026-07-10T12:00:00.000Z",
-  updatedAt: "2026-07-10T12:00:00.000Z"
+  updatedAt: "2026-07-10T12:00:00.000Z",
 };
 
 describe("useAssistantTurn", () => {
@@ -23,12 +23,26 @@ describe("useAssistantTurn", () => {
       yield { type: "context", contextPackId: "ctx_1", sourceCount: 1 };
       yield { type: "delta", text: "Hello " };
       yield { type: "delta", text: "world" };
-      yield { type: "completed", turn: completed, event: { id: "evt_answer", workspaceId: "w_1", type: "assistant.response.created", actor: "assistant", title: "Answer", payload: {}, privacy: {}, createdAt: "2026-07-10T12:01:00.000Z" }, citations: [] };
+      yield {
+        type: "completed",
+        turn: completed,
+        event: {
+          id: "evt_answer",
+          workspaceId: "w_1",
+          type: "assistant.response.created",
+          actor: "assistant",
+          title: "Answer",
+          payload: {},
+          privacy: {},
+          createdAt: "2026-07-10T12:01:00.000Z",
+        },
+        citations: [],
+      };
     });
     const api = {
       createAssistantTurn: vi.fn(async () => ({ turn, replayed: false })),
       streamAssistantTurn,
-      cancelAssistantTurn: vi.fn()
+      cancelAssistantTurn: vi.fn(),
     } as unknown as FutureApi;
     const onTimelineChanged = vi.fn();
     const onContextSelected = vi.fn();
@@ -46,17 +60,29 @@ describe("useAssistantTurn", () => {
 
   it("loads an exact external preview and resumes the same turn after approval", async () => {
     const preview = {
-      id: "preview_1", workspaceId: "w_1", turnId: turn.id,
-      providerId: "provider_1", modelProfileId: "profile_1", model: "model-1",
-      endpointClassification: "external" as const, contextPackId: "ctx_1",
-      contextPackHash: "ctx-hash", redactedPrompt: "Email [REDACTED_EMAIL]",
-      promptHash: "prompt-hash", bindingHash: "binding-hash", estimatedTokens: 8,
-      privacyLabels: ["private"], redactionCounts: { email: 1 },
-      selectedSources: [], excludedSources: [],
-      createdAt: "2026-07-11T00:00:00.000Z", expiresAt: "2026-07-11T00:05:00.000Z"
+      id: "preview_1",
+      workspaceId: "w_1",
+      turnId: turn.id,
+      providerId: "provider_1",
+      modelProfileId: "profile_1",
+      model: "model-1",
+      endpointClassification: "external" as const,
+      contextPackId: "ctx_1",
+      contextPackHash: "ctx-hash",
+      redactedPrompt: "Email [REDACTED_EMAIL]",
+      promptHash: "prompt-hash",
+      bindingHash: "binding-hash",
+      estimatedTokens: 8,
+      privacyLabels: ["private"],
+      redactionCounts: { email: 1 },
+      selectedSources: [],
+      excludedSources: [],
+      createdAt: "2026-07-11T00:00:00.000Z",
+      expiresAt: "2026-07-11T00:05:00.000Z",
     };
     const completed = { ...turn, state: "completed" as const, contextPackId: "ctx_1", assistantEventId: "evt_answer" };
-    const streamAssistantTurn = vi.fn()
+    const streamAssistantTurn = vi
+      .fn()
       .mockImplementationOnce(async function* (): AsyncIterable<AssistantStreamFrame> {
         yield { type: "started", turn };
         yield { type: "context", contextPackId: "ctx_1", sourceCount: 0 };
@@ -65,21 +91,42 @@ describe("useAssistantTurn", () => {
       .mockImplementationOnce(async function* (): AsyncIterable<AssistantStreamFrame> {
         yield { type: "started", turn: { ...turn, state: "awaiting_approval" } };
         yield { type: "delta", text: "Approved" };
-        yield { type: "completed", turn: completed, event: { id: "evt_answer", workspaceId: "w_1", type: "assistant.response.created", actor: "assistant", title: "Answer", payload: {}, privacy: {}, createdAt: "2026-07-11T00:01:00.000Z" }, citations: [] };
+        yield {
+          type: "completed",
+          turn: completed,
+          event: {
+            id: "evt_answer",
+            workspaceId: "w_1",
+            type: "assistant.response.created",
+            actor: "assistant",
+            title: "Answer",
+            payload: {},
+            privacy: {},
+            createdAt: "2026-07-11T00:01:00.000Z",
+          },
+          citations: [],
+        };
       });
     const api = {
       createAssistantTurn: vi.fn(async () => ({ turn, replayed: false })),
       streamAssistantTurn,
       getPromptPreview: vi.fn(async () => preview),
       decidePromptPreview: vi.fn(async () => ({
-        id: "decision_1", previewId: preview.id, decision: "approved" as const,
-        bindingHash: preview.bindingHash, decidedAt: "2026-07-11T00:00:30.000Z"
+        id: "decision_1",
+        previewId: preview.id,
+        decision: "approved" as const,
+        bindingHash: preview.bindingHash,
+        decidedAt: "2026-07-11T00:00:30.000Z",
       })),
-      cancelAssistantTurn: vi.fn()
+      cancelAssistantTurn: vi.fn(),
     } as unknown as FutureApi;
-    const { result } = renderHook(() => useAssistantTurn({
-      api, onTimelineChanged: vi.fn(), onContextSelected: vi.fn()
-    }));
+    const { result } = renderHook(() =>
+      useAssistantTurn({
+        api,
+        onTimelineChanged: vi.fn(),
+        onContextSelected: vi.fn(),
+      }),
+    );
 
     await act(async () => {
       await result.current.submit({ workspaceId: "w_1", modelProfileId: "profile_1", message: "Hello" });
@@ -87,7 +134,9 @@ describe("useAssistantTurn", () => {
     expect(result.current.status).toBe("awaiting_approval");
     expect(result.current.promptPreview).toEqual(preview);
 
-    await act(async () => { await result.current.approvePrompt(); });
+    await act(async () => {
+      await result.current.approvePrompt();
+    });
 
     expect(api.decidePromptPreview).toHaveBeenCalledWith(preview.id, "w_1", "approved", preview.bindingHash);
     expect(streamAssistantTurn).toHaveBeenNthCalledWith(2, turn.id);

@@ -20,7 +20,7 @@ describe("local V2 session", () => {
 
     expect(response.statusCode).toBe(401);
     expect(response.json()).toEqual({
-      error: expect.objectContaining({ code: "unauthorized" })
+      error: expect.objectContaining({ code: "unauthorized" }),
     });
 
     await server.close();
@@ -43,13 +43,13 @@ describe("local V2 session", () => {
       url: "/api/v2/test-mutation",
       headers: {
         origin: "https://unrelated.example",
-        "x-future-session": "test-token"
-      }
+        "x-future-session": "test-token",
+      },
     });
 
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
-      error: expect.objectContaining({ code: "forbidden" })
+      error: expect.objectContaining({ code: "forbidden" }),
     });
 
     await server.close();
@@ -62,8 +62,8 @@ describe("local V2 session", () => {
       url: "/api/v2/test-mutation",
       headers: {
         origin: allowedOrigins[0],
-        "x-future-session": "test-token"
-      }
+        "x-future-session": "test-token",
+      },
     });
 
     expect(response.statusCode).toBe(200);

@@ -3,15 +3,13 @@ import { apiError } from "./api";
 
 describe("apiError", () => {
   it("creates the stable V2 error envelope", () => {
-    expect(
-      apiError("validation_error", "Invalid request", "req_1", { name: "required" })
-    ).toEqual({
+    expect(apiError("validation_error", "Invalid request", "req_1", { name: "required" })).toEqual({
       error: {
         code: "validation_error",
         message: "Invalid request",
         requestId: "req_1",
-        details: { name: "required" }
-      }
+        details: { name: "required" },
+      },
     });
   });
 
@@ -21,8 +19,8 @@ describe("apiError", () => {
         code: "conflict",
         message: "Memory changed",
         requestId: "req_2",
-        details: { expectedVersion: 2 }
-      }
+        details: { expectedVersion: 2 },
+      },
     });
   });
 });

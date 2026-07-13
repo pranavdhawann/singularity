@@ -1,18 +1,7 @@
 export type PermissionCapability =
-  | "read_files"
-  | "write_files"
-  | "run_commands"
-  | "browse_web"
-  | "call_apis"
-  | "write_memory"
-  | "use_external_models";
+  "read_files" | "write_files" | "run_commands" | "browse_web" | "call_apis" | "write_memory" | "use_external_models";
 
-export type PermissionState =
-  | "deny"
-  | "ask_every_time"
-  | "allow_for_session"
-  | "allow_for_workspace"
-  | "always_allow";
+export type PermissionState = "deny" | "ask_every_time" | "allow_for_session" | "allow_for_workspace" | "always_allow";
 
 export interface PermissionRule {
   capability: PermissionCapability;
@@ -41,9 +30,7 @@ export function decidePermission(input: PermissionDecisionInput): PermissionDeci
   });
 
   if (!matchingRule) {
-    return input.capability === "use_external_models"
-      ? { decision: "needs_approval" }
-      : { decision: "deny" };
+    return input.capability === "use_external_models" ? { decision: "needs_approval" } : { decision: "deny" };
   }
 
   if (matchingRule.state === "deny") {

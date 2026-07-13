@@ -22,7 +22,7 @@ import type {
   PromptDecisionDto,
   PromptPreviewDto,
   TimelineEventDto,
-  WorkspaceDto
+  WorkspaceDto,
 } from "@future/core";
 import type { FutureApi, ImportUploadResult } from "./api-types";
 
@@ -71,9 +71,7 @@ export class ApiClient implements FutureApi {
     return this.mutate<ModelProfile>("/model-profiles", input);
   }
 
-  async createAssistantTurn(
-    input: CreateAssistantTurnInput
-  ): Promise<{ turn: AssistantTurnDto; replayed: boolean }> {
+  async createAssistantTurn(input: CreateAssistantTurnInput): Promise<{ turn: AssistantTurnDto; replayed: boolean }> {
     return this.mutate<{ turn: AssistantTurnDto; replayed: boolean }>("/assistant-turns", input);
   }
 
@@ -81,7 +79,7 @@ export class ApiClient implements FutureApi {
     const token = await this.getSessionToken();
     const response = await fetch(`${this.baseUrl}/v2/assistant-turns/${encodeURIComponent(id)}/stream`, {
       method: "POST",
-      headers: { "x-future-session": token }
+      headers: { "x-future-session": token },
     });
     if (!response.ok) throw await ApiClient.toError(response);
     if (!response.body) throw new Error("Assistant stream was unavailable");
@@ -112,7 +110,7 @@ export class ApiClient implements FutureApi {
 
   async listTimeline(
     workspaceId: string,
-    after?: string
+    after?: string,
   ): Promise<{ events: TimelineEventDto[]; nextCursor?: string }> {
     const query = new URLSearchParams({ workspaceId });
     if (after) query.set("after", after);
@@ -123,18 +121,25 @@ export class ApiClient implements FutureApi {
     return this.get<ContextPackInspection>(`/context-packs/${encodeURIComponent(id)}`);
   }
 
-  async listMemories(workspaceId: string, filters: { reviewState?: string; namespaceId?: string } = {}): Promise<{ items: MemoryDto[]; nextCursor?: string }> {
+  async listMemories(
+    workspaceId: string,
+    filters: { reviewState?: string; namespaceId?: string } = {},
+  ): Promise<{ items: MemoryDto[]; nextCursor?: string }> {
     const query = new URLSearchParams({ workspaceId });
     if (filters.reviewState) query.set("reviewState", filters.reviewState);
     if (filters.namespaceId) query.set("namespaceId", filters.namespaceId);
     return this.get(`/memories?${query}`);
   }
 
-  async getMemory(id: string): Promise<MemoryDto> { return this.get(`/memories/${encodeURIComponent(id)}`); }
+  async getMemory(id: string): Promise<MemoryDto> {
+    return this.get(`/memories/${encodeURIComponent(id)}`);
+  }
   async listMemoryRevisions(id: string): Promise<{ revisions: MemoryRevisionDto[] }> {
     return this.get(`/memories/${encodeURIComponent(id)}/revisions`);
   }
-  async createMemory(input: CreateMemoryInput): Promise<MemoryDto> { return this.mutate("/memories", input); }
+  async createMemory(input: CreateMemoryInput): Promise<MemoryDto> {
+    return this.mutate("/memories", input);
+  }
   async updateMemory(id: string, input: MemoryMutationInput): Promise<MemoryDto> {
     return this.mutate(`/memories/${encodeURIComponent(id)}`, input, "PATCH");
   }
@@ -159,7 +164,7 @@ export class ApiClient implements FutureApi {
     const response = await fetch(`${this.baseUrl}/v2/imports`, {
       method: "POST",
       headers: { "x-future-session": token },
-      body: form
+      body: form,
     });
     if (!response.ok) throw await ApiClient.toError(response);
     return (await response.json()) as ImportUploadResult;
@@ -185,10 +190,12 @@ export class ApiClient implements FutureApi {
     id: string,
     workspaceId: string,
     decision: "approved" | "denied",
-    bindingHash: string
+    bindingHash: string,
   ): Promise<PromptDecisionDto> {
     return this.mutate(`/prompt-previews/${encodeURIComponent(id)}/decision`, {
-      workspaceId, decision, bindingHash
+      workspaceId,
+      decision,
+      bindingHash,
     });
   }
 
@@ -220,9 +227,9 @@ export class ApiClient implements FutureApi {
       method,
       headers: {
         "content-type": "application/json",
-        "x-future-session": token
+        "x-future-session": token,
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -239,9 +246,10 @@ export class ApiClient implements FutureApi {
 }
 
 function parseSseRecord(record: string): AssistantStreamFrame | undefined {
-  const data = record.split("\n")
+  const data = record
+    .split("\n")
     .filter((line) => line.startsWith("data:"))
     .map((line) => line.slice(5).trimStart())
     .join("\n");
-  return data ? JSON.parse(data) as AssistantStreamFrame : undefined;
+  return data ? (JSON.parse(data) as AssistantStreamFrame) : undefined;
 }

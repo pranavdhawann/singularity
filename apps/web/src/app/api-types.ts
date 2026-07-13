@@ -20,7 +20,7 @@ import type {
   PromptDecisionDto,
   PromptPreviewDto,
   TimelineEventDto,
-  WorkspaceDto
+  WorkspaceDto,
 } from "@future/core";
 
 export type {
@@ -45,7 +45,7 @@ export type {
   PromptDecisionDto,
   PromptPreviewDto,
   TimelineEventDto,
-  WorkspaceDto
+  WorkspaceDto,
 } from "@future/core";
 
 export interface FutureApi {
@@ -60,7 +60,10 @@ export interface FutureApi {
   cancelAssistantTurn(id: string): Promise<AssistantTurnDto>;
   listTimeline(workspaceId: string, after?: string): Promise<{ events: TimelineEventDto[]; nextCursor?: string }>;
   getContextPack(id: string): Promise<ContextPackInspection>;
-  listMemories(workspaceId: string, filters?: { reviewState?: string; namespaceId?: string }): Promise<{ items: MemoryDto[]; nextCursor?: string }>;
+  listMemories(
+    workspaceId: string,
+    filters?: { reviewState?: string; namespaceId?: string },
+  ): Promise<{ items: MemoryDto[]; nextCursor?: string }>;
   getMemory(id: string): Promise<MemoryDto>;
   listMemoryRevisions(id: string): Promise<{ revisions: MemoryRevisionDto[] }>;
   createMemory(input: CreateMemoryInput): Promise<MemoryDto>;
@@ -78,13 +81,12 @@ export interface FutureApi {
     id: string,
     workspaceId: string,
     decision: "approved" | "denied",
-    bindingHash: string
+    bindingHash: string,
   ): Promise<PromptDecisionDto>;
 }
 
 export interface ImportUploadResult {
   files: Array<
-    | { filename: string; job: ImportJobDto }
-    | { filename: string; errorCode: "unsupported_file" | "file_too_large" }
+    { filename: string; job: ImportJobDto } | { filename: string; errorCode: "unsupported_file" | "file_too_large" }
   >;
 }

@@ -26,7 +26,7 @@ export async function runCommand(input: RunCommandInput): Promise<RunCommandResu
     budgetTokens: 1200,
     memories: input.memories ?? [],
     chunks: [],
-    recentEvents: []
+    recentEvents: [],
   });
 
   let responseText = "";
@@ -41,7 +41,7 @@ export async function runCommand(input: RunCommandInput): Promise<RunCommandResu
       actor: "user",
       title: "Ask with memory",
       payload: { command: input.command, input: input.input },
-      privacy: { labels: ["local"] }
+      privacy: { labels: ["local"] },
     }),
     createEvent({
       workspaceId: input.workspaceId,
@@ -51,9 +51,9 @@ export async function runCommand(input: RunCommandInput): Promise<RunCommandResu
       payload: {
         contextPackId: contextPack.id,
         itemIds: contextPack.items.map((item) => item.source.id),
-        estimatedTokens: contextPack.estimatedTokens
+        estimatedTokens: contextPack.estimatedTokens,
       },
-      privacy: { labels: ["local"] }
+      privacy: { labels: ["local"] },
     }),
     createEvent({
       workspaceId: input.workspaceId,
@@ -64,9 +64,9 @@ export async function runCommand(input: RunCommandInput): Promise<RunCommandResu
         providerId: input.providerId,
         providerKind: provider.kind,
         model,
-        outputCharacters: responseText.length
+        outputCharacters: responseText.length,
       },
-      privacy: { labels: ["local"] }
+      privacy: { labels: ["local"] },
     }),
     createEvent({
       workspaceId: input.workspaceId,
@@ -74,14 +74,14 @@ export async function runCommand(input: RunCommandInput): Promise<RunCommandResu
       actor: "assistant",
       title: "Assistant response",
       payload: { responseText, contextPackId: contextPack.id },
-      privacy: { labels: ["local"] }
-    })
+      privacy: { labels: ["local"] },
+    }),
   ];
 
   return {
     events,
     responseText,
-    contextPackId: contextPack.id
+    contextPackId: contextPack.id,
   };
 }
 

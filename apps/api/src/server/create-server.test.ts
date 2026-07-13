@@ -22,14 +22,14 @@ describe("createServer", () => {
         name: "Future Demo",
         kind: "project",
         rootPath: "C:/work/future",
-        privacyMode: "standard"
-      }
+        privacyMode: "standard",
+      },
     });
 
     const workspace = createResponse.json<{ id: string; name: string }>();
     const timelineResponse = await server.inject({
       method: "GET",
-      url: `/api/timeline?workspaceId=${workspace.id}`
+      url: `/api/timeline?workspaceId=${workspace.id}`,
     });
 
     await server.close();
@@ -38,7 +38,7 @@ describe("createServer", () => {
     expect(workspace.name).toBe("Future Demo");
     expect(timelineResponse.statusCode).toBe(200);
     expect(timelineResponse.json<{ events: Array<{ type: string }> }>().events).toEqual([
-      expect.objectContaining({ type: "workspace.created" })
+      expect.objectContaining({ type: "workspace.created" }),
     ]);
   });
 });

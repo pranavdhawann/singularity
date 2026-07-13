@@ -9,7 +9,7 @@ export const migrations: readonly Migration[] = [
   initialMigration,
   continuousAssistantMigration,
   memoryHybridRetrievalMigration,
-  importsExternalModelsMigration
+  importsExternalModelsMigration,
 ];
 
 export function runMigrations(db: SqliteDatabase): MigrationRecord[] {
@@ -21,9 +21,8 @@ export function runMigrations(db: SqliteDatabase): MigrationRecord[] {
 
   const apply = db.transaction(() => {
     for (const migration of migrations) {
-      const applied = db
-        .prepare("SELECT checksum FROM schema_migrations WHERE id = ?")
-        .get(migration.id) as { checksum: string } | undefined;
+      const applied = db.prepare("SELECT checksum FROM schema_migrations WHERE id = ?").get(migration.id) as
+        { checksum: string } | undefined;
 
       if (applied && applied.checksum !== migration.checksum) {
         throw new Error(`Migration checksum mismatch: ${migration.id}`);
@@ -34,9 +33,11 @@ export function runMigrations(db: SqliteDatabase): MigrationRecord[] {
       }
 
       migration.up(db);
-      db.prepare(
-        "INSERT INTO schema_migrations (id, checksum, applied_at) VALUES (?, ?, ?)"
-      ).run(migration.id, migration.checksum, new Date().toISOString());
+      db.prepare("INSERT INTO schema_migrations (id, checksum, applied_at) VALUES (?, ?, ?)").run(
+        migration.id,
+        migration.checksum,
+        new Date().toISOString(),
+      );
     }
   });
 
@@ -49,7 +50,7 @@ export function runMigrations(db: SqliteDatabase): MigrationRecord[] {
         checksum,
         applied_at AS appliedAt
        FROM schema_migrations
-       ORDER BY id`
+       ORDER BY id`,
     )
     .all() as MigrationRecord[];
 }

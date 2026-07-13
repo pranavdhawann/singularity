@@ -10,7 +10,7 @@ import type {
   ProviderRepository,
   PromptPreviewRepository,
   NamespaceRepository,
-  SqliteDatabase
+  SqliteDatabase,
 } from "@future/db";
 import type { AssistantService } from "../services/assistant-service";
 import type { ContextService } from "../services/context-service";

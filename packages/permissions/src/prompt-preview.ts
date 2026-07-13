@@ -1,9 +1,6 @@
 import type { PromptBindingInput, SourceReference } from "@future/core";
 import { createHash } from "node:crypto";
-import {
-  redactSensitiveText,
-  type RedactionResult
-} from "./redaction";
+import { redactSensitiveText, type RedactionResult } from "./redaction";
 
 export interface ExternalPromptSegment {
   source: SourceReference;
@@ -47,7 +44,7 @@ interface PromptPreviewDependencies {
 
 export function buildExternalPromptPreview(
   input: ExternalPromptPreviewInput,
-  dependencies: PromptPreviewDependencies = {}
+  dependencies: PromptPreviewDependencies = {},
 ): ExternalPromptPreviewResult {
   const selected = input.segments.filter((segment) => !segment.excluded);
   const excluded = input.segments.filter((segment) => segment.excluded);
@@ -68,7 +65,7 @@ export function buildExternalPromptPreview(
     model: input.model,
     contextPackId: input.contextPackId,
     contextPackHash: input.contextPackHash,
-    promptHash
+    promptHash,
   };
 
   return {
@@ -82,7 +79,7 @@ export function buildExternalPromptPreview(
       return counts;
     }, {}),
     selectedSources: selected.map((segment) => segment.source),
-    excludedSources: excluded.map((segment) => segment.source)
+    excludedSources: excluded.map((segment) => segment.source),
   };
 }
 
@@ -90,28 +87,23 @@ export function hashPromptBinding(input: PromptBindingInput): string {
   return sha256(canonicalJson(input));
 }
 
-function renderPrompt(
-  instructions: string,
-  userText: string,
-  segments: ExternalPromptSegment[]
-): string {
-  const context = segments.map((segment, index) => [
-    `[SOURCE ${index + 1}]`,
-    `kind: ${segment.source.kind}`,
-    `id: ${segment.source.id}`,
-    `title: ${segment.source.title}`,
-    `privacy: ${[...segment.privacyLabels].sort().join(", ") || "unlabeled"}`,
-    segment.text
-  ].join("\n")).join("\n\n");
+function renderPrompt(instructions: string, userText: string, segments: ExternalPromptSegment[]): string {
+  const context = segments
+    .map((segment, index) =>
+      [
+        `[SOURCE ${index + 1}]`,
+        `kind: ${segment.source.kind}`,
+        `id: ${segment.source.id}`,
+        `title: ${segment.source.title}`,
+        `privacy: ${[...segment.privacyLabels].sort().join(", ") || "unlabeled"}`,
+        segment.text,
+      ].join("\n"),
+    )
+    .join("\n\n");
 
-  return [
-    "[INSTRUCTIONS]",
-    instructions,
-    "[CONTEXT]",
-    context || "No selected context.",
-    "[USER]",
-    userText
-  ].join("\n\n");
+  return ["[INSTRUCTIONS]", instructions, "[CONTEXT]", context || "No selected context.", "[USER]", userText].join(
+    "\n\n",
+  );
 }
 
 function canonicalJson(value: unknown): string {

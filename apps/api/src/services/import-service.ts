@@ -1,16 +1,12 @@
 import { createHash } from "node:crypto";
 import { createEvent, type ImportJobDto } from "@future/core";
-import {
-  type EventRepository,
-  type ImportJobRepository,
-  type SqliteDatabase
-} from "@future/db";
+import { type EventRepository, type ImportJobRepository, type SqliteDatabase } from "@future/db";
 import {
   chunkDocument,
   parseChatGptExport,
   parseMarkdownDocument,
   parseTextDocument,
-  type ImportParseResult
+  type ImportParseResult,
 } from "@future/importers";
 import { indexSearchChunk } from "@future/retrieval";
 
@@ -47,14 +43,16 @@ export class ImportService {
 
   enqueueFile(input: EnqueueImportFileInput): ImportJobDto {
     const job = this.dependencies.jobs.createFile(input);
-    this.dependencies.events.append(createEvent({
-      workspaceId: input.workspaceId,
-      type: "import.started",
-      actor: "user",
-      title: `Started import of ${input.filename}`,
-      payload: { importId: job.importId, jobId: job.id, filename: input.filename },
-      privacy: { labels: ["local"] }
-    }));
+    this.dependencies.events.append(
+      createEvent({
+        workspaceId: input.workspaceId,
+        type: "import.started",
+        actor: "user",
+        title: `Started import of ${input.filename}`,
+        payload: { importId: job.importId, jobId: job.id, filename: input.filename },
+        privacy: { labels: ["local"] },
+      }),
+    );
     return job;
   }
 
@@ -72,7 +70,7 @@ export class ImportService {
       parsed = this.parse(queued);
       this.dependencies.jobs.advance(jobId, "queued", {
         state: "parsing",
-        documentCount: parsed.documents.length
+        documentCount: parsed.documents.length,
       });
     } catch (error) {
       this.dependencies.jobs.fail(jobId, "parse_failed");
@@ -81,7 +79,7 @@ export class ImportService {
 
     let checkpoint = this.dependencies.jobs.advance(jobId, "parsing", {
       state: "indexing",
-      documentCount: parsed.documents.length
+      documentCount: parsed.documents.length,
     });
 
     try {
@@ -108,12 +106,12 @@ export class ImportService {
               sourceUri: document.sourceUri,
               mediaType: document.mediaType,
               hash: document.hash,
-              contentHash
+              contentHash,
             });
             checkpoint = this.dependencies.jobs.advance(jobId, "indexing", {
               state: "indexing",
               documentIndex,
-              nextChunkIndex: chunkIndex + 1
+              nextChunkIndex: chunkIndex + 1,
             });
           });
           persistChunk();
@@ -131,19 +129,21 @@ export class ImportService {
         }
 
         const finishDocument = this.dependencies.db.transaction(() => {
-          this.dependencies.events.appendInCurrentTransaction(createEvent({
-            workspaceId: checkpoint.workspaceId,
-            type: "document.imported",
-            actor: "job",
-            title: `Imported ${document.title}`,
-            payload: { importId: checkpoint.importId, documentId, documentIndex, chunkCount: chunks.length },
-            privacy: { labels: ["local"] }
-          }));
+          this.dependencies.events.appendInCurrentTransaction(
+            createEvent({
+              workspaceId: checkpoint.workspaceId,
+              type: "document.imported",
+              actor: "job",
+              title: `Imported ${document.title}`,
+              payload: { importId: checkpoint.importId, documentId, documentIndex, chunkCount: chunks.length },
+              privacy: { labels: ["local"] },
+            }),
+          );
           checkpoint = this.dependencies.jobs.advance(jobId, "indexing", {
             state: "indexing",
             documentIndex: documentIndex + 1,
             nextChunkIndex: 0,
-            completedDocumentCount: documentIndex + 1
+            completedDocumentCount: documentIndex + 1,
           });
         });
         finishDocument();
@@ -154,20 +154,22 @@ export class ImportService {
           state: "completed",
           documentIndex: parsed.documents.length,
           nextChunkIndex: 0,
-          completedDocumentCount: parsed.documents.length
+          completedDocumentCount: parsed.documents.length,
         });
-        this.dependencies.events.appendInCurrentTransaction(createEvent({
-          workspaceId: checkpoint.workspaceId,
-          type: "import.finished",
-          actor: "job",
-          title: `Finished import of ${checkpoint.filename}`,
-          payload: {
-            importId: checkpoint.importId,
-            jobId: checkpoint.id,
-            documentCount: parsed.documents.length
-          },
-          privacy: { labels: ["local"] }
-        }));
+        this.dependencies.events.appendInCurrentTransaction(
+          createEvent({
+            workspaceId: checkpoint.workspaceId,
+            type: "import.finished",
+            actor: "job",
+            title: `Finished import of ${checkpoint.filename}`,
+            payload: {
+              importId: checkpoint.importId,
+              jobId: checkpoint.id,
+              documentCount: parsed.documents.length,
+            },
+            privacy: { labels: ["local"] },
+          }),
+        );
       });
       complete();
       return checkpoint;
@@ -186,7 +188,7 @@ export class ImportService {
     const input = {
       title: job.filename,
       sourceUri: `import://${encodeURIComponent(job.filename)}`,
-      text
+      text,
     };
     return kind === "markdown" ? parseMarkdownDocument(input) : parseTextDocument(input);
   }

@@ -198,5 +198,5 @@ export const schemaStatements = [
     created_at TEXT NOT NULL,
     started_at TEXT,
     finished_at TEXT
-  )`
+  )`,
 ] as const;

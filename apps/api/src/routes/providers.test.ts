@@ -10,8 +10,8 @@ describe("provider routes", () => {
       url: "/api/providers",
       payload: {
         kind: "custom-shell",
-        displayName: "Unsafe provider"
-      }
+        displayName: "Unsafe provider",
+      },
     });
 
     await server.close();

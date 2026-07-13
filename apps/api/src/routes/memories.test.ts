@@ -8,7 +8,7 @@ describe("memory routes", () => {
     const workspaceResponse = await server.inject({
       method: "POST",
       url: "/api/workspaces",
-      payload: { name: "Memory Demo" }
+      payload: { name: "Memory Demo" },
     });
     const workspace = workspaceResponse.json<{ id: string }>();
 
@@ -19,20 +19,20 @@ describe("memory routes", () => {
         workspaceId: workspace.id,
         type: "fact",
         statement: "Future uses SQLite for local truth.",
-        confidence: 0.92
-      }
+        confidence: 0.92,
+      },
     });
     const created = createResponse.json<{ id: string; reviewState: string }>();
 
     const promoteResponse = await server.inject({
       method: "POST",
-      url: `/api/memories/${created.id}/promote`
+      url: `/api/memories/${created.id}/promote`,
     });
     const promoted = promoteResponse.json<{ reviewState: string }>();
 
     const listResponse = await server.inject({
       method: "GET",
-      url: `/api/memories?workspaceId=${workspace.id}&reviewState=approved`
+      url: `/api/memories?workspaceId=${workspace.id}&reviewState=approved`,
     });
 
     const patchResponse = await server.inject({
@@ -40,19 +40,19 @@ describe("memory routes", () => {
       url: `/api/memories/${created.id}`,
       payload: {
         statement: "Future uses SQLite and FTS5 for local truth.",
-        pinned: true
-      }
+        pinned: true,
+      },
     });
     const patched = patchResponse.json<{ statement: string; pinned: boolean }>();
 
     const deleteResponse = await server.inject({
       method: "DELETE",
-      url: `/api/memories/${created.id}`
+      url: `/api/memories/${created.id}`,
     });
 
     const afterDeleteResponse = await server.inject({
       method: "GET",
-      url: `/api/memories?workspaceId=${workspace.id}`
+      url: `/api/memories?workspaceId=${workspace.id}`,
     });
 
     await server.close();
@@ -62,14 +62,14 @@ describe("memory routes", () => {
     expect(promoteResponse.statusCode).toBe(200);
     expect(promoted.reviewState).toBe("approved");
     expect(listResponse.json<{ memories: Array<{ statement: string }> }>().memories).toEqual([
-      expect.objectContaining({ statement: "Future uses SQLite for local truth." })
+      expect.objectContaining({ statement: "Future uses SQLite for local truth." }),
     ]);
     expect(patchResponse.statusCode).toBe(200);
     expect(patched).toEqual(
       expect.objectContaining({
         statement: "Future uses SQLite and FTS5 for local truth.",
-        pinned: true
-      })
+        pinned: true,
+      }),
     );
     expect(deleteResponse.statusCode).toBe(204);
     expect(afterDeleteResponse.json<{ memories: unknown[] }>().memories).toEqual([]);

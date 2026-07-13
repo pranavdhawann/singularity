@@ -1,5 +1,12 @@
-export interface EmbeddingInput { model: string; texts: readonly string[]; signal?: AbortSignal }
-export interface EmbeddingResult { available: boolean; vectors: number[][] }
+export interface EmbeddingInput {
+  model: string;
+  texts: readonly string[];
+  signal?: AbortSignal;
+}
+export interface EmbeddingResult {
+  available: boolean;
+  vectors: number[][];
+}
 export interface EmbeddingAdapter {
   readonly id: "noop" | "ollama" | "openai-compatible";
   embed(input: EmbeddingInput): Promise<EmbeddingResult>;
@@ -26,7 +33,11 @@ export function validateVectors(vectors: unknown, expectedCount: number): number
   }
   let dimensions: number | undefined;
   return vectors.map((candidate) => {
-    if (!Array.isArray(candidate) || candidate.length === 0 || candidate.some((value) => typeof value !== "number" || !Number.isFinite(value))) {
+    if (
+      !Array.isArray(candidate) ||
+      candidate.length === 0 ||
+      candidate.some((value) => typeof value !== "number" || !Number.isFinite(value))
+    ) {
       throw new EmbeddingAdapterError("invalid_response");
     }
     dimensions ??= candidate.length;

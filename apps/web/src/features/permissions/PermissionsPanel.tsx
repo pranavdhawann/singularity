@@ -2,7 +2,7 @@ const permissions = [
   ["Read files", "Ask every time"],
   ["Write memory", "Allow for workspace"],
   ["Use external models", "Ask every time"],
-  ["Run commands", "Deny"]
+  ["Run commands", "Deny"],
 ];
 
 export function PermissionsPanel() {

@@ -23,37 +23,41 @@ export class ContextPackRepository {
   constructor(private readonly db: SqliteDatabase) {}
 
   create(pack: ContextPackInspection): void {
-    this.db.prepare(
-      `INSERT INTO context_packs (
+    this.db
+      .prepare(
+        `INSERT INTO context_packs (
         id, workspace_id, command_event_id, model_profile_id,
         budget_json, items_json, redactions_json, created_at
       ) VALUES (
         @id, @workspaceId, NULL, @modelProfileId,
         @budgetJson, @itemsJson, @redactionsJson, @createdAt
-      )`
-    ).run({
-      id: pack.id,
-      workspaceId: pack.workspaceId,
-      modelProfileId: pack.modelProfileId,
-      budgetJson: JSON.stringify({
-        turnId: pack.turnId,
-        providerId: pack.providerId,
-        model: pack.model,
-        estimatedTokens: pack.estimatedTokens,
-        retrieval: pack.retrieval
-      }),
-      itemsJson: JSON.stringify(pack.items),
-      redactionsJson: JSON.stringify({ count: pack.redactionCount }),
-      createdAt: pack.createdAt
-    });
+      )`,
+      )
+      .run({
+        id: pack.id,
+        workspaceId: pack.workspaceId,
+        modelProfileId: pack.modelProfileId,
+        budgetJson: JSON.stringify({
+          turnId: pack.turnId,
+          providerId: pack.providerId,
+          model: pack.model,
+          estimatedTokens: pack.estimatedTokens,
+          retrieval: pack.retrieval,
+        }),
+        itemsJson: JSON.stringify(pack.items),
+        redactionsJson: JSON.stringify({ count: pack.redactionCount }),
+        createdAt: pack.createdAt,
+      });
   }
 
   get(id: string): ContextPackInspection | undefined {
-    const row = this.db.prepare<{ id: string }, ContextPackRow>(
-      `SELECT id, workspace_id, model_profile_id, budget_json, items_json,
+    const row = this.db
+      .prepare<{ id: string }, ContextPackRow>(
+        `SELECT id, workspace_id, model_profile_id, budget_json, items_json,
               redactions_json, created_at
-       FROM context_packs WHERE id = @id`
-    ).get({ id });
+       FROM context_packs WHERE id = @id`,
+      )
+      .get({ id });
     if (!row || !row.model_profile_id) return undefined;
 
     const metadata = JSON.parse(row.budget_json) as StoredContextMetadata;
@@ -69,7 +73,7 @@ export class ContextPackRepository {
       estimatedTokens: metadata.estimatedTokens,
       redactionCount: redactions.count ?? 0,
       ...(metadata.retrieval ? { retrieval: metadata.retrieval } : {}),
-      createdAt: row.created_at
+      createdAt: row.created_at,
     };
   }
 }

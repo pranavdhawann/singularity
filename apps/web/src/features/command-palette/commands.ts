@@ -4,5 +4,5 @@ export const commandPaletteCommands = [
   "Search workspace",
   "Import files",
   "Review proposed memories",
-  "Build prompt preview"
+  "Build prompt preview",
 ] as const;

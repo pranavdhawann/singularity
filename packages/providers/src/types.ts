@@ -5,5 +5,5 @@ export type {
   ModelProvider,
   ModelTextChunk,
   ModelTextRequest,
-  ProviderKind
+  ProviderKind,
 } from "@future/core";

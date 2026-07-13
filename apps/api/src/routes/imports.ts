@@ -4,7 +4,7 @@ import {
   parseChatGptExport,
   parseMarkdownDocument,
   parseTextDocument,
-  type ImportParseResult
+  type ImportParseResult,
 } from "@future/importers";
 import { indexSearchChunk } from "@future/retrieval";
 import type { FastifyInstance } from "fastify";
@@ -20,10 +20,7 @@ interface ImportBody {
   exportJson?: unknown;
 }
 
-export async function registerImportRoutes(
-  server: FastifyInstance,
-  deps: ApiDependencies
-): Promise<void> {
+export async function registerImportRoutes(server: FastifyInstance, deps: ApiDependencies): Promise<void> {
   server.post<{ Body: ImportBody }>(
     "/api/imports",
     {
@@ -38,10 +35,10 @@ export async function registerImportRoutes(
             title: { type: "string" },
             sourceUri: { type: "string" },
             sourcePath: { type: "string" },
-            text: { type: "string" }
-          }
-        }
-      }
+            text: { type: "string" },
+          },
+        },
+      },
     },
     async (request, reply) => {
       const result = parseImportBody(request.body);
@@ -70,7 +67,7 @@ export async function registerImportRoutes(
               @startedAt,
               @finishedAt,
               NULL
-            )`
+            )`,
           )
           .run({
             id: importId,
@@ -78,7 +75,7 @@ export async function registerImportRoutes(
             kind: request.body.kind,
             sourcePath: request.body.sourcePath ?? request.body.sourceUri ?? null,
             startedAt: now,
-            finishedAt: now
+            finishedAt: now,
           });
 
         deps.db
@@ -105,7 +102,7 @@ export async function registerImportRoutes(
               @createdAt,
               @startedAt,
               @finishedAt
-            )`
+            )`,
           )
           .run({
             id: jobId,
@@ -113,12 +110,12 @@ export async function registerImportRoutes(
             inputJson: JSON.stringify({
               kind: request.body.kind,
               sourcePath: request.body.sourcePath,
-              sourceUri: request.body.sourceUri
+              sourceUri: request.body.sourceUri,
             }),
             resultJson: JSON.stringify({ documentCount: result.documents.length }),
             createdAt: now,
             startedAt: now,
-            finishedAt: now
+            finishedAt: now,
           });
 
         deps.events.appendInCurrentTransaction(
@@ -128,8 +125,8 @@ export async function registerImportRoutes(
             actor: "user",
             title: `Started ${request.body.kind} import`,
             payload: { importId, jobId },
-            privacy: { labels: ["local"] }
-          })
+            privacy: { labels: ["local"] },
+          }),
         );
 
         for (const [documentIndex, document] of result.documents.entries()) {
@@ -149,7 +146,7 @@ export async function registerImportRoutes(
               sourceRange: chunk.sourceRange,
               sourceUri: document.sourceUri,
               mediaType: document.mediaType,
-              hash: document.hash
+              hash: document.hash,
             });
           });
 
@@ -163,10 +160,10 @@ export async function registerImportRoutes(
                 importId,
                 documentId,
                 documentIndex,
-                chunkCount: chunks.length
+                chunkCount: chunks.length,
               },
-              privacy: { labels: ["local"] }
-            })
+              privacy: { labels: ["local"] },
+            }),
           );
         }
 
@@ -177,8 +174,8 @@ export async function registerImportRoutes(
             actor: "job",
             title: `Finished ${request.body.kind} import`,
             payload: { importId, jobId, documentCount: result.documents.length },
-            privacy: { labels: ["local"] }
-          })
+            privacy: { labels: ["local"] },
+          }),
         );
       });
 
@@ -187,9 +184,9 @@ export async function registerImportRoutes(
       return reply.code(201).send({
         importId,
         jobId,
-        documentCount: result.documents.length
+        documentCount: result.documents.length,
       });
-    }
+    },
   );
 }
 

@@ -7,7 +7,7 @@ describe("command routes", () => {
     const workspaceResponse = await server.inject({
       method: "POST",
       url: "/api/workspaces",
-      payload: { name: "Command Validation Demo" }
+      payload: { name: "Command Validation Demo" },
     });
     const workspace = workspaceResponse.json<{ id: string }>();
 
@@ -18,8 +18,8 @@ describe("command routes", () => {
         workspaceId: workspace.id,
         command: "delete_everything",
         input: "This should not run",
-        providerId: "mock"
-      }
+        providerId: "mock",
+      },
     });
 
     await server.close();
@@ -32,7 +32,7 @@ describe("command routes", () => {
     const workspaceResponse = await server.inject({
       method: "POST",
       url: "/api/workspaces",
-      payload: { name: "Command Permission Demo" }
+      payload: { name: "Command Permission Demo" },
     });
     const workspace = workspaceResponse.json<{ id: string }>();
 
@@ -43,8 +43,8 @@ describe("command routes", () => {
         workspaceId: workspace.id,
         command: "ask_with_memory",
         input: "Use an external model",
-        providerId: "openai-compatible"
-      }
+        providerId: "openai-compatible",
+      },
     });
 
     await server.close();
@@ -53,8 +53,8 @@ describe("command routes", () => {
     expect(commandResponse.json<{ error: string; permissionRequestId: string }>()).toEqual(
       expect.objectContaining({
         error: "permission_required",
-        permissionRequestId: expect.stringMatching(/^permreq_/)
-      })
+        permissionRequestId: expect.stringMatching(/^permreq_/),
+      }),
     );
   });
 });

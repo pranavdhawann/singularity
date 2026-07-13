@@ -12,6 +12,6 @@ export function createTestDb(): TestDb {
     client,
     close() {
       client.close();
-    }
+    },
   };
 }

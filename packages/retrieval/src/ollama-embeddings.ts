@@ -5,7 +5,7 @@ import {
   type EmbeddingAdapter,
   type EmbeddingInput,
   type EmbeddingResult,
-  type FetchLike
+  type FetchLike,
 } from "./embeddings";
 
 export class OllamaEmbeddingAdapter implements EmbeddingAdapter {
@@ -21,10 +21,10 @@ export class OllamaEmbeddingAdapter implements EmbeddingAdapter {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ model: input.model, input: input.texts }),
-        ...(input.signal ? { signal: input.signal } : {})
+        ...(input.signal ? { signal: input.signal } : {}),
       });
       if (!response.ok) throw new EmbeddingAdapterError("unavailable");
-      const body = await response.json() as { embeddings?: unknown };
+      const body = (await response.json()) as { embeddings?: unknown };
       return { available: true, vectors: validateVectors(body.embeddings, input.texts.length) };
     } catch (error) {
       if (isAbort(error) || error instanceof EmbeddingAdapterError) throw error;

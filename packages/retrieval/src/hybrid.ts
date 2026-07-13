@@ -30,16 +30,19 @@ export function rankHybridCandidates(input: {
   now?: Date;
 }): RankedContextCandidate[] {
   const suppressed = new Set(input.suppressedSourceKeys ?? []);
-  const ranked = input.candidates.filter((candidate) =>
-    candidate.workspaceId === input.workspaceId && !suppressed.has(sourceKey(candidate))
-  ).map((candidate) => rank(candidate, input.now ?? new Date()));
+  const ranked = input.candidates
+    .filter((candidate) => candidate.workspaceId === input.workspaceId && !suppressed.has(sourceKey(candidate)))
+    .map((candidate) => rank(candidate, input.now ?? new Date()));
 
   ranked.sort(compareRanked);
   const diverse: RankedContextCandidate[] = [];
   const selected = new Set<string>();
   for (const kind of ["memory", "compaction", "document_chunk", "timeline_event"] as const) {
     const item = ranked.find((candidate) => candidate.source.kind === kind);
-    if (item) { diverse.push(item); selected.add(sourceIdentity(item)); }
+    if (item) {
+      diverse.push(item);
+      selected.add(sourceIdentity(item));
+    }
   }
   for (const item of ranked) if (!selected.has(sourceIdentity(item))) diverse.push(item);
   return diverse;
@@ -49,7 +52,7 @@ function rank(candidate: HybridRetrievalCandidate, now: Date): RankedContextCand
   const hasVector = candidate.vectorScore !== undefined;
   let score = hasVector
     ? (candidate.lexicalScore ?? 0) * 0.65 + candidate.vectorScore! * 0.35
-    : candidate.lexicalScore ?? 0;
+    : (candidate.lexicalScore ?? 0);
   const reasons: string[] = [];
   if ((candidate.lexicalScore ?? 0) > 0) reasons.push("lexical");
   if (hasVector && candidate.vectorScore! > 0) reasons.push("vector");
@@ -57,14 +60,25 @@ function rank(candidate: HybridRetrievalCandidate, now: Date): RankedContextCand
     score += Math.max(0, Math.min(1, candidate.confidence)) * 0.05;
     reasons.push("confidence");
   }
-  if (candidate.pinned) { score += 0.15; reasons.push("pinned"); }
-  const quality = candidate.kind === "memory" || candidate.kind === "compaction" ? 0.05
-    : candidate.kind === "document_chunk" ? 0.04 : 0.02;
-  score += quality; reasons.push("source_quality");
+  if (candidate.pinned) {
+    score += 0.15;
+    reasons.push("pinned");
+  }
+  const quality =
+    candidate.kind === "memory" || candidate.kind === "compaction"
+      ? 0.05
+      : candidate.kind === "document_chunk"
+        ? 0.04
+        : 0.02;
+  score += quality;
+  reasons.push("source_quality");
   if (candidate.createdAt) {
     const ageDays = Math.max(0, now.getTime() - new Date(candidate.createdAt).getTime()) / 86_400_000;
     const recency = Math.max(0, 1 - ageDays / 30) * 0.05;
-    if (recency > 0) { score += recency; reasons.push("recent"); }
+    if (recency > 0) {
+      score += recency;
+      reasons.push("recent");
+    }
   }
   const finalScore = Math.max(0, Math.min(1, score));
   const source: SourceReference = {
@@ -73,7 +87,7 @@ function rank(candidate: HybridRetrievalCandidate, now: Date): RankedContextCand
     workspaceId: candidate.workspaceId,
     title: candidate.title,
     contentHash: candidate.contentHash,
-    ...(candidate.sourceRange ? { range: candidate.sourceRange } : {})
+    ...(candidate.sourceRange ? { range: candidate.sourceRange } : {}),
   };
   return {
     source,
@@ -84,9 +98,9 @@ function rank(candidate: HybridRetrievalCandidate, now: Date): RankedContextCand
       ...(candidate.lexicalScore !== undefined ? { lexicalScore: candidate.lexicalScore } : {}),
       ...(candidate.vectorScore !== undefined ? { vectorScore: candidate.vectorScore } : {}),
       finalScore,
-      reasons
+      reasons,
     },
-    ...(candidate.compactionSources ? { compactionSources: candidate.compactionSources } : {})
+    ...(candidate.compactionSources ? { compactionSources: candidate.compactionSources } : {}),
   };
 }
 

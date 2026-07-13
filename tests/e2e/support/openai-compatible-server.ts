@@ -16,7 +16,9 @@ const server = createServer((request, response) => {
     return;
   }
   let body = "";
-  request.on("data", (chunk) => { body += chunk.toString(); });
+  request.on("data", (chunk) => {
+    body += chunk.toString();
+  });
   request.on("end", () => {
     const parsed = JSON.parse(body) as { stream?: boolean };
     if (parsed.stream !== true) {

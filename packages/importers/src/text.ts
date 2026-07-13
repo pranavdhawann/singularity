@@ -16,8 +16,8 @@ export function parseTextDocument(options: ParseTextOptions): ImportParseResult 
         mediaType: "text/plain",
         text: options.text,
         hash: hashText(options.text),
-        metadata: {}
-      }
-    ]
+        metadata: {},
+      },
+    ],
   };
 }

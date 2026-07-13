@@ -60,10 +60,7 @@ interface MemoryParams {
   id: string;
 }
 
-export async function registerMemoryRoutes(
-  server: FastifyInstance,
-  deps: ApiDependencies
-): Promise<void> {
+export async function registerMemoryRoutes(server: FastifyInstance, deps: ApiDependencies): Promise<void> {
   server.get<{ Querystring: MemoryQuery }>("/api/memories", async (request) => {
     const where: string[] = [];
     const params: Record<string, string> = {};
@@ -93,7 +90,7 @@ export async function registerMemoryRoutes(
         `SELECT *
          FROM memories
          ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-         ORDER BY pinned DESC, updated_at DESC`
+         ORDER BY pinned DESC, updated_at DESC`,
       )
       .all(params);
 
@@ -112,10 +109,10 @@ export async function registerMemoryRoutes(
             type: { type: "string" },
             statement: { type: "string", minLength: 1 },
             confidence: { type: "number" },
-            summary: { type: "string" }
-          }
-        }
-      }
+            summary: { type: "string" },
+          },
+        },
+      },
     },
     async (request, reply) => {
       const now = new Date().toISOString();
@@ -128,7 +125,7 @@ export async function registerMemoryRoutes(
         confidence: request.body.confidence ?? 0.5,
         reviewState: "proposed" as MemoryReviewState,
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
       };
 
       const insert = deps.db.transaction(() => {
@@ -164,7 +161,7 @@ export async function registerMemoryRoutes(
               NULL,
               @createdAt,
               @updatedAt
-            )`
+            )`,
           )
           .run(memory);
 
@@ -175,8 +172,8 @@ export async function registerMemoryRoutes(
             actor: "assistant",
             title: "Proposed memory",
             payload: { memoryId: memory.id, memoryType: memory.type },
-            privacy: { labels: ["local"] }
-          })
+            privacy: { labels: ["local"] },
+          }),
         );
       });
 
@@ -191,9 +188,9 @@ export async function registerMemoryRoutes(
         pinned: false,
         createdAt: memory.createdAt,
         updatedAt: memory.updatedAt,
-        ...(memory.summary ? { summary: memory.summary } : {})
+        ...(memory.summary ? { summary: memory.summary } : {}),
       });
-    }
+    },
   );
 
   server.post<{ Params: MemoryParams }>("/api/memories/:id/promote", async (request, reply) => {
@@ -203,7 +200,7 @@ export async function registerMemoryRoutes(
     const transition = transitionMemory({
       reviewState: row.review_state,
       action: "approve",
-      actor: "user"
+      actor: "user",
     });
     const now = new Date().toISOString();
 
@@ -214,13 +211,13 @@ export async function registerMemoryRoutes(
            SET review_state = @reviewState,
                last_confirmed_at = @confirmedAt,
                updated_at = @updatedAt
-           WHERE id = @id`
+           WHERE id = @id`,
         )
         .run({
           id: row.id,
           reviewState: transition.reviewState,
           confirmedAt: now,
-          updatedAt: now
+          updatedAt: now,
         });
 
       deps.db
@@ -239,7 +236,7 @@ export async function registerMemoryRoutes(
             @nextJson,
             @reason,
             @createdAt
-          )`
+          )`,
         )
         .run({
           id: createId("memrev"),
@@ -247,7 +244,7 @@ export async function registerMemoryRoutes(
           previousJson: JSON.stringify(rowToMemory(row)),
           nextJson: JSON.stringify({ ...rowToMemory(row), reviewState: transition.reviewState }),
           reason: transition.revisionReason,
-          createdAt: now
+          createdAt: now,
         });
 
       deps.events.appendInCurrentTransaction(
@@ -257,8 +254,8 @@ export async function registerMemoryRoutes(
           actor: "user",
           title: "Approved memory",
           payload: { memoryId: row.id },
-          privacy: { labels: ["local"] }
-        })
+          privacy: { labels: ["local"] },
+        }),
       );
     });
 
@@ -267,36 +264,33 @@ export async function registerMemoryRoutes(
     return updated ? rowToMemory(updated) : reply.code(404).send({ error: "memory not found" });
   });
 
-  server.patch<{ Params: MemoryParams; Body: PatchMemoryBody }>(
-    "/api/memories/:id",
-    async (request, reply) => {
-      const row = getMemory(deps, request.params.id);
-      if (!row) return reply.code(404).send({ error: "memory not found" });
+  server.patch<{ Params: MemoryParams; Body: PatchMemoryBody }>("/api/memories/:id", async (request, reply) => {
+    const row = getMemory(deps, request.params.id);
+    if (!row) return reply.code(404).send({ error: "memory not found" });
 
-      const next = {
-        statement: request.body.statement ?? row.statement,
-        confidence: request.body.confidence ?? row.confidence,
-        pinned: typeof request.body.pinned === "boolean" ? (request.body.pinned ? 1 : 0) : row.pinned,
-        reviewState: request.body.reviewState ?? row.review_state,
-        updatedAt: new Date().toISOString()
-      };
+    const next = {
+      statement: request.body.statement ?? row.statement,
+      confidence: request.body.confidence ?? row.confidence,
+      pinned: typeof request.body.pinned === "boolean" ? (request.body.pinned ? 1 : 0) : row.pinned,
+      reviewState: request.body.reviewState ?? row.review_state,
+      updatedAt: new Date().toISOString(),
+    };
 
-      deps.db
-        .prepare(
-          `UPDATE memories
+    deps.db
+      .prepare(
+        `UPDATE memories
            SET statement = @statement,
                confidence = @confidence,
                pinned = @pinned,
                review_state = @reviewState,
                updated_at = @updatedAt
-           WHERE id = @id`
-        )
-        .run({ id: row.id, ...next });
+           WHERE id = @id`,
+      )
+      .run({ id: row.id, ...next });
 
-      const updated = getMemory(deps, row.id);
-      return updated ? rowToMemory(updated) : reply.code(404).send({ error: "memory not found" });
-    }
-  );
+    const updated = getMemory(deps, row.id);
+    return updated ? rowToMemory(updated) : reply.code(404).send({ error: "memory not found" });
+  });
 
   server.delete<{ Params: MemoryParams }>("/api/memories/:id", async (request, reply) => {
     const row = getMemory(deps, request.params.id);
@@ -312,8 +306,8 @@ export async function registerMemoryRoutes(
           actor: "user",
           title: "Deleted memory",
           payload: { memoryId: row.id },
-          privacy: { labels: ["local"] }
-        })
+          privacy: { labels: ["local"] },
+        }),
       );
     });
 
@@ -337,6 +331,6 @@ function rowToMemory(row: MemoryRow): MemoryResponse {
     pinned: row.pinned === 1,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    ...(row.summary ? { summary: row.summary } : {})
+    ...(row.summary ? { summary: row.summary } : {}),
   };
 }

@@ -13,11 +13,9 @@ describe("OllamaProvider", () => {
         controller.enqueue(encoder.encode('{"response":"Local ","done":false}\n{"res'));
         controller.enqueue(encoder.encode('ponse":"answer","done":true}\n'));
         controller.close();
-      }
+      },
     });
-    const fetch = vi.fn<typeof globalThis.fetch>(
-      async (_input, _init) => new Response(body, { status: 200 })
-    );
+    const fetch = vi.fn<typeof globalThis.fetch>(async (_input, _init) => new Response(body, { status: 200 }));
     vi.stubGlobal("fetch", fetch);
     const provider = new OllamaProvider({ model: "qwen3:8b" });
     const chunks: string[] = [];
@@ -29,7 +27,7 @@ describe("OllamaProvider", () => {
     expect(chunks).toEqual(["Local ", "answer"]);
     const init = fetch.mock.calls[0]?.[1];
     expect(init?.body && JSON.parse(init.body as string)).toEqual(
-      expect.objectContaining({ model: "qwen3:8b", stream: true })
+      expect.objectContaining({ model: "qwen3:8b", stream: true }),
     );
   });
 
@@ -47,7 +45,7 @@ describe("OllamaProvider", () => {
       for await (const _chunk of provider.streamText({
         prompt: "hello",
         model: "llama3.2",
-        signal: controller.signal
+        signal: controller.signal,
       })) {
         // The aborted request must not yield.
       }
@@ -56,7 +54,7 @@ describe("OllamaProvider", () => {
     await expect(consume()).rejects.toMatchObject({ name: "AbortError" });
     expect(fetch).toHaveBeenCalledWith(
       "http://127.0.0.1:11434/api/generate",
-      expect.objectContaining({ signal: controller.signal })
+      expect.objectContaining({ signal: controller.signal }),
     );
   });
 });

@@ -20,6 +20,6 @@ export function createEvent(input: TimelineEventInput): TimelineEvent {
   return {
     id: createId("evt"),
     createdAt: new Date(),
-    ...input
+    ...input,
   };
 }

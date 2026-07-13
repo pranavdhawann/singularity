@@ -71,7 +71,12 @@ test("memory retrieval lifecycle changes source-backed answers", async ({ page }
   await page.getByRole("button", { name: "Timeline" }).click();
   await composer.fill("Repeat the project codename from memory");
   await page.getByRole("button", { name: "Send" }).click();
-  await expect(page.getByLabel("Assistant response").last().getByRole("button", { name: /Pinned memory|Approved memory/ })).toHaveCount(0);
+  await expect(
+    page
+      .getByLabel("Assistant response")
+      .last()
+      .getByRole("button", { name: /Pinned memory|Approved memory/ }),
+  ).toHaveCount(0);
 
   await page.getByRole("button", { name: "Memory", exact: true }).click();
   await page.getByRole("button", { name: "Project codename is Firefly" }).click();
