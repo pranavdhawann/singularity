@@ -23,7 +23,7 @@ export function transitionMemory(input: TransitionMemoryInput): TransitionMemory
 
   return {
     reviewState: nextState,
-    revisionReason: `${input.actor} ${reasonByAction[input.action]}`
+    revisionReason: `${input.actor} ${reasonByAction[input.action]}`,
   };
 }
 
@@ -33,7 +33,7 @@ const allowedTransitions: Record<string, MemoryReviewState> = {
   "approved:mark_outdated": "outdated",
   "approved:reject": "rejected",
   "approved:edit": "approved",
-  "outdated:reconfirm": "approved"
+  "outdated:reconfirm": "approved",
 };
 
 const reasonByAction: Record<MemoryAction, string> = {
@@ -41,5 +41,5 @@ const reasonByAction: Record<MemoryAction, string> = {
   reject: "rejected memory",
   mark_outdated: "marked memory outdated",
   edit: "edited memory",
-  reconfirm: "reconfirmed memory"
+  reconfirm: "reconfirmed memory",
 };

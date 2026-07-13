@@ -12,17 +12,14 @@ interface WorkspaceRow {
   updated_at: string;
 }
 
-export async function registerV2WorkspaceRoutes(
-  server: FastifyInstance,
-  deps: ApiDependencies
-): Promise<void> {
+export async function registerV2WorkspaceRoutes(server: FastifyInstance, deps: ApiDependencies): Promise<void> {
   server.get("/api/v2/workspaces", async () => {
     const rows = deps.db
       .prepare<[], WorkspaceRow>(
         `SELECT id, name, kind, root_path, privacy_mode, created_at, updated_at
          FROM workspaces
          WHERE archived_at IS NULL
-         ORDER BY created_at DESC`
+         ORDER BY created_at DESC`,
       )
       .all();
     return { workspaces: rows.map(rowToWorkspace) };
@@ -40,10 +37,10 @@ export async function registerV2WorkspaceRoutes(
             name: { type: "string", minLength: 1 },
             kind: { type: "string", minLength: 1 },
             privacyMode: { type: "string", enum: ["standard", "local_only"] },
-            rootPath: { type: "string", minLength: 1 }
-          }
-        }
-      }
+            rootPath: { type: "string", minLength: 1 },
+          },
+        },
+      },
     },
     async (request, reply) => {
       const workspace = deps.db.transaction((input: CreateWorkspaceInput) => {
@@ -55,7 +52,7 @@ export async function registerV2WorkspaceRoutes(
           root_path: input.rootPath ?? null,
           privacy_mode: input.privacyMode,
           created_at: now,
-          updated_at: now
+          updated_at: now,
         };
 
         deps.db
@@ -64,7 +61,7 @@ export async function registerV2WorkspaceRoutes(
               id, name, kind, root_path, privacy_mode, created_at, updated_at
             ) VALUES (
               @id, @name, @kind, @root_path, @privacy_mode, @created_at, @updated_at
-            )`
+            )`,
           )
           .run(row);
 
@@ -78,17 +75,17 @@ export async function registerV2WorkspaceRoutes(
               name: row.name,
               kind: row.kind,
               rootPath: row.root_path,
-              privacyMode: row.privacy_mode
+              privacyMode: row.privacy_mode,
             },
-            privacy: { labels: ["local"] }
-          })
+            privacy: { labels: ["local"] },
+          }),
         );
 
         return rowToWorkspace(row);
       })(request.body);
 
       return reply.code(201).send(workspace);
-    }
+    },
   );
 }
 
@@ -100,6 +97,6 @@ function rowToWorkspace(row: WorkspaceRow): WorkspaceDto {
     ...(row.root_path ? { rootPath: row.root_path } : {}),
     privacyMode: row.privacy_mode,
     createdAt: row.created_at,
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
   };
 }

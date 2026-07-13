@@ -1,11 +1,7 @@
 import type { ModelProfile, ModelProvider } from "@future/core";
 import type { ModelProfileRepository, ProviderRepository } from "@future/db";
 import { MockProvider, OllamaProvider, OpenAiCompatibleProvider } from "@future/providers";
-import {
-  OllamaEmbeddingAdapter,
-  OpenAiCompatibleEmbeddingAdapter,
-  type EmbeddingAdapter
-} from "@future/retrieval";
+import { OllamaEmbeddingAdapter, OpenAiCompatibleEmbeddingAdapter, type EmbeddingAdapter } from "@future/retrieval";
 
 export type ProviderServiceErrorCode =
   | "model_profile_not_found"
@@ -24,7 +20,7 @@ export class ProviderServiceError extends Error {
 export class ProviderService {
   constructor(
     private readonly providers: ProviderRepository,
-    private readonly profiles: ModelProfileRepository
+    private readonly profiles: ModelProfileRepository,
   ) {}
 
   getRuntime(profileId: string): { provider: ModelProvider; profile: ModelProfile; isLocal: boolean } {
@@ -47,10 +43,10 @@ export class ProviderService {
         provider: new OllamaProvider({
           id: config.id,
           ...(config.baseUrl ? { baseUrl: config.baseUrl } : {}),
-          model: profile.model
+          model: profile.model,
         }),
         profile,
-        isLocal: config.isLocal
+        isLocal: config.isLocal,
       };
     }
 
@@ -70,10 +66,10 @@ export class ProviderService {
           id: config.id,
           baseUrl,
           apiKey,
-          models: [{ id: profile.model, displayName: profile.model, contextWindow: profile.contextWindow }]
+          models: [{ id: profile.model, displayName: profile.model, contextWindow: profile.contextWindow }],
         }),
         profile,
-        isLocal: config.isLocal
+        isLocal: config.isLocal,
       };
     }
 
@@ -85,12 +81,20 @@ export class ProviderService {
     const config = this.providers.getRuntimeConfig(profile.providerId);
     if (!config?.capabilities.embeddings) return undefined;
     if (config.kind === "ollama") {
-      return { adapter: new OllamaEmbeddingAdapter({ baseUrl: config.baseUrl ?? "http://127.0.0.1:11434" }),
-        model: profile.embeddingModel };
+      return {
+        adapter: new OllamaEmbeddingAdapter({ baseUrl: config.baseUrl ?? "http://127.0.0.1:11434" }),
+        model: profile.embeddingModel,
+      };
     }
     if (config.kind === "openai-compatible" && config.baseUrl && config.secretReference) {
-      return { adapter: new OpenAiCompatibleEmbeddingAdapter({ baseUrl: config.baseUrl,
-        apiKeyRef: config.secretReference, resolveSecret: resolveEnvironmentSecret }), model: profile.embeddingModel };
+      return {
+        adapter: new OpenAiCompatibleEmbeddingAdapter({
+          baseUrl: config.baseUrl,
+          apiKeyRef: config.secretReference,
+          resolveSecret: resolveEnvironmentSecret,
+        }),
+        model: profile.embeddingModel,
+      };
     }
     return undefined;
   }

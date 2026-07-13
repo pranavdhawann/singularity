@@ -1,19 +1,6 @@
-import {
-  createId,
-  type PromptBindingInput,
-  type PromptDecisionDto,
-  type PromptPreviewDto
-} from "@future/core";
-import {
-  PromptPreviewConflictError,
-  PromptPreviewExpiredError,
-  type PromptPreviewRepository
-} from "@future/db";
-import {
-  buildExternalPromptPreview,
-  hashPromptBinding,
-  type ExternalPromptPreviewInput
-} from "@future/permissions";
+import { createId, type PromptBindingInput, type PromptDecisionDto, type PromptPreviewDto } from "@future/core";
+import { PromptPreviewConflictError, PromptPreviewExpiredError, type PromptPreviewRepository } from "@future/db";
+import { buildExternalPromptPreview, hashPromptBinding, type ExternalPromptPreviewInput } from "@future/permissions";
 
 interface PromptPreviewServiceDependencies {
   previews: PromptPreviewRepository;
@@ -56,7 +43,7 @@ export class PromptPreviewService {
       endpointClassification: "external",
       ...built,
       createdAt: createdAt.toISOString(),
-      expiresAt: expiresAt.toISOString()
+      expiresAt: expiresAt.toISOString(),
     });
   }
 
@@ -74,18 +61,14 @@ export class PromptPreviewService {
     return this.dependencies.previews.getDecision(previewId);
   }
 
-  decide(
-    previewId: string,
-    decision: "approved" | "denied",
-    bindingHash: string
-  ): PromptDecisionDto {
+  decide(previewId: string, decision: "approved" | "denied", bindingHash: string): PromptDecisionDto {
     try {
       return this.dependencies.previews.decide({
         id: createId("decision"),
         previewId,
         decision,
         bindingHash,
-        decidedAt: this.now().toISOString()
+        decidedAt: this.now().toISOString(),
       });
     } catch (error) {
       if (error instanceof PromptPreviewExpiredError) {

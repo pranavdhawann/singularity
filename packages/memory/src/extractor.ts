@@ -14,7 +14,7 @@ export function extractCandidateMemories(text: string): CandidateMemory[] {
     {
       type: "summary",
       statement: trimmed.length > 240 ? `${trimmed.slice(0, 237)}...` : trimmed,
-      confidence: 0.6
-    }
+      confidence: 0.6,
+    },
   ];
 }

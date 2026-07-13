@@ -2,7 +2,7 @@ import {
   decidePermission,
   type PermissionCapability,
   type PermissionDecision,
-  type PermissionRule
+  type PermissionRule,
 } from "@future/core";
 
 export interface PermissionEvaluationInput {
@@ -22,7 +22,7 @@ export function evaluatePermission(input: PermissionEvaluationInput): Permission
     const explicit = decidePermission({
       capability: input.capability,
       rules: input.rules,
-      requestedScope: { workspaceId: input.workspaceId }
+      requestedScope: { workspaceId: input.workspaceId },
     });
     return explicit.decision === "allow" ? explicit : { decision: "needs_approval" };
   }
@@ -30,6 +30,6 @@ export function evaluatePermission(input: PermissionEvaluationInput): Permission
   return decidePermission({
     capability: input.capability,
     rules: input.rules,
-    requestedScope: { workspaceId: input.workspaceId }
+    requestedScope: { workspaceId: input.workspaceId },
   });
 }

@@ -6,7 +6,7 @@ describe("decidePermission", () => {
     const result = decidePermission({
       capability: "use_external_models",
       rules: [],
-      requestedScope: { workspaceId: "w_demo" }
+      requestedScope: { workspaceId: "w_demo" },
     });
 
     expect(result.decision).toBe("needs_approval");

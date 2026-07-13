@@ -37,21 +37,18 @@ function rowToWorkspace(row: WorkspaceRow): WorkspaceResponse {
     ...(row.root_path ? { rootPath: row.root_path } : {}),
     privacyMode: row.privacy_mode,
     createdAt: row.created_at,
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
   };
 }
 
-export async function registerWorkspaceRoutes(
-  server: FastifyInstance,
-  deps: ApiDependencies
-): Promise<void> {
+export async function registerWorkspaceRoutes(server: FastifyInstance, deps: ApiDependencies): Promise<void> {
   server.get("/api/workspaces", async () => {
     const rows = deps.db
       .prepare<[], WorkspaceRow>(
         `SELECT id, name, kind, root_path, privacy_mode, created_at, updated_at
          FROM workspaces
          WHERE archived_at IS NULL
-         ORDER BY created_at DESC`
+         ORDER BY created_at DESC`,
       )
       .all();
 
@@ -70,10 +67,10 @@ export async function registerWorkspaceRoutes(
             name: { type: "string", minLength: 1 },
             kind: { type: "string" },
             rootPath: { type: "string" },
-            privacyMode: { type: "string" }
-          }
-        }
-      }
+            privacyMode: { type: "string" },
+          },
+        },
+      },
     },
     async (request, reply) => {
       const createWorkspace = deps.db.transaction((body: CreateWorkspaceBody) => {
@@ -85,7 +82,7 @@ export async function registerWorkspaceRoutes(
           rootPath: body.rootPath ?? null,
           privacyMode: body.privacyMode ?? "standard",
           createdAt: now.toISOString(),
-          updatedAt: now.toISOString()
+          updatedAt: now.toISOString(),
         };
 
         deps.db
@@ -106,7 +103,7 @@ export async function registerWorkspaceRoutes(
               @privacyMode,
               @createdAt,
               @updatedAt
-            )`
+            )`,
           )
           .run(workspace);
 
@@ -120,10 +117,10 @@ export async function registerWorkspaceRoutes(
               name: workspace.name,
               kind: workspace.kind,
               rootPath: workspace.rootPath,
-              privacyMode: workspace.privacyMode
+              privacyMode: workspace.privacyMode,
             },
-            privacy: { labels: ["local"] }
-          })
+            privacy: { labels: ["local"] },
+          }),
         );
 
         return workspace;
@@ -137,8 +134,8 @@ export async function registerWorkspaceRoutes(
         ...(workspace.rootPath ? { rootPath: workspace.rootPath } : {}),
         privacyMode: workspace.privacyMode,
         createdAt: workspace.createdAt,
-        updatedAt: workspace.updatedAt
+        updatedAt: workspace.updatedAt,
       });
-    }
+    },
   );
 }

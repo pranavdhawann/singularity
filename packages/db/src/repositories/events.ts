@@ -61,7 +61,7 @@ export class EventRepository {
           @payloadJson,
           @privacyJson,
           @createdAt
-        )`
+        )`,
       )
       .run({
         id: event.id,
@@ -71,14 +71,14 @@ export class EventRepository {
         title: event.title,
         payloadJson: JSON.stringify(event.payload),
         privacyJson: JSON.stringify(event.privacy),
-        createdAt: event.createdAt.toISOString()
+        createdAt: event.createdAt.toISOString(),
       });
   }
 
   list(options: EventListOptions = {}): TimelineEvent[] {
     const where: string[] = [];
     const params: Record<string, string | number> = {
-      limit: options.limit ?? 100
+      limit: options.limit ?? 100,
     };
 
     if (options.workspaceId) {
@@ -93,16 +93,16 @@ export class EventRepository {
 
     const order = options.order ?? "desc";
     if (options.after) {
-      const cursor = this.db.prepare<{ id: string }, EventCursorRow>(
-        "SELECT id, created_at FROM events WHERE id = @id"
-      ).get({ id: options.after });
+      const cursor = this.db
+        .prepare<{ id: string }, EventCursorRow>("SELECT id, created_at FROM events WHERE id = @id")
+        .get({ id: options.after });
       if (cursor) {
         params.cursorCreatedAt = cursor.created_at;
         params.cursorId = cursor.id;
         where.push(
           order === "asc"
             ? "(created_at > @cursorCreatedAt OR (created_at = @cursorCreatedAt AND id > @cursorId))"
-            : "(created_at < @cursorCreatedAt OR (created_at = @cursorCreatedAt AND id < @cursorId))"
+            : "(created_at < @cursorCreatedAt OR (created_at = @cursorCreatedAt AND id < @cursorId))",
         );
       }
     }
@@ -114,7 +114,7 @@ export class EventRepository {
          FROM events
          ${whereSql}
          ORDER BY created_at ${order === "asc" ? "ASC" : "DESC"}, id ${order === "asc" ? "ASC" : "DESC"}
-         LIMIT @limit`
+         LIMIT @limit`,
       )
       .all(params);
 
@@ -126,7 +126,7 @@ export class EventRepository {
       title: row.title,
       payload: JSON.parse(row.payload_json) as Record<string, unknown>,
       privacy: JSON.parse(row.privacy_json) as Record<string, unknown>,
-      createdAt: new Date(row.created_at)
+      createdAt: new Date(row.created_at),
     }));
   }
 
@@ -143,7 +143,7 @@ export class EventRepository {
         event_id, source_kind, source_id, source_json, ordinal
       ) VALUES (
         @eventId, @sourceKind, @sourceId, @sourceJson, @ordinal
-      )`
+      )`,
     );
     sources.forEach((source, ordinal) => {
       insert.run({
@@ -151,15 +151,18 @@ export class EventRepository {
         sourceKind: source.kind,
         sourceId: source.id,
         sourceJson: JSON.stringify(source),
-        ordinal
+        ordinal,
       });
     });
   }
 
   listSources(eventId: string): SourceReference[] {
-    return this.db.prepare<{ eventId: string }, EventSourceRow>(
-      `SELECT source_json FROM assistant_response_sources
-       WHERE event_id = @eventId ORDER BY ordinal ASC`
-    ).all({ eventId }).map((row) => JSON.parse(row.source_json) as SourceReference);
+    return this.db
+      .prepare<{ eventId: string }, EventSourceRow>(
+        `SELECT source_json FROM assistant_response_sources
+       WHERE event_id = @eventId ORDER BY ordinal ASC`,
+      )
+      .all({ eventId })
+      .map((row) => JSON.parse(row.source_json) as SourceReference);
   }
 }

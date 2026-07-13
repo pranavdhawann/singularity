@@ -1,9 +1,4 @@
-import {
-  createEvent,
-  createId,
-  type PermissionCapability,
-  type PermissionState
-} from "@future/core";
+import { createEvent, createId, type PermissionCapability, type PermissionState } from "@future/core";
 import type { FastifyInstance } from "fastify";
 import type { ApiDependencies } from "../server/dependencies";
 
@@ -14,7 +9,7 @@ const permissionCapabilities: PermissionCapability[] = [
   "browse_web",
   "call_apis",
   "write_memory",
-  "use_external_models"
+  "use_external_models",
 ];
 
 const permissionStates: PermissionState[] = [
@@ -22,7 +17,7 @@ const permissionStates: PermissionState[] = [
   "ask_every_time",
   "allow_for_session",
   "allow_for_workspace",
-  "always_allow"
+  "always_allow",
 ];
 
 interface PermissionQuery {
@@ -67,17 +62,14 @@ interface PermissionRequestRow {
   decided_at: string | null;
 }
 
-export async function registerPermissionRoutes(
-  server: FastifyInstance,
-  deps: ApiDependencies
-): Promise<void> {
+export async function registerPermissionRoutes(server: FastifyInstance, deps: ApiDependencies): Promise<void> {
   server.get<{ Querystring: PermissionQuery }>("/api/permissions", async (request) => {
     const ruleRows = deps.db
       .prepare<Record<string, string>, PermissionRuleRow>(
         `SELECT *
          FROM permission_rules
          ${request.query.workspaceId ? "WHERE workspace_id = @workspaceId" : ""}
-         ORDER BY updated_at DESC`
+         ORDER BY updated_at DESC`,
       )
       .all(request.query.workspaceId ? { workspaceId: request.query.workspaceId } : {});
 
@@ -86,13 +78,13 @@ export async function registerPermissionRoutes(
         `SELECT *
          FROM permission_requests
          ${request.query.workspaceId ? "WHERE workspace_id = @workspaceId" : ""}
-         ORDER BY created_at DESC`
+         ORDER BY created_at DESC`,
       )
       .all(request.query.workspaceId ? { workspaceId: request.query.workspaceId } : {});
 
     return {
       rules: ruleRows.map(rowToRule),
-      requests: requestRows.map(rowToRequest)
+      requests: requestRows.map(rowToRequest),
     };
   });
 
@@ -108,10 +100,10 @@ export async function registerPermissionRoutes(
             workspaceId: { type: "string", minLength: 1 },
             capability: { type: "string", enum: permissionCapabilities },
             reason: { type: "string", minLength: 1 },
-            dataAccess: { type: "object", additionalProperties: true }
-          }
-        }
-      }
+            dataAccess: { type: "object", additionalProperties: true },
+          },
+        },
+      },
     },
     async (request, reply) => {
       const now = new Date().toISOString();
@@ -121,7 +113,7 @@ export async function registerPermissionRoutes(
         capability: request.body.capability,
         reason: request.body.reason,
         dataAccessJson: JSON.stringify(request.body.dataAccess ?? {}),
-        createdAt: now
+        createdAt: now,
       };
 
       const insert = deps.db.transaction(() => {
@@ -145,7 +137,7 @@ export async function registerPermissionRoutes(
               NULL,
               @createdAt,
               NULL
-            )`
+            )`,
           )
           .run(permissionRequest);
 
@@ -156,8 +148,8 @@ export async function registerPermissionRoutes(
             actor: "assistant",
             title: `Requested ${permissionRequest.capability}`,
             payload: { permissionRequestId: permissionRequest.id },
-            privacy: { labels: ["local"] }
-          })
+            privacy: { labels: ["local"] },
+          }),
         );
       });
 
@@ -168,9 +160,9 @@ export async function registerPermissionRoutes(
         capability: permissionRequest.capability,
         reason: permissionRequest.reason,
         decision: null,
-        createdAt: permissionRequest.createdAt
+        createdAt: permissionRequest.createdAt,
       });
-    }
+    },
   );
 
   server.post<{ Params: PermissionParams; Body: PermissionDecisionBody }>(
@@ -181,8 +173,8 @@ export async function registerPermissionRoutes(
           type: "object",
           required: ["id"],
           properties: {
-            id: { type: "string", minLength: 1 }
-          }
+            id: { type: "string", minLength: 1 },
+          },
         },
         body: {
           type: "object",
@@ -190,10 +182,10 @@ export async function registerPermissionRoutes(
           additionalProperties: false,
           properties: {
             decision: { type: "string", enum: ["granted", "denied"] },
-            state: { type: "string", enum: permissionStates }
-          }
-        }
-      }
+            state: { type: "string", enum: permissionStates },
+          },
+        },
+      },
     },
     async (request, reply) => {
       const row = deps.db
@@ -209,7 +201,7 @@ export async function registerPermissionRoutes(
             `UPDATE permission_requests
              SET decision = @decision,
                  decided_at = @decidedAt
-             WHERE id = @id`
+             WHERE id = @id`,
           )
           .run({ id: row.id, decision: request.body.decision, decidedAt: now });
 
@@ -234,7 +226,7 @@ export async function registerPermissionRoutes(
                 NULL,
                 @createdAt,
                 @updatedAt
-              )`
+              )`,
             )
             .run({
               id: createId("permrule"),
@@ -243,7 +235,7 @@ export async function registerPermissionRoutes(
               state: request.body.state ?? "allow_for_workspace",
               scopeJson: JSON.stringify({ workspaceId: row.workspace_id }),
               createdAt: now,
-              updatedAt: now
+              updatedAt: now,
             });
         }
 
@@ -254,8 +246,8 @@ export async function registerPermissionRoutes(
             actor: "user",
             title: `${request.body.decision} ${row.capability}`,
             payload: { permissionRequestId: row.id },
-            privacy: { labels: ["local"] }
-          })
+            privacy: { labels: ["local"] },
+          }),
         );
       });
 
@@ -263,9 +255,9 @@ export async function registerPermissionRoutes(
       return {
         id: row.id,
         decision: request.body.decision,
-        decidedAt: now
+        decidedAt: now,
       };
-    }
+    },
   );
 }
 
@@ -278,7 +270,7 @@ function rowToRule(row: PermissionRuleRow) {
     scope: JSON.parse(row.scope_json) as Record<string, unknown>,
     expiresAt: row.expires_at,
     createdAt: row.created_at,
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
   };
 }
 
@@ -291,6 +283,6 @@ function rowToRequest(row: PermissionRequestRow) {
     dataAccess: JSON.parse(row.data_access_json) as Record<string, unknown>,
     decision: row.decision,
     createdAt: row.created_at,
-    decidedAt: row.decided_at
+    decidedAt: row.decided_at,
   };
 }

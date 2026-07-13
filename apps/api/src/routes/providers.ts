@@ -22,10 +22,7 @@ interface ProviderRow {
   capabilities_json: string;
 }
 
-export async function registerProviderRoutes(
-  server: FastifyInstance,
-  deps: ApiDependencies
-): Promise<void> {
+export async function registerProviderRoutes(server: FastifyInstance, deps: ApiDependencies): Promise<void> {
   server.get("/api/providers", async () => {
     const rows = deps.db.prepare<[], ProviderRow>("SELECT * FROM providers ORDER BY display_name").all();
     return {
@@ -36,8 +33,8 @@ export async function registerProviderRoutes(
         baseUrl: row.base_url,
         apiKeyRef: row.api_key_ref,
         isLocal: row.is_local === 1,
-        capabilities: JSON.parse(row.capabilities_json) as Record<string, unknown>
-      }))
+        capabilities: JSON.parse(row.capabilities_json) as Record<string, unknown>,
+      })),
     };
   });
 
@@ -54,10 +51,10 @@ export async function registerProviderRoutes(
             displayName: { type: "string", minLength: 1 },
             baseUrl: { type: "string" },
             apiKeyRef: { type: "string" },
-            isLocal: { type: "boolean" }
-          }
-        }
-      }
+            isLocal: { type: "boolean" },
+          },
+        },
+      },
     },
     async (request, reply) => {
       const now = new Date().toISOString();
@@ -70,7 +67,7 @@ export async function registerProviderRoutes(
         isLocal: request.body.isLocal ?? request.body.kind !== "openai-compatible",
         capabilitiesJson: JSON.stringify({ streaming: true, text: true }),
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
       };
 
       deps.db
@@ -95,7 +92,7 @@ export async function registerProviderRoutes(
           @capabilitiesJson,
           @createdAt,
           @updatedAt
-        )`
+        )`,
         )
         .run({ ...provider, isLocal: provider.isLocal ? 1 : 0 });
 
@@ -106,8 +103,8 @@ export async function registerProviderRoutes(
         baseUrl: provider.baseUrl,
         apiKeyRef: provider.apiKeyRef,
         isLocal: provider.isLocal,
-        capabilities: JSON.parse(provider.capabilitiesJson) as Record<string, unknown>
+        capabilities: JSON.parse(provider.capabilitiesJson) as Record<string, unknown>,
       });
-    }
+    },
   );
 }

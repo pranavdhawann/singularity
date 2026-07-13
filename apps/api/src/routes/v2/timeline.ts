@@ -8,10 +8,7 @@ interface TimelineQuery {
   limit?: number;
 }
 
-export async function registerV2TimelineRoutes(
-  server: FastifyInstance,
-  deps: ApiDependencies
-): Promise<void> {
+export async function registerV2TimelineRoutes(server: FastifyInstance, deps: ApiDependencies): Promise<void> {
   server.get<{ Querystring: TimelineQuery }>(
     "/api/v2/timeline",
     {
@@ -23,26 +20,26 @@ export async function registerV2TimelineRoutes(
           properties: {
             workspaceId: { type: "string", minLength: 1 },
             after: { type: "string", minLength: 1 },
-            limit: { type: "integer", minimum: 1, maximum: 100 }
-          }
-        }
-      }
+            limit: { type: "integer", minimum: 1, maximum: 100 },
+          },
+        },
+      },
     },
     async (request) => {
       const events = deps.events.list({
         workspaceId: request.query.workspaceId,
         order: "asc",
         limit: request.query.limit ?? 100,
-        ...(request.query.after ? { after: request.query.after } : {})
+        ...(request.query.after ? { after: request.query.after } : {}),
       });
       const serialized = events.map((event) => ({
         ...serializeTimelineEvent(event),
-        citations: deps.events.listSources(event.id)
+        citations: deps.events.listSources(event.id),
       }));
       return {
         events: serialized,
-        ...(serialized.length ? { nextCursor: serialized.at(-1)?.id } : {})
+        ...(serialized.length ? { nextCursor: serialized.at(-1)?.id } : {}),
       };
-    }
+    },
   );
 }

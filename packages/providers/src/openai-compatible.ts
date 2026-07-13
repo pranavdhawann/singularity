@@ -7,10 +7,7 @@ export interface OpenAiCompatibleProviderOptions {
   models: ModelDescriptor[];
 }
 
-export type OpenAiCompatibleProviderErrorCode =
-  | "request_failed"
-  | "stream_unavailable"
-  | "invalid_stream";
+export type OpenAiCompatibleProviderErrorCode = "request_failed" | "stream_unavailable" | "invalid_stream";
 
 export class OpenAiCompatibleProviderError extends Error {
   constructor(readonly code: OpenAiCompatibleProviderErrorCode) {
@@ -42,14 +39,14 @@ export class OpenAiCompatibleProvider implements ModelProvider {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        ...(this.apiKey ? { authorization: `Bearer ${this.apiKey}` } : {})
+        ...(this.apiKey ? { authorization: `Bearer ${this.apiKey}` } : {}),
       },
       body: JSON.stringify({
         model: request.model,
         messages: [{ role: "user", content: request.prompt }],
-        stream: true
+        stream: true,
       }),
-      ...(request.signal ? { signal: request.signal } : {})
+      ...(request.signal ? { signal: request.signal } : {}),
     });
 
     if (!response.ok) {

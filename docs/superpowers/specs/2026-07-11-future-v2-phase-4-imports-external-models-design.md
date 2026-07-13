@@ -267,4 +267,3 @@ corepack pnpm --filter @future/web build
 corepack pnpm test:e2e
 git diff --check
 ```
-

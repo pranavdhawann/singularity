@@ -12,7 +12,7 @@ describe("ImportJobRepository", () => {
         filename: "notes.md",
         mediaType: "text/markdown",
         kind: "markdown",
-        content: Buffer.from("# Notes\nUse SQLite")
+        content: Buffer.from("# Notes\nUse SQLite"),
       });
 
       expect(created.state).toBe("queued");
@@ -20,18 +20,17 @@ describe("ImportJobRepository", () => {
 
       const parsing = repository.advance(created.id, "queued", {
         state: "parsing",
-        documentCount: 1
+        documentCount: 1,
       });
       const indexing = repository.advance(created.id, "parsing", {
         state: "indexing",
         documentIndex: 0,
-        nextChunkIndex: 1
+        nextChunkIndex: 1,
       });
 
       expect(parsing.documentCount).toBe(1);
       expect(indexing.nextChunkIndex).toBe(1);
-      expect(() => repository.advance(created.id, "queued", { state: "parsing" }))
-        .toThrow(ImportJobConflictError);
+      expect(() => repository.advance(created.id, "queued", { state: "parsing" })).toThrow(ImportJobConflictError);
     } finally {
       db.close();
     }
@@ -46,12 +45,12 @@ describe("ImportJobRepository", () => {
         filename: "notes.txt",
         mediaType: "text/plain",
         kind: "text",
-        content: Buffer.from("one two three")
+        content: Buffer.from("one two three"),
       });
       repository.advance(created.id, "queued", {
         state: "indexing",
         documentCount: 1,
-        nextChunkIndex: 2
+        nextChunkIndex: 2,
       });
       repository.fail(created.id, "index_failed");
 

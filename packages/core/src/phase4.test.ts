@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type {
-  ImportJobDto,
-  PromptBindingInput,
-  PromptDecisionDto,
-  PromptPreviewDto
-} from "./index";
+import type { ImportJobDto, PromptBindingInput, PromptDecisionDto, PromptPreviewDto } from "./index";
 
 describe("Phase 4 contracts", () => {
   it("carries resumable import checkpoints", () => {
@@ -21,7 +16,7 @@ describe("Phase 4 contracts", () => {
       documentCount: 2,
       completedDocumentCount: 1,
       createdAt: "2026-07-11T00:00:00.000Z",
-      updatedAt: "2026-07-11T00:00:01.000Z"
+      updatedAt: "2026-07-11T00:00:01.000Z",
     } satisfies ImportJobDto;
 
     expect(job.nextChunkIndex).toBe(3);
@@ -35,7 +30,7 @@ describe("Phase 4 contracts", () => {
       model: "test-model",
       contextPackId: "pack_1",
       contextPackHash: "pack-hash",
-      promptHash: "prompt-hash"
+      promptHash: "prompt-hash",
     } satisfies PromptBindingInput;
     const preview = {
       ...binding,
@@ -50,14 +45,14 @@ describe("Phase 4 contracts", () => {
       excludedSources: [],
       bindingHash: "binding-hash",
       createdAt: "2026-07-11T00:00:00.000Z",
-      expiresAt: "2026-07-11T00:05:00.000Z"
+      expiresAt: "2026-07-11T00:05:00.000Z",
     } satisfies PromptPreviewDto;
     const decision = {
       id: "decision_1",
       previewId: preview.id,
       decision: "approved",
       bindingHash: preview.bindingHash,
-      decidedAt: "2026-07-11T00:01:00.000Z"
+      decidedAt: "2026-07-11T00:01:00.000Z",
     } satisfies PromptDecisionDto;
 
     expect(decision.bindingHash).toBe(preview.bindingHash);

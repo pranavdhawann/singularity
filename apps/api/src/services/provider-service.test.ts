@@ -12,7 +12,7 @@ describe("ProviderService", () => {
       const provider = providers.create({
         kind: "mock",
         displayName: "Mock",
-        isLocal: true
+        isLocal: true,
       });
       const profile = profiles.create({
         providerId: provider.id,
@@ -20,7 +20,7 @@ describe("ProviderService", () => {
         model: "mock",
         contextWindow: 4096,
         purpose: "testing",
-        privacyPolicy: "local_only"
+        privacyPolicy: "local_only",
       });
 
       const runtime = new ProviderService(providers, profiles).getRuntime(profile.id);
@@ -42,7 +42,7 @@ describe("ProviderService", () => {
         kind: "ollama",
         displayName: "Local Ollama",
         baseUrl: "http://127.0.0.1:11434",
-        isLocal: true
+        isLocal: true,
       });
       const profile = profiles.create({
         providerId: provider.id,
@@ -50,15 +50,13 @@ describe("ProviderService", () => {
         model: "qwen3:8b",
         contextWindow: 32768,
         purpose: "general",
-        privacyPolicy: "local_only"
+        privacyPolicy: "local_only",
       });
 
       const runtime = new ProviderService(providers, profiles).getRuntime(profile.id);
 
       expect(runtime.provider.kind).toBe("ollama");
-      await expect(runtime.provider.listModels()).resolves.toEqual([
-        expect.objectContaining({ id: "qwen3:8b" })
-      ]);
+      await expect(runtime.provider.listModels()).resolves.toEqual([expect.objectContaining({ id: "qwen3:8b" })]);
     } finally {
       db.close();
     }
@@ -68,15 +66,12 @@ describe("ProviderService", () => {
     const db = createTestDb();
 
     try {
-      const service = new ProviderService(
-        new ProviderRepository(db.client),
-        new ModelProfileRepository(db.client)
-      );
+      const service = new ProviderService(new ProviderRepository(db.client), new ModelProfileRepository(db.client));
 
       expect(() => service.getRuntime("profile_missing")).toThrowError(
         expect.objectContaining<Partial<ProviderServiceError>>({
-          code: "model_profile_not_found"
-        })
+          code: "model_profile_not_found",
+        }),
       );
     } finally {
       db.close();
@@ -90,26 +85,32 @@ describe("ProviderService", () => {
       const providers = new ProviderRepository(db.client);
       const profiles = new ModelProfileRepository(db.client);
       const provider = providers.create({
-        kind: "openai-compatible", displayName: "External",
-        baseUrl: "http://127.0.0.1:9999/v1", isLocal: false,
-        secretEnvironmentVariable: "FUTURE_TEST_OPENAI_KEY"
+        kind: "openai-compatible",
+        displayName: "External",
+        baseUrl: "http://127.0.0.1:9999/v1",
+        isLocal: false,
+        secretEnvironmentVariable: "FUTURE_TEST_OPENAI_KEY",
       });
       const profile = profiles.create({
-        providerId: provider.id, name: "External model", model: "model-1",
-        contextWindow: 8192, purpose: "general", privacyPolicy: "prompt_preview"
+        providerId: provider.id,
+        name: "External model",
+        model: "model-1",
+        contextWindow: 8192,
+        purpose: "general",
+        privacyPolicy: "prompt_preview",
       });
       const service = new ProviderService(providers, profiles);
 
       delete process.env.FUTURE_TEST_OPENAI_KEY;
       expect(() => service.getRuntime(profile.id)).toThrowError(
-        expect.objectContaining<Partial<ProviderServiceError>>({ code: "missing_external_secret" })
+        expect.objectContaining<Partial<ProviderServiceError>>({ code: "missing_external_secret" }),
       );
       process.env.FUTURE_TEST_OPENAI_KEY = "resolved-at-call-time";
       const runtime = service.getRuntime(profile.id);
 
       expect(runtime.provider.kind).toBe("openai-compatible");
       await expect(runtime.provider.listModels()).resolves.toEqual([
-        { id: "model-1", displayName: "model-1", contextWindow: 8192 }
+        { id: "model-1", displayName: "model-1", contextWindow: 8192 },
       ]);
     } finally {
       if (previous === undefined) delete process.env.FUTURE_TEST_OPENAI_KEY;

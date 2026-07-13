@@ -9,8 +9,8 @@ export class MockProvider implements ModelProvider {
       {
         id: "mock",
         displayName: "Mock",
-        contextWindow: 4096
-      }
+        contextWindow: 4096,
+      },
     ];
   }
 

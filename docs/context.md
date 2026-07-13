@@ -12,8 +12,11 @@ The V2 source of truth is
 
 ## Current Implementation
 
-Phase 4, Imports and External Models, is complete. The implementation retains
-the Phase 3 memory/retrieval slice and adds:
+Phase 4, Imports and External Models, is complete. The `v0.1.0` launch-readiness
+foundation also adds real lint/format gates, GitHub Actions, a deterministic
+offline demo, first-run browser coverage, community health files, release
+instructions, and public launch assets. The implementation retains the Phase 3
+memory/retrieval slice and adds:
 
 - ordered SQLite migrations with checksum verification
 - stable API error envelopes
@@ -106,6 +109,8 @@ assistant uses V2 contracts.
 
 ## Next Boundary
 
-Phase 5 adds opt-in proactive assistance, browser notifications and job controls,
-bounded failure recovery, structured redacted local logging, real lint/formatting,
-CI, and contribution/security/release documentation.
+Phase 5 foundations are complete for linting, formatting, CI, contribution,
+security, launch, and release documentation. Remaining Phase 5 product work is
+opt-in proactive assistance, browser notifications and job controls, bounded
+failure recovery, and structured redacted local logging. Proactive work must
+remain disabled by default and permission-bound.

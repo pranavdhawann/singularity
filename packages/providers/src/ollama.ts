@@ -36,9 +36,9 @@ export class OllamaProvider implements ModelProvider {
       body: JSON.stringify({
         model: request.model,
         prompt: request.prompt,
-        stream: true
+        stream: true,
       }),
-      ...(request.signal ? { signal: request.signal } : {})
+      ...(request.signal ? { signal: request.signal } : {}),
     });
 
     if (!response.ok) {

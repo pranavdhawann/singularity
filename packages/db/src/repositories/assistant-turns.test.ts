@@ -19,16 +19,14 @@ describe("AssistantTurnRepository", () => {
       workspaceId: "w_demo",
       modelProfileId: "profile_1",
       idempotencyKey: "key_1",
-      message: "Hello Future"
+      message: "Hello Future",
     };
     const first = turns.create(input);
     const replay = turns.create(input);
 
     expect(first.replayed).toBe(false);
     expect(replay).toEqual({ turn: first.turn, replayed: true });
-    expect(
-      db.client.prepare("SELECT COUNT(*) FROM events WHERE type = 'user.message.created'").pluck().get()
-    ).toBe(1);
+    expect(db.client.prepare("SELECT COUNT(*) FROM events WHERE type = 'user.message.created'").pluck().get()).toBe(1);
   });
 
   it("rejects reuse of an idempotency key for different input", () => {
@@ -37,7 +35,7 @@ describe("AssistantTurnRepository", () => {
       workspaceId: "w_demo",
       modelProfileId: "profile_1",
       idempotencyKey: "key_1",
-      message: "First message"
+      message: "First message",
     });
 
     expect(() =>
@@ -45,8 +43,8 @@ describe("AssistantTurnRepository", () => {
         workspaceId: "w_demo",
         modelProfileId: "profile_1",
         idempotencyKey: "key_1",
-        message: "Different message"
-      })
+        message: "Different message",
+      }),
     ).toThrow(AssistantTurnConflictError);
   });
 
@@ -56,15 +54,13 @@ describe("AssistantTurnRepository", () => {
       workspaceId: "w_demo",
       modelProfileId: "profile_1",
       idempotencyKey: "key_1",
-      message: "Hello"
+      message: "Hello",
     });
     const building = turns.updateState(turn.id, "building_context", {
-      contextPackId: "ctx_1"
+      contextPackId: "ctx_1",
     });
 
-    expect(building).toEqual(
-      expect.objectContaining({ state: "building_context", contextPackId: "ctx_1" })
-    );
+    expect(building).toEqual(expect.objectContaining({ state: "building_context", contextPackId: "ctx_1" }));
     expect(() => turns.updateState(turn.id, "queued")).toThrow(/invalid turn transition/);
   });
 });

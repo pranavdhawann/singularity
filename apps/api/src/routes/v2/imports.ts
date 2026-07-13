@@ -15,15 +15,11 @@ interface ImportParams {
 }
 
 type FileResult =
-  | { filename: string; job: ImportJobDto }
-  | { filename: string; errorCode: "unsupported_file" | "file_too_large" };
+  { filename: string; job: ImportJobDto } | { filename: string; errorCode: "unsupported_file" | "file_too_large" };
 
-export async function registerV2ImportRoutes(
-  server: FastifyInstance,
-  deps: ApiDependencies
-): Promise<void> {
+export async function registerV2ImportRoutes(server: FastifyInstance, deps: ApiDependencies): Promise<void> {
   await server.register(multipart, {
-    limits: { fileSize: MAX_FILE_BYTES, files: 10, parts: 20 }
+    limits: { fileSize: MAX_FILE_BYTES, files: 10, parts: 20 },
   });
 
   server.post("/api/v2/imports", async (request, reply) => {
@@ -50,11 +46,7 @@ export async function registerV2ImportRoutes(
         }
         if (!workspaceId) {
           part.file.resume();
-          return reply.code(400).send(apiError(
-            "validation_error",
-            "workspaceId must precede files",
-            request.id
-          ));
+          return reply.code(400).send(apiError("validation_error", "workspaceId must precede files", request.id));
         }
 
         const content = await part.toBuffer();
@@ -69,7 +61,7 @@ export async function registerV2ImportRoutes(
           filename,
           mediaType: part.mimetype,
           kind,
-          content
+          content,
         });
         queuedIds.push(job.id);
         files.push({ filename, job });
@@ -121,10 +113,7 @@ export async function registerV2ImportRoutes(
   });
 }
 
-function classifyFile(
-  filename: string,
-  mediaType: string
-): "text" | "markdown" | "chatgpt" | undefined {
+function classifyFile(filename: string, mediaType: string): "text" | "markdown" | "chatgpt" | undefined {
   const lower = filename.toLowerCase();
   if (lower.endsWith(".md") || lower.endsWith(".markdown")) {
     return mediaType === "text/markdown" || mediaType === "text/plain" ? "markdown" : undefined;
@@ -135,6 +124,10 @@ function classifyFile(
 }
 
 function isFileLimitError(error: unknown): boolean {
-  return Boolean(error && typeof error === "object" && "code" in error &&
-    (error as { code?: string }).code === "FST_REQ_FILE_TOO_LARGE");
+  return Boolean(
+    error &&
+    typeof error === "object" &&
+    "code" in error &&
+    (error as { code?: string }).code === "FST_REQ_FILE_TOO_LARGE",
+  );
 }

@@ -1,13 +1,4 @@
-const memoryTabs = [
-  "Facts",
-  "Episodes",
-  "Procedures",
-  "Decisions",
-  "Tasks",
-  "Summaries",
-  "Uncertain",
-  "Pinned"
-];
+const memoryTabs = ["Facts", "Episodes", "Procedures", "Decisions", "Tasks", "Summaries", "Uncertain", "Pinned"];
 
 export function MemoryBrowser() {
   return (

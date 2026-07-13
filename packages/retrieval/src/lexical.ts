@@ -64,7 +64,7 @@ export function indexSearchChunk(db: SqliteDatabase, input: IndexSearchChunkInpu
         @hash,
         NULL,
         @createdAt
-      )`
+      )`,
     ).run({
       documentId: chunk.documentId,
       workspaceId: chunk.workspaceId ?? "w_search",
@@ -73,7 +73,7 @@ export function indexSearchChunk(db: SqliteDatabase, input: IndexSearchChunkInpu
       sourceUri: chunk.sourceUri ?? `memory://${chunk.documentId}`,
       mediaType: chunk.mediaType ?? "text/plain",
       hash: chunk.hash ?? chunk.documentId,
-      createdAt: now
+      createdAt: now,
     });
 
     db.prepare(
@@ -97,7 +97,7 @@ export function indexSearchChunk(db: SqliteDatabase, input: IndexSearchChunkInpu
         'pending',
         @createdAt,
         @contentHash
-      )`
+      )`,
     ).run({
       chunkId: chunk.chunkId,
       documentId: chunk.documentId,
@@ -106,16 +106,16 @@ export function indexSearchChunk(db: SqliteDatabase, input: IndexSearchChunkInpu
       tokenCount: chunk.tokenCount,
       sourceRangeJson: chunk.sourceRange ? JSON.stringify(chunk.sourceRange) : null,
       createdAt: now,
-      contentHash: chunk.contentHash ?? chunk.hash ?? chunk.chunkId
+      contentHash: chunk.contentHash ?? chunk.hash ?? chunk.chunkId,
     });
 
     db.prepare(
       `INSERT OR REPLACE INTO document_chunks_fts (chunk_id, title, text)
-       VALUES (@chunkId, @title, @text)`
+       VALUES (@chunkId, @title, @text)`,
     ).run({
       chunkId: chunk.chunkId,
       title: chunk.title,
-      text: chunk.text
+      text: chunk.text,
     });
   });
 
@@ -142,12 +142,12 @@ export function searchLexical(db: SqliteDatabase, input: LexicalSearchInput): Le
        WHERE document_chunks_fts MATCH @query
        ${whereWorkspace}
        ORDER BY rank
-       LIMIT @limit`
+       LIMIT @limit`,
     )
     .all({
       query,
       workspaceId: input.workspaceId ?? "",
-      limit: input.limit ?? 10
+      limit: input.limit ?? 10,
     });
 
   return rows.map((row) => ({
@@ -156,15 +156,13 @@ export function searchLexical(db: SqliteDatabase, input: LexicalSearchInput): Le
     title: row.title,
     snippet: row.snippet,
     rank: row.rank,
-    sourceRange: row.source_range_json
-      ? (JSON.parse(row.source_range_json) as { start: number; end: number })
-      : null
+    sourceRange: row.source_range_json ? (JSON.parse(row.source_range_json) as { start: number; end: number }) : null,
   }));
 }
 
 export function searchAllLexical(
   db: SqliteDatabase,
-  input: { workspaceId: string; query: string; limit?: number }
+  input: { workspaceId: string; query: string; limit?: number },
 ): UnifiedSearchCandidate[] {
   return new SearchRepository(db).search(input);
 }

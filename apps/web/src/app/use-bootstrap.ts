@@ -20,25 +20,21 @@ export function useBootstrap(api: FutureApi) {
     let active = true;
     setState({ status: "loading" });
 
-    void Promise.all([
-      api.listWorkspaces(),
-      api.listProviders(),
-      api.listModelProfiles()
-    ])
+    void Promise.all([api.listWorkspaces(), api.listProviders(), api.listModelProfiles()])
       .then(([workspaceResult, providerResult, profileResult]) => {
         if (!active) return;
         setState({
           status: "ready",
           workspaces: workspaceResult.workspaces,
           providers: providerResult.providers,
-          modelProfiles: profileResult.modelProfiles
+          modelProfiles: profileResult.modelProfiles,
         });
       })
       .catch((error: unknown) => {
         if (!active) return;
         setState({
           status: "error",
-          message: error instanceof Error ? error.message : "Unable to connect to the local API"
+          message: error instanceof Error ? error.message : "Unable to connect to the local API",
         });
       });
 

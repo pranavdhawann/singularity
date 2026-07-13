@@ -5,12 +5,11 @@ import type { ApiDependencies } from "../../server/dependencies";
 import { sendApiError } from "../../server/api-errors";
 import { AssistantServiceError } from "../../services/assistant-service";
 
-interface TurnParams { id: string }
+interface TurnParams {
+  id: string;
+}
 
-export async function registerV2AssistantTurnRoutes(
-  server: FastifyInstance,
-  deps: ApiDependencies
-): Promise<void> {
+export async function registerV2AssistantTurnRoutes(server: FastifyInstance, deps: ApiDependencies): Promise<void> {
   server.post<{ Body: CreateAssistantTurnInput }>(
     "/api/v2/assistant-turns",
     {
@@ -23,10 +22,10 @@ export async function registerV2AssistantTurnRoutes(
             workspaceId: { type: "string", minLength: 1 },
             modelProfileId: { type: "string", minLength: 1 },
             idempotencyKey: { type: "string", minLength: 1, maxLength: 200 },
-            message: { type: "string", minLength: 1, maxLength: 20000 }
-          }
-        }
-      }
+            message: { type: "string", minLength: 1, maxLength: 20000 },
+          },
+        },
+      },
     },
     async (request, reply) => {
       try {
@@ -38,7 +37,7 @@ export async function registerV2AssistantTurnRoutes(
         }
         throw error;
       }
-    }
+    },
   );
 
   server.get<{ Params: TurnParams }>("/api/v2/assistant-turns/:id", async (request, reply) => {
@@ -62,7 +61,11 @@ export async function registerV2AssistantTurnRoutes(
       reply.raw.setHeader("cache-control", "no-cache");
       reply.raw.setHeader("connection", "keep-alive");
       request.raw.once("aborted", () => {
-        try { deps.assistantService.cancelTurn(request.params.id); } catch { /* terminal */ }
+        try {
+          deps.assistantService.cancelTurn(request.params.id);
+        } catch {
+          /* terminal */
+        }
       });
       try {
         for await (const frame of deps.assistantService.streamTurn(request.params.id)) {
@@ -71,7 +74,7 @@ export async function registerV2AssistantTurnRoutes(
       } finally {
         reply.raw.end();
       }
-    }
+    },
   );
 
   server.post<{ Params: TurnParams }>(
@@ -83,7 +86,7 @@ export async function registerV2AssistantTurnRoutes(
       } catch (error) {
         return mapServiceError(reply, error);
       }
-    }
+    },
   );
 }
 

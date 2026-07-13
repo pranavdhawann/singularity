@@ -12,7 +12,7 @@ This runbook covers the local Future MVP implementation.
 ## Install
 
 ```powershell
-corepack pnpm install
+corepack pnpm install --frozen-lockfile
 ```
 
 The repository pins `pnpm@11.9.0` through `packageManager`. Build scripts for
@@ -20,7 +20,16 @@ The repository pins `pnpm@11.9.0` through `packageManager`. Build scripts for
 
 ## Run Locally
 
-Start API and web together:
+For the deterministic offline demo, which uses `.future/demo.sqlite`, the mock
+provider, and `examples/future-demo.md`:
+
+```powershell
+corepack pnpm demo
+```
+
+Open `http://127.0.0.1:4173` and ask `launch readiness decision`.
+
+For an unseeded development database, start API and web together:
 
 ```powershell
 corepack pnpm dev
@@ -138,8 +147,11 @@ and do not fail the assistant turn.
 ## Verification Commands
 
 ```powershell
+corepack pnpm install --frozen-lockfile
 corepack pnpm check
+corepack pnpm --filter @future/web build
 corepack pnpm test:e2e
+git diff --check
 ```
 
 `pnpm check` runs typecheck, lint, and unit tests. `pnpm test:e2e` starts the API
@@ -151,6 +163,12 @@ direct API requests.
 The browser suite also creates, namespaces, approves, pins, outdates, corrects,
 and deletes memory, then proves later answers stop citing unavailable memory and
 that deletion remains effective after reload.
+
+The first browser scenario performs visible first-run setup, imports the bundled
+Markdown source, retries an interrupted checkpoint, receives a cited answer, and
+opens the immutable local context. The Phase 4 scenario proves both external
+approval and denial; denial leaves the deterministic provider call count
+unchanged.
 
 ## Phase 4 Imports and External Models
 
@@ -194,4 +212,3 @@ Remove-Item -Recurse -Force .future
 
 Do not remove committed files or migration/schema files when resetting local
 data.
-

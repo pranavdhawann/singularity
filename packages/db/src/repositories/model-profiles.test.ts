@@ -14,7 +14,7 @@ describe("ModelProfileRepository", () => {
         kind: "ollama",
         displayName: "Local Ollama",
         baseUrl: "http://127.0.0.1:11434",
-        isLocal: true
+        isLocal: true,
       });
       const profile = profiles.create({
         providerId: provider.id,
@@ -23,7 +23,7 @@ describe("ModelProfileRepository", () => {
         embeddingModel: "nomic-embed-text",
         contextWindow: 8192,
         purpose: "general",
-        privacyPolicy: "local_only"
+        privacyPolicy: "local_only",
       });
 
       expect(profiles.get(profile.id)).toEqual(profile);

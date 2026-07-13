@@ -7,7 +7,7 @@ describe("context pack routes", () => {
     const workspaceResponse = await server.inject({
       method: "POST",
       url: "/api/workspaces",
-      payload: { name: "Redaction Demo" }
+      payload: { name: "Redaction Demo" },
     });
     const workspace = workspaceResponse.json<{ id: string }>();
 
@@ -16,15 +16,15 @@ describe("context pack routes", () => {
       url: "/api/context-packs/preview",
       payload: {
         workspaceId: workspace.id,
-        command: "Use token sk-1234567890abcdef"
-      }
+        command: "Use token sk-1234567890abcdef",
+      },
     });
 
     await server.close();
 
     expect(previewResponse.statusCode).toBe(200);
     expect(previewResponse.json<{ redactions: Array<{ kind: string }> }>().redactions).toEqual([
-      expect.objectContaining({ kind: "secret" })
+      expect.objectContaining({ kind: "secret" }),
     ]);
   });
 });

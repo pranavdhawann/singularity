@@ -1,10 +1,4 @@
-export type ImportJobState =
-  | "queued"
-  | "parsing"
-  | "indexing"
-  | "embedding"
-  | "completed"
-  | "failed";
+export type ImportJobState = "queued" | "parsing" | "indexing" | "embedding" | "completed" | "failed";
 
 export interface ImportJobDto {
   id: string;

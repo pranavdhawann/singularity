@@ -6,7 +6,7 @@ const mutationMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 export async function registerLocalSession(
   server: FastifyInstance,
   token: string,
-  allowedOrigins: readonly string[]
+  allowedOrigins: readonly string[],
 ): Promise<void> {
   server.get("/api/v2/session", async () => ({ token }));
 
@@ -17,17 +17,13 @@ export async function registerLocalSession(
 
     const origin = request.headers.origin;
     if (origin && !allowedOrigins.includes(origin)) {
-      return reply
-        .code(403)
-        .send(apiError("forbidden", "Origin not allowed", request.id));
+      return reply.code(403).send(apiError("forbidden", "Origin not allowed", request.id));
     }
 
     if (request.headers["x-future-session"] === token) {
       return;
     }
 
-    return reply
-      .code(401)
-      .send(apiError("unauthorized", "Local session required", request.id));
+    return reply.code(401).send(apiError("unauthorized", "Local session required", request.id));
   });
 }

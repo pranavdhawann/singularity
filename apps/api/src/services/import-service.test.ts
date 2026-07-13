@@ -11,7 +11,7 @@ function setup() {
     db,
     jobs,
     events,
-    service: new ImportService({ db: db.client, jobs, events })
+    service: new ImportService({ db: db.client, jobs, events }),
   };
 }
 
@@ -25,16 +25,18 @@ describe("ImportService", () => {
         filename: "long.txt",
         mediaType: "text/plain",
         kind: "text",
-        content: Buffer.from(importedText)
+        content: Buffer.from(importedText),
       });
       let committed = 0;
 
-      await expect(ctx.service.run(created.id, {
-        afterChunkCommitted: () => {
-          committed += 1;
-          if (committed === 1) throw new Error("simulated interruption");
-        }
-      })).rejects.toThrow("simulated interruption");
+      await expect(
+        ctx.service.run(created.id, {
+          afterChunkCommitted: () => {
+            committed += 1;
+            if (committed === 1) throw new Error("simulated interruption");
+          },
+        }),
+      ).rejects.toThrow("simulated interruption");
 
       const failed = ctx.jobs.get(created.id)!;
       expect(failed.state).toBe("failed");
@@ -48,9 +50,11 @@ describe("ImportService", () => {
       expect(completed.state).toBe("completed");
       expect(ctx.db.client.prepare("SELECT COUNT(*) FROM documents").pluck().get()).toBe(1);
       expect(ctx.db.client.prepare("SELECT hash FROM documents").pluck().get()).toBe(
-        createHash("sha256").update(importedText).digest("hex")
+        createHash("sha256").update(importedText).digest("hex"),
       );
-      expect(ctx.db.client.prepare("SELECT COUNT(*) FROM document_chunks WHERE content_hash = ''").pluck().get()).toBe(0);
+      expect(ctx.db.client.prepare("SELECT COUNT(*) FROM document_chunks WHERE content_hash = ''").pluck().get()).toBe(
+        0,
+      );
       expect(ctx.db.client.prepare("SELECT COUNT(*) FROM document_chunks").pluck().get()).toBe(3);
       expect(ctx.db.client.prepare("SELECT COUNT(*) FROM document_chunks_fts").pluck().get()).toBe(3);
       expect(ctx.events.list({ workspaceId: "w_1", type: "document.imported" })).toHaveLength(1);
@@ -64,12 +68,18 @@ describe("ImportService", () => {
     const ctx = setup();
     try {
       const valid = ctx.service.enqueueFile({
-        workspaceId: "w_1", filename: "notes.md", mediaType: "text/markdown",
-        kind: "markdown", content: Buffer.from("# Notes\nUse SQLite")
+        workspaceId: "w_1",
+        filename: "notes.md",
+        mediaType: "text/markdown",
+        kind: "markdown",
+        content: Buffer.from("# Notes\nUse SQLite"),
       });
       const invalid = ctx.service.enqueueFile({
-        workspaceId: "w_1", filename: "chatgpt.json", mediaType: "application/json",
-        kind: "chatgpt", content: Buffer.from("not json")
+        workspaceId: "w_1",
+        filename: "chatgpt.json",
+        mediaType: "application/json",
+        kind: "chatgpt",
+        content: Buffer.from("not json"),
       });
 
       await expect(ctx.service.run(valid.id)).resolves.toMatchObject({ state: "completed" });
@@ -87,11 +97,17 @@ describe("ImportService", () => {
     const ctx = setup();
     try {
       const service = new ImportService({
-        db: ctx.db.client, jobs: ctx.jobs, events: ctx.events, failAfterChunks: 1
+        db: ctx.db.client,
+        jobs: ctx.jobs,
+        events: ctx.events,
+        failAfterChunks: 1,
       });
       const job = service.enqueueFile({
-        workspaceId: "w_1", filename: "resume.txt", mediaType: "text/plain",
-        kind: "text", content: Buffer.from("resumable ".repeat(400))
+        workspaceId: "w_1",
+        filename: "resume.txt",
+        mediaType: "text/plain",
+        kind: "text",
+        content: Buffer.from("resumable ".repeat(400)),
       });
 
       await expect(service.run(job.id)).rejects.toThrow("configured import interruption");

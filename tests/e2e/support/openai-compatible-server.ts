@@ -1,10 +1,16 @@
 import { createServer } from "node:http";
 
 const port = Number.parseInt(process.env.PHASE4_OPENAI_PORT ?? "4180", 10);
+let callCount = 0;
 const server = createServer((request, response) => {
   if (request.method === "GET" && request.url === "/health") {
     response.writeHead(200, { "content-type": "application/json" });
     response.end(JSON.stringify({ ok: true }));
+    return;
+  }
+  if (request.method === "GET" && request.url === "/calls") {
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(JSON.stringify({ callCount }));
     return;
   }
   if (request.method !== "POST" || request.url !== "/v1/chat/completions") {
@@ -16,8 +22,11 @@ const server = createServer((request, response) => {
     return;
   }
   let body = "";
-  request.on("data", (chunk) => { body += chunk.toString(); });
+  request.on("data", (chunk) => {
+    body += chunk.toString();
+  });
   request.on("end", () => {
+    callCount += 1;
     const parsed = JSON.parse(body) as { stream?: boolean };
     if (parsed.stream !== true) {
       response.writeHead(400).end();

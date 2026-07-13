@@ -34,10 +34,10 @@ export function parseChatGptExport(input: ChatGptExport | ChatGptConversation[])
         hash: hashText(text),
         metadata: {
           source: "chatgpt",
-          conversationIndex: index
-        }
+          conversationIndex: index,
+        },
       };
-    })
+    }),
   };
 }
 

@@ -47,13 +47,21 @@ export function AssistantComposer({ status, error, onSubmit, onCancel }: Assista
             Cancel
           </button>
         ) : (
-          <button type="submit" disabled={!message.trim()}>Send</button>
+          <button type="submit" disabled={!message.trim()}>
+            Send
+          </button>
         )}
       </div>
       {status === "streaming" ? <p className="composer-status">Future is responding...</p> : null}
-      {status === "awaiting_approval" ? <p className="composer-status">Review the external prompt before continuing.</p> : null}
+      {status === "awaiting_approval" ? (
+        <p className="composer-status">Review the external prompt before continuing.</p>
+      ) : null}
       {status === "cancelled" ? <p className="turn-cancelled">Turn cancelled.</p> : null}
-      {error ? <p className="turn-error" role="alert">{error}</p> : null}
+      {error ? (
+        <p className="turn-error" role="alert">
+          {error}
+        </p>
+      ) : null}
     </form>
   );
 }

@@ -22,12 +22,10 @@ export class ModelProfileRepository {
     const rows = providerId
       ? this.db
           .prepare<{ providerId: string }, ModelProfileRow>(
-            "SELECT * FROM model_profiles WHERE provider_id = @providerId ORDER BY name"
+            "SELECT * FROM model_profiles WHERE provider_id = @providerId ORDER BY name",
           )
           .all({ providerId })
-      : this.db
-          .prepare<[], ModelProfileRow>("SELECT * FROM model_profiles ORDER BY name")
-          .all();
+      : this.db.prepare<[], ModelProfileRow>("SELECT * FROM model_profiles ORDER BY name").all();
     return rows.map(rowToModelProfile);
   }
 
@@ -51,7 +49,7 @@ export class ModelProfileRepository {
       temperature: input.temperature ?? null,
       privacy_policy: input.privacyPolicy,
       created_at: now,
-      updated_at: now
+      updated_at: now,
     };
 
     this.db
@@ -80,7 +78,7 @@ export class ModelProfileRepository {
           @privacy_policy,
           @created_at,
           @updated_at
-        )`
+        )`,
       )
       .run(row);
 
@@ -100,6 +98,6 @@ function rowToModelProfile(row: ModelProfileRow): ModelProfile {
     ...(row.temperature === null ? {} : { temperature: row.temperature }),
     privacyPolicy: row.privacy_policy,
     createdAt: row.created_at,
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
   };
 }

@@ -9,7 +9,7 @@ export function PromptPreview({
   providerName = "Mock",
   modelName = "mock",
   items = [],
-  redactions = []
+  redactions = [],
 }: PromptPreviewProps) {
   return (
     <section className="prompt-preview" aria-label="Prompt preview">

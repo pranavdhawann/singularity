@@ -16,8 +16,8 @@ export function parseMarkdownDocument(options: ParseMarkdownOptions): ImportPars
         mediaType: "text/markdown",
         text: options.text,
         hash: hashText(options.text),
-        metadata: {}
-      }
-    ]
+        metadata: {},
+      },
+    ],
   };
 }

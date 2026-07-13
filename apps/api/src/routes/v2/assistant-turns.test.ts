@@ -18,44 +18,71 @@ describe("V2 assistant turn routes", () => {
       workspaceId: ready.workspaceId,
       modelProfileId: ready.modelProfileId,
       idempotencyKey: "browser-key-1",
-      message: "Hello Future"
+      message: "Hello Future",
     };
 
-    const created = await server.inject({ method: "POST", url: "/api/v2/assistant-turns", headers: sessionHeaders, payload: body });
+    const created = await server.inject({
+      method: "POST",
+      url: "/api/v2/assistant-turns",
+      headers: sessionHeaders,
+      payload: body,
+    });
     expect(created.statusCode).toBe(201);
     const turn = created.json<{ turn: { id: string } }>().turn;
-    const replay = await server.inject({ method: "POST", url: "/api/v2/assistant-turns", headers: sessionHeaders, payload: body });
+    const replay = await server.inject({
+      method: "POST",
+      url: "/api/v2/assistant-turns",
+      headers: sessionHeaders,
+      payload: body,
+    });
     expect(replay.statusCode).toBe(200);
     expect(replay.json()).toEqual(expect.objectContaining({ replayed: true }));
 
-    const streamed = await server.inject({ method: "POST", url: `/api/v2/assistant-turns/${turn.id}/stream`, headers: sessionHeaders });
+    const streamed = await server.inject({
+      method: "POST",
+      url: `/api/v2/assistant-turns/${turn.id}/stream`,
+      headers: sessionHeaders,
+    });
     expect(streamed.statusCode).toBe(200);
     expect(streamed.headers["content-type"]).toContain("text/event-stream");
     expect(streamed.body).toContain("event: delta");
     expect(streamed.body).toContain("event: completed");
 
     const persisted = await server.inject({ method: "GET", url: `/api/v2/assistant-turns/${turn.id}` });
-    expect(persisted.json()).toEqual(expect.objectContaining({ state: "completed", assistantEventId: expect.any(String) }));
+    expect(persisted.json()).toEqual(
+      expect.objectContaining({ state: "completed", assistantEventId: expect.any(String) }),
+    );
 
     const second = await server.inject({
       method: "POST",
       url: "/api/v2/assistant-turns",
       headers: sessionHeaders,
-      payload: { ...body, idempotencyKey: "browser-key-2", message: "What did I just ask?" }
+      payload: { ...body, idempotencyKey: "browser-key-2", message: "What did I just ask?" },
     });
     const secondId = second.json<{ turn: { id: string } }>().turn.id;
-    const secondStream = await server.inject({ method: "POST", url: `/api/v2/assistant-turns/${secondId}/stream`, headers: sessionHeaders });
+    const secondStream = await server.inject({
+      method: "POST",
+      url: `/api/v2/assistant-turns/${secondId}/stream`,
+      headers: sessionHeaders,
+    });
     expect(secondStream.body).toContain("event: completed");
-    const secondTurn = (await server.inject({ method: "GET", url: `/api/v2/assistant-turns/${secondId}` })).json<{ contextPackId: string }>();
+    const secondTurn = (await server.inject({ method: "GET", url: `/api/v2/assistant-turns/${secondId}` })).json<{
+      contextPackId: string;
+    }>();
     const inspection = await server.inject({ method: "GET", url: `/api/v2/context-packs/${secondTurn.contextPackId}` });
     expect(inspection.statusCode).toBe(200);
-    expect(inspection.json()).toEqual(expect.objectContaining({
-      model: "mock",
-      items: expect.arrayContaining([expect.objectContaining({ source: expect.objectContaining({ kind: "timeline_event" }) })])
-    }));
+    expect(inspection.json()).toEqual(
+      expect.objectContaining({
+        model: "mock",
+        items: expect.arrayContaining([
+          expect.objectContaining({ source: expect.objectContaining({ kind: "timeline_event" }) }),
+        ]),
+      }),
+    );
     const timeline = await server.inject({ method: "GET", url: `/api/v2/timeline?workspaceId=${ready.workspaceId}` });
-    const assistantEvents = timeline.json<{ events: Array<{ type: string; citations: unknown[] }> }>().events
-      .filter((event) => event.type === "assistant.response.created");
+    const assistantEvents = timeline
+      .json<{ events: Array<{ type: string; citations: unknown[] }> }>()
+      .events.filter((event) => event.type === "assistant.response.created");
     expect(assistantEvents.at(-1)?.citations.length).toBeGreaterThan(0);
   });
 
@@ -67,12 +94,17 @@ describe("V2 assistant turn routes", () => {
       modelProfileId: ready.modelProfileId,
       idempotencyKey: "browser-key-2",
       message: "Hello",
-      unexpected: true
+      unexpected: true,
     };
 
     const unauthorized = await server.inject({ method: "POST", url: "/api/v2/assistant-turns", payload });
     expect(unauthorized.statusCode).toBe(401);
-    const invalid = await server.inject({ method: "POST", url: "/api/v2/assistant-turns", headers: sessionHeaders, payload });
+    const invalid = await server.inject({
+      method: "POST",
+      url: "/api/v2/assistant-turns",
+      headers: sessionHeaders,
+      payload,
+    });
     expect(invalid.statusCode).toBe(400);
     expect(invalid.json()).toEqual({ error: expect.objectContaining({ code: "validation_error" }) });
   });
@@ -84,11 +116,20 @@ describe("V2 assistant turn routes", () => {
       method: "POST",
       url: "/api/v2/assistant-turns",
       headers: sessionHeaders,
-      payload: { workspaceId: ready.workspaceId, modelProfileId: ready.modelProfileId, idempotencyKey: "cancel-key", message: "Never mind" }
+      payload: {
+        workspaceId: ready.workspaceId,
+        modelProfileId: ready.modelProfileId,
+        idempotencyKey: "cancel-key",
+        message: "Never mind",
+      },
     });
     const turnId = created.json<{ turn: { id: string } }>().turn.id;
 
-    const cancelled = await server.inject({ method: "POST", url: `/api/v2/assistant-turns/${turnId}/cancel`, headers: sessionHeaders });
+    const cancelled = await server.inject({
+      method: "POST",
+      url: `/api/v2/assistant-turns/${turnId}/cancel`,
+      headers: sessionHeaders,
+    });
     expect(cancelled.statusCode).toBe(200);
     expect(cancelled.json()).toEqual(expect.objectContaining({ state: "cancelled" }));
   });
@@ -96,10 +137,32 @@ describe("V2 assistant turn routes", () => {
 
 async function setupReadyServer() {
   const server = await createServer({ databasePath: ":memory:", sessionToken: "test-token" });
-  const workspace = await server.inject({ method: "POST", url: "/api/v2/workspaces", headers: sessionHeaders, payload: { name: "Assistant", privacyMode: "local_only" } });
+  const workspace = await server.inject({
+    method: "POST",
+    url: "/api/v2/workspaces",
+    headers: sessionHeaders,
+    payload: { name: "Assistant", privacyMode: "local_only" },
+  });
   const workspaceId = workspace.json<{ id: string }>().id;
-  const provider = await server.inject({ method: "POST", url: "/api/v2/providers", headers: sessionHeaders, payload: { kind: "mock", displayName: "Mock", isLocal: true } });
+  const provider = await server.inject({
+    method: "POST",
+    url: "/api/v2/providers",
+    headers: sessionHeaders,
+    payload: { kind: "mock", displayName: "Mock", isLocal: true },
+  });
   const providerId = provider.json<{ id: string }>().id;
-  const profile = await server.inject({ method: "POST", url: "/api/v2/model-profiles", headers: sessionHeaders, payload: { providerId, name: "Default", model: "mock", contextWindow: 4096, purpose: "general", privacyPolicy: "local_only" } });
+  const profile = await server.inject({
+    method: "POST",
+    url: "/api/v2/model-profiles",
+    headers: sessionHeaders,
+    payload: {
+      providerId,
+      name: "Default",
+      model: "mock",
+      contextWindow: 4096,
+      purpose: "general",
+      privacyPolicy: "local_only",
+    },
+  });
   return { server, workspaceId, modelProfileId: profile.json<{ id: string }>().id };
 }

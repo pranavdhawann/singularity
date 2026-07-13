@@ -23,7 +23,7 @@ describe("MockProvider", () => {
       for await (const _chunk of provider.streamText({
         prompt: "hello",
         model: "mock",
-        signal: controller.signal
+        signal: controller.signal,
       })) {
         // The aborted stream must not yield.
       }

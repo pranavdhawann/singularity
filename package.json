@@ -1,20 +1,32 @@
 {
   "name": "future",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.9.0",
   "scripts": {
     "dev": "pnpm --parallel --filter @future/api --filter @future/web dev",
+    "demo": "node scripts/demo.mjs",
     "typecheck": "pnpm -r typecheck",
-    "lint": "pnpm -r lint",
-    "test": "pnpm -r test",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "pnpm test:demo && pnpm -r test",
+    "test:demo": "vitest run scripts/demo.test.ts",
     "test:e2e": "playwright test",
-    "check": "pnpm typecheck && pnpm lint && pnpm test"
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "@playwright/test": "1.61.1",
     "@types/node": "26.1.0",
+    "eslint": "10.7.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.3",
+    "globals": "17.7.0",
+    "prettier": "3.9.5",
     "typescript": "6.0.3",
+    "typescript-eslint": "8.63.0",
     "vitest": "4.1.9"
   }
 }

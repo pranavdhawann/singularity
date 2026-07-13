@@ -1,0 +1,45 @@
+name: Feature request
+description: Propose a focused improvement that preserves Future's local-first boundary
+title: "[Enhancement]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: Describe the concrete workflow or failure, not only a proposed solution.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Expected outcome
+      description: State observable behavior and who benefits.
+    validations:
+      required: true
+  - type: textarea
+    id: boundary
+    attributes:
+      label: Privacy and permission boundary
+      description: Explain what stays local, what could leave the machine, and where approval applies.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Suggested scope and likely files
+      description: Keep the smallest useful slice; mention likely packages when known.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: "- [ ] Observable result\n- [ ] Tests or documentation"
+    validations:
+      required: true
+  - type: checkboxes
+    id: exclusions
+    attributes:
+      label: Release boundary
+      options:
+        - label: This request does not silently add autonomous external actions, cloud accounts, teams, or broad integrations.
+          required: true

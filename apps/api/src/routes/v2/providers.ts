@@ -7,10 +7,7 @@ interface ModelProfileQuery {
   providerId?: string;
 }
 
-export async function registerV2ProviderRoutes(
-  server: FastifyInstance,
-  deps: ApiDependencies
-): Promise<void> {
+export async function registerV2ProviderRoutes(server: FastifyInstance, deps: ApiDependencies): Promise<void> {
   server.get("/api/v2/providers", async () => ({ providers: deps.providers.list() }));
 
   server.post<{ Body: CreateProviderInput }>(
@@ -27,14 +24,14 @@ export async function registerV2ProviderRoutes(
             baseUrl: { type: "string", minLength: 1 },
             secretEnvironmentVariable: {
               type: "string",
-              pattern: "^[A-Z][A-Z0-9_]*$"
+              pattern: "^[A-Z][A-Z0-9_]*$",
             },
-            isLocal: { type: "boolean" }
-          }
-        }
-      }
+            isLocal: { type: "boolean" },
+          },
+        },
+      },
     },
-    async (request, reply) => reply.code(201).send(deps.providers.create(request.body))
+    async (request, reply) => reply.code(201).send(deps.providers.create(request.body)),
   );
 
   server.get<{ Querystring: ModelProfileQuery }>(
@@ -44,13 +41,13 @@ export async function registerV2ProviderRoutes(
         querystring: {
           type: "object",
           additionalProperties: false,
-          properties: { providerId: { type: "string", minLength: 1 } }
-        }
-      }
+          properties: { providerId: { type: "string", minLength: 1 } },
+        },
+      },
     },
     async (request) => ({
-      modelProfiles: deps.modelProfiles.list(request.query.providerId)
-    })
+      modelProfiles: deps.modelProfiles.list(request.query.providerId),
+    }),
   );
 
   server.post<{ Body: CreateModelProfileInput }>(
@@ -59,14 +56,7 @@ export async function registerV2ProviderRoutes(
       schema: {
         body: {
           type: "object",
-          required: [
-            "providerId",
-            "name",
-            "model",
-            "contextWindow",
-            "purpose",
-            "privacyPolicy"
-          ],
+          required: ["providerId", "name", "model", "contextWindow", "purpose", "privacyPolicy"],
           additionalProperties: false,
           properties: {
             providerId: { type: "string", minLength: 1 },
@@ -78,17 +68,17 @@ export async function registerV2ProviderRoutes(
             temperature: { type: "number", minimum: 0, maximum: 2 },
             privacyPolicy: {
               type: "string",
-              enum: ["local_only", "prompt_preview"]
-            }
-          }
-        }
-      }
+              enum: ["local_only", "prompt_preview"],
+            },
+          },
+        },
+      },
     },
     async (request, reply) => {
       if (!deps.providers.get(request.body.providerId)) {
         return sendApiError(reply, 404, "not_found", "Provider not found");
       }
       return reply.code(201).send(deps.modelProfiles.create(request.body));
-    }
+    },
   );
 }

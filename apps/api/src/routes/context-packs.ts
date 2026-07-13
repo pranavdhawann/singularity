@@ -16,10 +16,7 @@ interface MemoryCandidateRow {
   confidence: number;
 }
 
-export async function registerContextPackRoutes(
-  server: FastifyInstance,
-  deps: ApiDependencies
-): Promise<void> {
+export async function registerContextPackRoutes(server: FastifyInstance, deps: ApiDependencies): Promise<void> {
   server.post<{ Body: PreviewBody }>("/api/context-packs/preview", async (request) => {
     const commandRedaction = redactSensitiveText(request.body.command);
     const memories = deps.db
@@ -29,7 +26,7 @@ export async function registerContextPackRoutes(
          WHERE workspace_id = @workspaceId
            AND review_state = 'approved'
          ORDER BY pinned DESC, confidence DESC
-         LIMIT 12`
+         LIMIT 12`,
       )
       .all({ workspaceId: request.body.workspaceId })
       .map((memory) => ({
@@ -38,11 +35,11 @@ export async function registerContextPackRoutes(
           id: memory.id,
           workspaceId: request.body.workspaceId,
           title: "Approved memory",
-          contentHash: createHash("sha256").update(memory.statement).digest("hex")
+          contentHash: createHash("sha256").update(memory.statement).digest("hex"),
         },
         text: memory.statement,
         tokenCount: estimateTokenCount(memory.statement),
-        score: memory.confidence * 10
+        score: memory.confidence * 10,
       }));
 
     const pack = buildContextPack({
@@ -51,7 +48,7 @@ export async function registerContextPackRoutes(
       budgetTokens: request.body.budgetTokens ?? 1200,
       memories,
       chunks: [],
-      recentEvents: []
+      recentEvents: [],
     });
 
     deps.db
@@ -74,7 +71,7 @@ export async function registerContextPackRoutes(
           @itemsJson,
           @redactionsJson,
           @createdAt
-        )`
+        )`,
       )
       .run({
         id: pack.id,
@@ -82,7 +79,7 @@ export async function registerContextPackRoutes(
         budgetJson: JSON.stringify({ budgetTokens: request.body.budgetTokens ?? 1200 }),
         itemsJson: JSON.stringify(pack.items),
         redactionsJson: JSON.stringify(commandRedaction.redactions),
-        createdAt: pack.createdAt.toISOString()
+        createdAt: pack.createdAt.toISOString(),
       });
 
     return { ...pack, redactions: commandRedaction.redactions };

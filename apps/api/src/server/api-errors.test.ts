@@ -7,15 +7,15 @@ describe("V2 API errors", () => {
     const response = await server.inject({
       method: "POST",
       url: "/api/workspaces",
-      payload: {}
+      payload: {},
     });
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       error: expect.objectContaining({
         code: "validation_error",
-        requestId: expect.any(String)
-      })
+        requestId: expect.any(String),
+      }),
     });
 
     await server.close();

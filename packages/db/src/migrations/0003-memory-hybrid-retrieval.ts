@@ -104,7 +104,7 @@ const statements = [
   `CREATE TRIGGER compactions_fts_delete AFTER DELETE ON compactions
     BEGIN
       DELETE FROM compactions_fts WHERE compaction_id = OLD.id;
-    END`
+    END`,
 ] as const;
 
 export const memoryHybridRetrievalMigration: Migration = {
@@ -112,5 +112,5 @@ export const memoryHybridRetrievalMigration: Migration = {
   checksum: createHash("sha256").update(statements.join("\n")).digest("hex"),
   up(db) {
     for (const statement of statements) db.exec(statement);
-  }
+  },
 };

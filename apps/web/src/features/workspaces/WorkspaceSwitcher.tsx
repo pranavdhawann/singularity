@@ -10,12 +10,11 @@ export function WorkspaceSwitcher({ workspaces, value, onChange }: WorkspaceSwit
   return (
     <label className="workspace-switcher">
       <span>Workspace</span>
-      <select
-        value={value ?? workspaces[0]?.id ?? ""}
-        onChange={(event) => onChange?.(event.target.value)}
-      >
+      <select value={value ?? workspaces[0]?.id ?? ""} onChange={(event) => onChange?.(event.target.value)}>
         {workspaces.map((workspace) => (
-          <option value={workspace.id} key={workspace.id}>{workspace.name}</option>
+          <option value={workspace.id} key={workspace.id}>
+            {workspace.name}
+          </option>
         ))}
       </select>
     </label>

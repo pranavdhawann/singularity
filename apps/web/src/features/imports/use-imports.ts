@@ -35,20 +35,29 @@ export function useImports(api: FutureApi, workspaceId: string) {
     };
     setStatus("loading");
     void poll();
-    return () => { active = false; if (timer) clearTimeout(timer); };
+    return () => {
+      active = false;
+      if (timer) clearTimeout(timer);
+    };
   }, [refresh]);
 
-  const upload = useCallback(async (files: File[]) => {
-    const result = await api.uploadImports(workspaceId, files);
-    await refresh();
-    return result;
-  }, [api, refresh, workspaceId]);
+  const upload = useCallback(
+    async (files: File[]) => {
+      const result = await api.uploadImports(workspaceId, files);
+      await refresh();
+      return result;
+    },
+    [api, refresh, workspaceId],
+  );
 
-  const retry = useCallback(async (id: string) => {
-    const result = await api.retryImport(id);
-    await refresh();
-    return result.job;
-  }, [api, refresh]);
+  const retry = useCallback(
+    async (id: string) => {
+      const result = await api.retryImport(id);
+      await refresh();
+      return result.job;
+    },
+    [api, refresh],
+  );
 
   return { jobs, status, error, refresh, upload, retry };
 }

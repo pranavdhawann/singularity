@@ -32,7 +32,7 @@ export interface BuiltContextPack {
 
 export function buildContextPack(input: BuildContextPackInput): BuiltContextPack {
   const sorted = [...input.memories, ...input.chunks, ...input.recentEvents].sort(
-    (a, b) => b.score - a.score || sourceReferenceKey(a.source).localeCompare(sourceReferenceKey(b.source))
+    (a, b) => b.score - a.score || sourceReferenceKey(a.source).localeCompare(sourceReferenceKey(b.source)),
   );
   const candidates: BuiltContextPackItem[] = [];
   for (const candidate of sorted) {
@@ -55,7 +55,7 @@ export function buildContextPack(input: BuildContextPackInput): BuiltContextPack
     command: input.command,
     items,
     estimatedTokens,
-    createdAt: new Date()
+    createdAt: new Date(),
   };
 }
 

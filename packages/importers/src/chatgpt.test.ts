@@ -11,12 +11,12 @@ describe("parseChatGptExport", () => {
             a: {
               message: {
                 author: { role: "user" },
-                content: { parts: ["Build Future"] }
-              }
-            }
-          }
-        }
-      ]
+                content: { parts: ["Build Future"] },
+              },
+            },
+          },
+        },
+      ],
     });
 
     expect(result.documents[0]?.title).toBe("Future planning");

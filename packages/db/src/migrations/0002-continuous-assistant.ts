@@ -26,7 +26,7 @@ const statements = [
     source_json TEXT NOT NULL,
     ordinal INTEGER NOT NULL,
     PRIMARY KEY (event_id, source_kind, source_id)
-  )`
+  )`,
 ] as const;
 
 const checksum = createHash("sha256").update(statements.join("\n")).digest("hex");
@@ -38,5 +38,5 @@ export const continuousAssistantMigration: Migration = {
     for (const statement of statements) {
       db.exec(statement);
     }
-  }
+  },
 };
