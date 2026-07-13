@@ -59,9 +59,10 @@ function ReadyAssistantShell({
   modelProfiles: ModelProfile[];
 }) {
   const [activeWorkspaceId, setActiveWorkspaceId] = useState(workspaces[0]?.id ?? "");
+  const [activeProfileId, setActiveProfileId] = useState(modelProfiles[0]?.id ?? "");
   const [selectedContextPackId, setSelectedContextPackId] = useState<string | undefined>(undefined);
   const [activeLens, setActiveLens] = useState<"timeline" | "memory" | "imports">("timeline");
-  const activeProfile = modelProfiles[0];
+  const activeProfile = modelProfiles.find((profile) => profile.id === activeProfileId) ?? modelProfiles[0];
   const timeline = useTimeline(api, activeWorkspaceId);
   const assistant = useAssistantTurn({
     api,
@@ -102,6 +103,12 @@ function ReadyAssistantShell({
             }}
           />
           <div className="top-status">
+            <label>Model profile
+              <select aria-label="Model profile" value={activeProfile?.id ?? ""}
+                onChange={(event) => setActiveProfileId(event.target.value)}>
+                {modelProfiles.map((profile) => <option value={profile.id} key={profile.id}>{profile.name}</option>)}
+              </select>
+            </label>
             <span>Model: {activeProfile?.name}</span>
             <span>Privacy: {activeProfile?.privacyPolicy === "local_only" ? "Local only" : "Prompt preview"}</span>
           </div>

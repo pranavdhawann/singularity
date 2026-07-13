@@ -1,0 +1,21 @@
+[
+  {
+    "title": "Phase 4 ChatGPT history",
+    "mapping": {
+      "one": {
+        "message": {
+          "author": { "role": "user" },
+          "content": { "parts": ["Remember CHATGPT-PHASE4-EXPORT as the migration marker."] },
+          "create_time": 1783800000
+        }
+      },
+      "two": {
+        "message": {
+          "author": { "role": "assistant" },
+          "content": { "parts": ["The marker is stored in the normalized imported conversation."] },
+          "create_time": 1783800001
+        }
+      }
+    }
+  }
+]

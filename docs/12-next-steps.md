@@ -2,22 +2,23 @@
 
 This document turns the remaining sequence in the original Future product design
 and the approved V2 continuous-assistant design into the next executable roadmap.
-Phase 3 is complete. New work must extend the existing event, assistant-turn,
+Phase 4 is complete. New work must extend the existing event, assistant-turn,
 source, memory, retrieval, context-pack, provider, and permission contracts rather
 than introduce parallel chat or retrieval flows.
 
 ## Status
 
-- Complete: Phases 1-3, including the connected shell, durable assistant turns,
-  memory lifecycle, hybrid retrieval, citations, and context inspection.
-- Current: Phase 4, Imports and External Models.
-- Next: Phase 5, Proactive Assistance and Hardening.
+- Complete: Phases 1-4, including the connected shell, durable assistant turns,
+  memory lifecycle, hybrid retrieval, citations, resumable imports, external
+  streaming, whole-prompt redaction, and immutable prompt grants.
+- Current: Phase 5, Proactive Assistance and Hardening.
 - Deferred: packaging, sync, teams, broad connectors, plugins, autonomous external
   actions, and automatic provider-cost routing until V2 is complete.
 
-## Immediate Priority: Phase 4, Imports and External Models
+## Completed: Phase 4, Imports and External Models
 
-Phase 4 completes the real source-ingestion and external-model path.
+Phase 4 completed the real source-ingestion and external-model path. Its browser
+acceptance scenario lives in `tests/e2e/phase4.spec.ts`.
 
 ### 1. Browser imports
 
@@ -75,7 +76,7 @@ corepack pnpm test:e2e
 git diff --check
 ```
 
-## Following Priority: Phase 5, Proactive Assistance and Hardening
+## Immediate Priority: Phase 5, Proactive Assistance and Hardening
 
 After Phase 4 is complete:
 
@@ -104,5 +105,5 @@ narrow extension:
 - autonomous external actions without explicit permission
 - automatic cost routing across providers
 
-The next planning artifact should be a dedicated Phase 4 design and test-driven
+The next planning artifact should be a dedicated Phase 5 design and test-driven
 implementation plan grounded in this document and the V2 design acceptance criteria.

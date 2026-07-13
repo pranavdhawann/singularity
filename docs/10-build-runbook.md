@@ -152,6 +152,38 @@ The browser suite also creates, namespaces, approves, pins, outdates, corrects,
 and deletes memory, then proves later answers stop citing unavailable memory and
 that deletion remains effective after reload.
 
+## Phase 4 Imports and External Models
+
+Open **Imports** to upload `.md`, `.markdown`, `.txt`, or ChatGPT `.json` files.
+The protected multipart boundary accepts at most 10 files, 25 MiB per file, and
+50 MiB total. Each file owns a persisted job and checkpoint. A failed file keeps
+its completed documents, chunks, and FTS rows; **Retry** resumes the unfinished
+checkpoint without duplicating durable work.
+
+Create an OpenAI-compatible provider with an explicit HTTP(S) base URL and a
+secret environment-variable name. Only the `env:NAME` reference is persisted;
+the value is resolved immediately before the call. For example:
+
+```powershell
+$env:FUTURE_OPENAI_API_KEY = "your-key"
+corepack pnpm dev
+```
+
+External turns build context locally, redact the complete final prompt, and stop
+in `awaiting_approval`. The browser shows the exact redacted prompt, selected and
+excluded sources, source ranges, privacy labels, token estimate, redaction counts,
+and immutable binding hash. Approval resumes the same turn. Denial, expiry,
+binding changes, and cancellation prevent the model call and remain auditable.
+
+The Phase 4 Playwright scenario uses isolated ports `4273`, `4274`, and `4280`, a
+deterministic local OpenAI-compatible server, an in-memory database, and a
+one-shot test-only import interruption. It requires no external network or key.
+For custom dev origins, set a comma-separated allowlist:
+
+```powershell
+$env:FUTURE_ALLOWED_ORIGINS = "http://127.0.0.1:4173"
+```
+
 ## Reset Local Data
 
 Stop running dev servers, then remove local generated data:

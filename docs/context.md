@@ -12,8 +12,8 @@ The V2 source of truth is
 
 ## Current Implementation
 
-Phase 3, Memory and Hybrid Retrieval, is complete. The implementation retains
-the Phase 2 continuous-assistant slice and adds:
+Phase 4, Imports and External Models, is complete. The implementation retains
+the Phase 3 memory/retrieval slice and adds:
 
 - ordered SQLite migrations with checksum verification
 - stable API error envelopes
@@ -43,6 +43,24 @@ the Phase 2 continuous-assistant slice and adds:
 - protected V2 memory, namespace, revision, compaction, and search resources
 - connected browser Memory lens with persistent composer and browser-only
   lifecycle coverage proving memory changes alter later context selection
+- migration `0004_imports_external_models` with durable import checkpoints,
+  import payloads, chunk hashes, immutable prompt previews, and prompt decisions
+- protected multipart `.md`, `.markdown`, `.txt`, and ChatGPT `.json` imports,
+  limited to 25 MiB per file, 50 MiB per request, and 10 files
+- stable document/chunk identities, short checkpoint transactions, partial-file
+  preservation, safe failure codes, and explicit browser retry
+- browser Import lens with persisted polling and reload-safe job progress
+- OpenAI-compatible chat-completions SSE streaming, cancellation, safe errors,
+  and call-time `env:` secret resolution
+- whole-prompt rendering and redaction after context assembly across system,
+  user, document, memory, event, and compaction text
+- immutable prompt previews and decisions bound to turn, provider, profile,
+  model, context-pack hash, final prompt hash, and binding hash
+- external assistant turns that pause in `awaiting_approval`, resume the same
+  turn after approval, and audit approval, denial, cancellation, and failure
+- browser model-profile selection and exact prompt-preview approval UI
+- deterministic Playwright coverage for real imports, interrupted job recovery,
+  external prompt redaction, approval, streaming, citations, and source ranges
 
 Legacy `/api` routes remain available during migration.
 
@@ -88,7 +106,6 @@ assistant uses V2 contracts.
 
 ## Next Boundary
 
-Phase 4 adds browser file/ChatGPT import, resumable indexing work, persisted
-OpenAI-compatible text generation, whole-prompt redaction, and immutable external
-prompt-preview grants. It must reuse the Phase 3 source, retrieval, context-pack,
-and memory contracts.
+Phase 5 adds opt-in proactive assistance, browser notifications and job controls,
+bounded failure recovery, structured redacted local logging, real lint/formatting,
+CI, and contribution/security/release documentation.

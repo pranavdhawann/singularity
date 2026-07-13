@@ -82,4 +82,24 @@ describe("ImportService", () => {
       ctx.db.close();
     }
   });
+
+  it("uses a one-shot configured interruption to prove browser retry behavior", async () => {
+    const ctx = setup();
+    try {
+      const service = new ImportService({
+        db: ctx.db.client, jobs: ctx.jobs, events: ctx.events, failAfterChunks: 1
+      });
+      const job = service.enqueueFile({
+        workspaceId: "w_1", filename: "resume.txt", mediaType: "text/plain",
+        kind: "text", content: Buffer.from("resumable ".repeat(400))
+      });
+
+      await expect(service.run(job.id)).rejects.toThrow("configured import interruption");
+      service.retry(job.id);
+      await expect(service.run(job.id)).resolves.toMatchObject({ state: "completed" });
+      expect(ctx.db.client.prepare("SELECT COUNT(*) FROM document_chunks").pluck().get()).toBe(4);
+    } finally {
+      ctx.db.close();
+    }
+  });
 });

@@ -18,6 +18,7 @@ interface ImportServiceDependencies {
   db: SqliteDatabase;
   jobs: ImportJobRepository;
   events: EventRepository;
+  failAfterChunks?: number;
 }
 
 interface RunImportHooks {
@@ -40,6 +41,8 @@ export class ImportServiceError extends Error {
 }
 
 export class ImportService {
+  private readonly interruptedJobs = new Set<string>();
+
   constructor(private readonly dependencies: ImportServiceDependencies) {}
 
   enqueueFile(input: EnqueueImportFileInput): ImportJobDto {
@@ -64,6 +67,7 @@ export class ImportService {
     if (!queued || queued.state !== "queued") throw new Error("import job is not queued");
 
     let parsed: ImportParseResult;
+    let committedChunks = 0;
     try {
       parsed = this.parse(queued);
       this.dependencies.jobs.advance(jobId, "queued", {
@@ -113,7 +117,17 @@ export class ImportService {
             });
           });
           persistChunk();
-          hooks.afterChunkCommitted?.();
+          committedChunks += 1;
+          if (hooks.afterChunkCommitted) {
+            hooks.afterChunkCommitted();
+          } else if (
+            this.dependencies.failAfterChunks &&
+            committedChunks >= this.dependencies.failAfterChunks &&
+            !this.interruptedJobs.has(jobId)
+          ) {
+            this.interruptedJobs.add(jobId);
+            throw new Error("configured import interruption");
+          }
         }
 
         const finishDocument = this.dependencies.db.transaction(() => {

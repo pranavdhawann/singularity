@@ -1,8 +1,10 @@
 import "@testing-library/jest-dom/vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { FutureApi } from "../../app/api-types";
 import { FirstRunSetup } from "./FirstRunSetup";
+
+afterEach(cleanup);
 
 describe("FirstRunSetup", () => {
   it("creates the missing workspace, provider, and model profile", async () => {
@@ -46,6 +48,29 @@ describe("FirstRunSetup", () => {
     expect(createProvider).toHaveBeenCalledWith(expect.objectContaining({ kind: "mock" }));
     expect(createModelProfile).toHaveBeenCalledWith(expect.objectContaining({
       providerId: "prov_new", model: "mock"
+    }));
+  });
+
+  it("configures an external OpenAI-compatible profile with an environment secret", async () => {
+    const createWorkspace = vi.fn(async () => ({ id: "w_1" }));
+    const createProvider = vi.fn(async () => ({ id: "provider_external" }));
+    const createModelProfile = vi.fn(async () => ({ id: "profile_external" }));
+    const api = { createWorkspace, createProvider, createModelProfile } as unknown as FutureApi;
+    render(<FirstRunSetup api={api} workspaces={[]} providers={[]} modelProfiles={[]} onComplete={vi.fn()} />);
+
+    fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "openai-compatible" } });
+    fireEvent.change(screen.getByLabelText("Base URL"), { target: { value: "http://127.0.0.1:4180/v1" } });
+    fireEvent.change(screen.getByLabelText("Secret environment variable"), { target: { value: "FUTURE_TEST_OPENAI_KEY" } });
+    fireEvent.change(screen.getByLabelText("Model"), { target: { value: "phase4-model" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create local assistant" }));
+
+    await waitFor(() => expect(createProvider).toHaveBeenCalledWith({
+      kind: "openai-compatible", displayName: "External OpenAI-compatible",
+      baseUrl: "http://127.0.0.1:4180/v1", secretEnvironmentVariable: "FUTURE_TEST_OPENAI_KEY",
+      isLocal: false
+    }));
+    expect(createModelProfile).toHaveBeenCalledWith(expect.objectContaining({
+      model: "phase4-model", privacyPolicy: "prompt_preview"
     }));
   });
 });

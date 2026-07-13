@@ -26,7 +26,9 @@ export function ExternalPromptPreview({
       <h3>Exact redacted prompt</h3>
       <pre>{preview.redactedPrompt}</pre>
       <h3>Selected sources</h3>
-      <ul>{preview.selectedSources.map((source) => <li key={`${source.kind}:${source.id}`}>{source.title}</li>)}</ul>
+      <ul>{preview.selectedSources.map((source) => <li key={`${source.kind}:${source.id}`}>
+        {source.title}{source.range ? ` · characters ${source.range.start}-${source.range.end}` : ""}
+      </li>)}</ul>
       {preview.excludedSources.length > 0 ? <><h3>Excluded sources</h3><ul>
         {preview.excludedSources.map((source) => <li key={`${source.kind}:${source.id}`}>{source.title}</li>)}
       </ul></> : null}

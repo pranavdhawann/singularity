@@ -86,7 +86,14 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
     promptPreviewService,
     contextService,
     memoryService: new MemoryService({ db, memories, namespaces, compactions, embeddings, events }),
-    importService: new ImportService({ db, jobs: importJobs, events }),
+    importService: new ImportService({
+      db,
+      jobs: importJobs,
+      events,
+      ...(process.env.FUTURE_TEST_IMPORT_FAILURE_AFTER_CHUNK
+        ? { failAfterChunks: Number.parseInt(process.env.FUTURE_TEST_IMPORT_FAILURE_AFTER_CHUNK, 10) }
+        : {})
+    }),
     cancellations,
     assistantService: new AssistantService({
       db,

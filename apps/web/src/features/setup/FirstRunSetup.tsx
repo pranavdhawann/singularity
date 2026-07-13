@@ -19,10 +19,11 @@ export function FirstRunSetup({
 }: FirstRunSetupProps) {
   const [workspaceName, setWorkspaceName] = useState("Personal");
   const [privacyMode, setPrivacyMode] = useState<"standard" | "local_only">("standard");
-  const [providerKind, setProviderKind] = useState<"mock" | "ollama">("mock");
+  const [providerKind, setProviderKind] = useState<"mock" | "ollama" | "openai-compatible">("mock");
   const [providerName, setProviderName] = useState("Mock");
   const [baseUrl, setBaseUrl] = useState("http://127.0.0.1:11434");
   const [model, setModel] = useState("mock");
+  const [secretEnvironmentVariable, setSecretEnvironmentVariable] = useState("FUTURE_OPENAI_API_KEY");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -39,8 +40,9 @@ export function FirstRunSetup({
       const provider = providers[0] ?? (await api.createProvider({
         kind: providerKind,
         displayName: providerName,
-        ...(providerKind === "ollama" ? { baseUrl } : {}),
-        isLocal: true
+        ...(providerKind !== "mock" ? { baseUrl } : {}),
+        ...(providerKind === "openai-compatible" ? { secretEnvironmentVariable } : {}),
+        isLocal: providerKind !== "openai-compatible"
       }));
 
       if (modelProfiles.length === 0) {
@@ -48,9 +50,9 @@ export function FirstRunSetup({
           providerId: provider.id,
           name: "Default",
           model,
-          contextWindow: providerKind === "ollama" ? 8192 : 4096,
+          contextWindow: providerKind === "mock" ? 4096 : 8192,
           purpose: "general",
-          privacyPolicy: "local_only"
+          privacyPolicy: providerKind === "openai-compatible" ? "prompt_preview" : "local_only"
         });
       }
 
@@ -86,22 +88,31 @@ export function FirstRunSetup({
             onChange={(event) => {
               const next = event.target.value as typeof providerKind;
               setProviderKind(next);
-              setProviderName(next === "mock" ? "Mock" : "Local Ollama");
-              setModel(next === "mock" ? "mock" : "llama3.2");
+              setProviderName(next === "mock" ? "Mock" : next === "ollama" ? "Local Ollama" : "External OpenAI-compatible");
+              setModel(next === "mock" ? "mock" : next === "ollama" ? "llama3.2" : "phase4-model");
+              setBaseUrl(next === "openai-compatible" ? "http://127.0.0.1:4180/v1" : "http://127.0.0.1:11434");
             }}
           >
             <option value="mock">Mock (offline test)</option>
             <option value="ollama">Ollama</option>
+            <option value="openai-compatible">OpenAI-compatible (external)</option>
           </select>
         </label>
         <label>
           Provider name
           <input value={providerName} onChange={(event) => setProviderName(event.target.value)} required />
         </label>
-        {providerKind === "ollama" ? (
+        {providerKind !== "mock" ? (
           <label>
             Base URL
             <input value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} required />
+          </label>
+        ) : null}
+        {providerKind === "openai-compatible" ? (
+          <label>
+            Secret environment variable
+            <input value={secretEnvironmentVariable}
+              onChange={(event) => setSecretEnvironmentVariable(event.target.value)} required />
           </label>
         ) : null}
         <label>
