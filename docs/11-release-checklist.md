@@ -4,11 +4,15 @@ Use this checklist before treating the local MVP as releasable.
 
 ## Required Commands
 
-- [ ] `corepack pnpm install` completes.
+- [ ] `corepack pnpm install --frozen-lockfile` completes.
 - [ ] `corepack pnpm check` passes.
 - [ ] `corepack pnpm test:e2e` passes.
 - [ ] `corepack pnpm --filter @future/web build` passes.
 - [ ] `git diff --check` passes.
+- [ ] `.github/workflows/ci.yml` and issue-form YAML parse successfully.
+- [ ] GitHub Actions passes on the exact release commit.
+- [ ] `corepack pnpm demo` seeds `Future Demo`, imports `future-demo.md`, and
+      returns a cited answer for `launch readiness decision`.
 
 ## V2 Foundation Gates
 
@@ -96,7 +100,10 @@ Use this checklist before treating the local MVP as releasable.
 
 ## Manual Inspection
 
-- [ ] `README.md` links to the design, blueprint, runbook, and checklist.
+- [ ] `README.md` quick-start commands match package scripts and work from a
+      clean clone.
+- [ ] `README.md` accurately labels the release early and functional rather than
+      production-ready.
 - [ ] The command center layout has left navigation, top workspace bar, command
       palette, timeline, inspector, and activity strip.
 - [ ] Prompt preview UI shows provider, model, context items, and redaction
@@ -104,3 +111,6 @@ Use this checklist before treating the local MVP as releasable.
 - [ ] Permissions UI shows current capability states.
 - [ ] No generated folders such as `.future/`, `node_modules/`, `test-results/`,
       or `playwright-report/` are tracked.
+- [ ] No environment files, SQLite files, logs, raw prompts, provider responses,
+      keys, tokens, or private user data are tracked.
+- [ ] The annotated release tag targets the same commit that passed CI.

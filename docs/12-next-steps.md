@@ -12,6 +12,9 @@ than introduce parallel chat or retrieval flows.
   memory lifecycle, hybrid retrieval, citations, resumable imports, external
   streaming, whole-prompt redaction, and immutable prompt grants.
 - Current: Phase 5, Proactive Assistance and Hardening.
+- Complete within Phase 5: real ESLint/Prettier gates, frozen-install CI with
+  build and Playwright, deterministic onboarding demo, security/contribution/
+  release documentation, issue/PR templates, and launch assets.
 - Deferred: packaging, sync, teams, broad connectors, plugins, autonomous external
   actions, and automatic provider-cost routing until V2 is complete.
 
@@ -83,10 +86,8 @@ After Phase 4 is complete:
 - add opt-in reminders and scheduled workspace/review summaries
 - add browser notifications, job controls, bounded retries, and visible blocked jobs
 - add structured redacted local logging and failure-recovery controls
-- replace the current TypeScript-only lint placeholder with real lint and formatting
-- add CI that runs the same frozen install, checks, build, migrations, and pinned
-  Chromium flows as local verification
-- document contribution, security, architecture, migration, and release procedures
+- maintain the completed real lint/format, CI, deterministic demo, and contributor/
+  security/release documentation foundations
 
 Phase 5 is complete only when proactive work is disabled by default, every job is
 permission-bound and auditable, repeated failures stop visibly, and clean-install
