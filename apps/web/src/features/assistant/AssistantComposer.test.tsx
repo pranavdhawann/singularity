@@ -8,13 +8,13 @@ describe("AssistantComposer", () => {
     const onSubmit = vi.fn();
     const onCancel = vi.fn();
     const { rerender } = render(<AssistantComposer status="idle" onSubmit={onSubmit} onCancel={onCancel} />);
-    fireEvent.change(screen.getByLabelText("Message Future"), { target: { value: "  Hello Future  " } });
+    fireEvent.change(screen.getByLabelText("Message Singularity"), { target: { value: "  Hello Singularity  " } });
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
-    expect(onSubmit).toHaveBeenCalledWith("Hello Future");
+    expect(onSubmit).toHaveBeenCalledWith("Hello Singularity");
 
     rerender(<AssistantComposer status="streaming" onSubmit={onSubmit} onCancel={onCancel} />);
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     expect(onCancel).toHaveBeenCalled();
-    expect(screen.getByLabelText("Message Future")).toBeDisabled();
+    expect(screen.getByLabelText("Message Singularity")).toBeDisabled();
   });
 });

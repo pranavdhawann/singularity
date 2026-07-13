@@ -6,12 +6,12 @@ test("browser imports, resumes indexing, approves an exact external prompt, and 
 }) => {
   test.setTimeout(90_000);
   await page.goto("/");
-  await expect(page.getByLabel("Workspace name").or(page.getByLabel("Message Future"))).toBeVisible();
+  await expect(page.getByLabel("Workspace name").or(page.getByLabel("Message Singularity"))).toBeVisible();
   if (await page.getByLabel("Workspace name").isVisible()) {
     await page.getByLabel("Workspace name").fill("Phase 4 Workspace");
     await page.getByRole("button", { name: "Create local assistant" }).click();
   }
-  await expect(page.getByLabel("Message Future")).toBeVisible();
+  await expect(page.getByLabel("Message Singularity")).toBeVisible();
 
   const session = await page.request.get("/api/v2/session");
   const token = ((await session.json()) as { token: string }).token;
@@ -62,7 +62,7 @@ test("browser imports, resumes indexing, approves an exact external prompt, and 
   }
 
   await page.getByRole("button", { name: "Timeline", exact: true }).click();
-  const composer = page.getByLabel("Message Future");
+  const composer = page.getByLabel("Message Singularity");
   await composer.fill("resumable import decision");
   await page.getByRole("button", { name: "Send" }).click();
 

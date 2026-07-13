@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Future is an early local-first project. Security fixes are applied to the latest release line and `main`; older pre-release snapshots are not supported.
+Singularity is an early local-first project. Security fixes are applied to the latest release line and `main`; older pre-release snapshots are not supported.
 
 | Version | Supported |
 | ------- | --------- |

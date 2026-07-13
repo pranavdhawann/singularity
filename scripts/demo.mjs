@@ -8,7 +8,7 @@ const DEFAULT_WEB_ORIGIN = "http://127.0.0.1:4173";
 
 export async function seedDemo({
   request = fetch,
-  readSource = () => readFile(new URL("../examples/future-demo.md", import.meta.url)),
+  readSource = () => readFile(new URL("../examples/singularity-demo.md", import.meta.url)),
   apiBase = DEFAULT_API_BASE,
   webOrigin = DEFAULT_WEB_ORIGIN,
 } = {}) {
@@ -26,7 +26,7 @@ export async function seedDemo({
   const workspace = await requestJson(request, `${apiBase}/workspaces`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ name: "Future Demo", privacyMode: "standard" }),
+    body: JSON.stringify({ name: "Singularity Demo", privacyMode: "standard" }),
   });
   const provider = await requestJson(request, `${apiBase}/providers`, {
     method: "POST",
@@ -49,7 +49,7 @@ export async function seedDemo({
   const source = await readSource();
   const form = new FormData();
   form.append("workspaceId", workspace.id);
-  form.append("files", new File([source], "future-demo.md", { type: "text/markdown" }));
+  form.append("files", new File([source], "singularity-demo.md", { type: "text/markdown" }));
   const imported = await requestJson(request, `${apiBase}/imports`, {
     method: "POST",
     headers: { origin: webOrigin, "x-future-session": session.token },
@@ -83,7 +83,7 @@ async function waitForApi(request = fetch, apiBase = DEFAULT_API_BASE) {
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
-  throw new Error("Future API did not become ready within 30 seconds");
+  throw new Error("Singularity API did not become ready within 30 seconds");
 }
 
 async function run() {
@@ -107,8 +107,8 @@ async function run() {
     const result = await seedDemo();
     console.log(
       result.seeded
-        ? `\nFuture demo seeded. Open ${DEFAULT_WEB_ORIGIN}\n`
-        : `\nFuture demo already exists. Open ${DEFAULT_WEB_ORIGIN}\n`,
+        ? `\nSingularity demo seeded. Open ${DEFAULT_WEB_ORIGIN}\n`
+        : `\nSingularity demo already exists. Open ${DEFAULT_WEB_ORIGIN}\n`,
     );
   } catch (error) {
     child.kill();

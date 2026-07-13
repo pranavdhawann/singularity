@@ -1,6 +1,6 @@
 # Architecture
 
-Future is a local web application with a React browser client, a Fastify API, and SQLite persistence. The browser uses protected HTTP and SSE contracts; it never opens the database directly.
+Singularity is a local web application with a React browser client, a Fastify API, and SQLite persistence. The browser uses protected HTTP and SSE contracts; it never opens the database directly.
 
 ## Request flow
 
@@ -8,7 +8,7 @@ Future is a local web application with a React browser client, a Fastify API, an
 2. The API stores the user event before model execution.
 3. Retrieval searches authorized document chunks, approved active memory, earlier events, and active compactions.
 4. Ranking applies lexical and optional vector channels, diversity, deduplication, source quality, recency, pinning, confidence, and a context budget.
-5. Future stores the selected evidence as an immutable context pack with citations and source ranges.
+5. Singularity stores the selected evidence as an immutable context pack with citations and source ranges.
 6. Local profiles stream immediately. External profiles render and redact the full prompt, persist an immutable preview, and pause for an approve/deny decision.
 7. The terminal answer, failure, denial, or cancellation is committed before the final SSE frame.
 

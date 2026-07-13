@@ -1,6 +1,6 @@
 # Changelog
 
-All notable user-visible changes to Future are documented here. The project follows semantic versioning beginning with the early `0.x` line.
+All notable user-visible changes to Singularity are documented here. The project follows semantic versioning beginning with the early `0.x` line.
 
 ## [Unreleased]
 

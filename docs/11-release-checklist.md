@@ -11,7 +11,7 @@ Use this checklist before treating the local MVP as releasable.
 - [ ] `git diff --check` passes.
 - [ ] `.github/workflows/ci.yml` and issue-form YAML parse successfully.
 - [ ] GitHub Actions passes on the exact release commit.
-- [ ] `corepack pnpm demo` seeds `Future Demo`, imports `future-demo.md`, and
+- [ ] `corepack pnpm demo` seeds `Singularity Demo`, imports `singularity-demo.md`, and
       returns a cited answer for `launch readiness decision`.
 
 ## V2 Foundation Gates
@@ -27,7 +27,7 @@ Use this checklist before treating the local MVP as releasable.
 
 ## V2 Continuous Assistant Gates
 
-- [ ] The ready shell always exposes one persistent `Message Future` composer.
+- [ ] The ready shell always exposes one persistent `Message Singularity` composer.
 - [ ] Retrying a create request with the same idempotency input returns one turn
       and writes one `user.message.created` event.
 - [ ] Mock and Ollama providers emit incremental chunks through the V2 SSE route.

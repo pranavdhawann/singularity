@@ -1,6 +1,6 @@
 # Code of Conduct
 
-Future welcomes contributors of different backgrounds and experience levels. Participation in project spaces requires respectful, constructive behavior.
+Singularity welcomes contributors of different backgrounds and experience levels. Participation in project spaces requires respectful, constructive behavior.
 
 ## Expected behavior
 

@@ -102,7 +102,7 @@ export function FirstRunSetup({ api, workspaces, providers, modelProfiles, onCom
   return (
     <section className="setup-panel" aria-labelledby="setup-heading">
       <p className="eyebrow">Local first run</p>
-      <h1 id="setup-heading">Set up Future</h1>
+      <h1 id="setup-heading">Set up Singularity</h1>
       <p>Create the local workspace and model profile for your continuous assistant.</p>
       <form onSubmit={submit}>
         <label>

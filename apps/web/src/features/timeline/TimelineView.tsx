@@ -25,7 +25,7 @@ export function TimelineView({ events = [], streamedText = "", onContextSelected
         {streamedText ? (
           <article className="timeline-event streaming-response" aria-label="Streaming assistant response">
             <span className="event-type">assistant.streaming</span>
-            <h3>Future is responding</h3>
+            <h3>Singularity is responding</h3>
             <p>{streamedText}</p>
           </article>
         ) : null}

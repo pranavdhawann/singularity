@@ -1,4 +1,4 @@
-# Contributing to Future
+# Contributing to Singularity
 
 Thank you for helping build an inspectable local assistant. Small, testable changes are preferred.
 

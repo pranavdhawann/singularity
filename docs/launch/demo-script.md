@@ -1,8 +1,8 @@
 # Two-minute demo script
 
 1. Run `corepack pnpm demo` and open the local URL.
-2. Point out the seeded **Future Demo** workspace, **Offline Demo** model, and **Privacy: Local only** status.
-3. Open Imports and show `future-demo.md` completed through the real import pipeline.
+2. Point out the seeded **Singularity Demo** workspace, **Offline Demo** model, and **Privacy: Local only** status.
+3. Open Imports and show `singularity-demo.md` completed through the real import pipeline.
 4. Ask `launch readiness decision`.
 5. Open the citation and show the document range, ranking reasons, model, token estimate, and redaction count.
 6. Switch to a prepared OpenAI-compatible profile and ask a source-backed question containing a test email in the imported context.

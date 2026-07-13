@@ -27,6 +27,9 @@ describe("AssistantTurnRepository", () => {
     expect(first.replayed).toBe(false);
     expect(replay).toEqual({ turn: first.turn, replayed: true });
     expect(db.client.prepare("SELECT COUNT(*) FROM events WHERE type = 'user.message.created'").pluck().get()).toBe(1);
+    expect(db.client.prepare("SELECT title FROM events WHERE type = 'user.message.created'").pluck().get()).toBe(
+      "Message to Singularity",
+    );
   });
 
   it("rejects reuse of an idempotency key for different input", () => {

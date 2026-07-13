@@ -1,6 +1,6 @@
 # Next Steps
 
-This document turns the remaining sequence in the original Future product design
+This document turns the remaining sequence in the original Singularity product design
 and the approved V2 continuous-assistant design into the next executable roadmap.
 Phase 4 is complete. New work must extend the existing event, assistant-turn,
 source, memory, retrieval, context-pack, provider, and permission contracts rather

@@ -27,7 +27,7 @@ describe("seedDemo", () => {
 
     const result = await seedDemo({
       request,
-      readSource: async () => Buffer.from("# Future demo\n\nCitations keep local context inspectable."),
+      readSource: async () => Buffer.from("# Singularity demo\n\nCitations keep local context inspectable."),
       apiBase: "http://127.0.0.1:4174/api/v2",
       webOrigin: "http://127.0.0.1:4173",
     });
@@ -45,10 +45,11 @@ describe("seedDemo", () => {
       expect(new Headers(call.init?.headers).get("x-future-session")).toBe("local-token");
       expect(new Headers(call.init?.headers).get("origin")).toBe("http://127.0.0.1:4173");
     }
+    expect(JSON.parse(String(calls[2]?.init?.body))).toEqual({ name: "Singularity Demo", privacyMode: "standard" });
     const upload = calls.at(-1)?.init?.body;
     expect(upload).toBeInstanceOf(FormData);
     expect((upload as FormData).get("workspaceId")).toBe("w_demo");
-    expect((upload as FormData).get("files")).toBeInstanceOf(File);
+    expect((upload as FormData).get("files")).toEqual(expect.objectContaining({ name: "singularity-demo.md" }));
   });
 
   it("leaves an existing demo database unchanged", async () => {

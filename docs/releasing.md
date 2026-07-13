@@ -1,6 +1,6 @@
-# Releasing Future
+# Releasing Singularity
 
-Future uses annotated Git tags and GitHub Releases. Release artifacts are currently source-only; desktop packaging is not implemented.
+Singularity uses annotated Git tags and GitHub Releases. Release artifacts are currently source-only; desktop packaging is not implemented.
 
 ## Prepare
 
@@ -13,9 +13,9 @@ Future uses annotated Git tags and GitHub Releases. Release artifacts are curren
 
 ```powershell
 $version = "v0.1.0"
-git tag -a $version -m "Future $version"
+git tag -a $version -m "Singularity $version"
 git push origin $version
-gh release create $version --title "Future $version" --notes-file CHANGELOG.md
+gh release create $version --title "Singularity $version" --notes-file CHANGELOG.md
 ```
 
 For later releases, use a release-specific notes file instead of the full changelog. Never retag a published version; fix forward with a patch release.

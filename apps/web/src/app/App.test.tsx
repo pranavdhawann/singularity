@@ -41,8 +41,8 @@ describe("App", () => {
   it("shows first-run setup when required local resources are missing", async () => {
     render(<App api={createApi()} />);
 
-    expect(await screen.findByRole("heading", { name: "Set up Future" })).toBeInTheDocument();
-    expect(screen.queryByText("Future Demo")).not.toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Set up Singularity" })).toBeInTheDocument();
+    expect(screen.queryByText("Singularity Demo")).not.toBeInTheDocument();
   });
 
   it("renders live workspace and model data when setup is complete", async () => {
@@ -95,6 +95,6 @@ describe("App", () => {
     expect(await screen.findByText("Live Workspace")).toBeInTheDocument();
     expect(screen.getByText("Model: Offline Default")).toBeInTheDocument();
     expect(screen.getByText("No activity recorded yet.")).toBeInTheDocument();
-    expect(screen.getByLabelText("Message Future")).toBeInTheDocument();
+    expect(screen.getByLabelText("Message Singularity")).toBeInTheDocument();
   });
 });

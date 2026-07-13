@@ -1,8 +1,8 @@
-# Future Agent Context
+# Singularity Agent Context
 
 ## Product
 
-Future is an open-source, local, model-agnostic continuous assistant. It has one
+Singularity is an open-source, local, model-agnostic continuous assistant. It has one
 durable timeline rather than multiple chats. Local events, imported sources,
 memories, model calls, permissions, and proactive jobs will become searchable
 lenses over the same assistant relationship.

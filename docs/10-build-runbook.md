@@ -1,6 +1,6 @@
 # Build Runbook
 
-This runbook covers the local Future MVP implementation.
+This runbook covers the local Singularity MVP implementation.
 
 ## Prerequisites
 
@@ -21,7 +21,7 @@ The repository pins `pnpm@11.9.0` through `packageManager`. Build scripts for
 ## Run Locally
 
 For the deterministic offline demo, which uses `.future/demo.sqlite`, the mock
-provider, and `examples/future-demo.md`:
+provider, and `examples/singularity-demo.md`:
 
 ```powershell
 corepack pnpm demo
