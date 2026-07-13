@@ -41,6 +41,18 @@ export interface CreateProviderInput {
   isLocal: boolean;
 }
 
+export interface TestProviderConnectionInput {
+  kind: "openai-compatible";
+  baseUrl: string;
+  secretEnvironmentVariable: string;
+}
+
+export type ProviderConnectionTestResult =
+  | { status: "ok"; models: string[] }
+  | { status: "missing_key"; message: string }
+  | { status: "unreachable"; message: string }
+  | { status: "unsupported"; message: string };
+
 export interface ProviderConfig {
   id: string;
   kind: ProviderKind;
