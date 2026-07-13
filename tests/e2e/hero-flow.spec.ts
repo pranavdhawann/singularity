@@ -5,6 +5,14 @@ test("first run imports a local source and produces an inspectable cited answer"
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Set up Future" })).toBeVisible();
   await page.getByLabel("Workspace name").fill("Browser Workspace");
+  await page.getByRole("combobox", { name: "Provider", exact: true }).selectOption("openai-compatible");
+  await page.getByLabel("Base URL").fill("http://127.0.0.1:4280/v1");
+  await page.getByLabel("Secret environment variable").fill("FUTURE_TEST_OPENAI_KEY");
+  await page.getByRole("button", { name: "Test connection" }).click();
+  await expect(page.getByText("Connected. 1 model available.")).toBeVisible();
+  const providersBeforeSetup = await page.request.get("/api/v2/providers");
+  expect(await providersBeforeSetup.json()).toEqual({ providers: [] });
+  await page.getByRole("combobox", { name: "Provider", exact: true }).selectOption("mock");
   await page.getByRole("button", { name: "Create local assistant" }).click();
 
   await expect(page.getByLabel("Workspace")).toContainText("Browser Workspace");
