@@ -25,14 +25,14 @@ export function AssistantComposer({ status, error, onSubmit, onCancel }: Assista
         if (trimmed && !active) void onSubmit(trimmed);
       }}
     >
-      <label htmlFor="assistant-message">Message Future</label>
+      <label htmlFor="assistant-message">Message Singularity</label>
       <div className="composer-row">
         <textarea
           id="assistant-message"
           value={message}
           disabled={active}
           rows={3}
-          placeholder="Ask Future anything about your local context"
+          placeholder="Ask Singularity anything about your local context"
           onChange={(event) => setMessage(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter" && !event.shiftKey && !active) {
@@ -52,7 +52,7 @@ export function AssistantComposer({ status, error, onSubmit, onCancel }: Assista
           </button>
         )}
       </div>
-      {status === "streaming" ? <p className="composer-status">Future is responding...</p> : null}
+      {status === "streaming" ? <p className="composer-status">Singularity is responding...</p> : null}
       {status === "awaiting_approval" ? (
         <p className="composer-status">Review the external prompt before continuing.</p>
       ) : null}

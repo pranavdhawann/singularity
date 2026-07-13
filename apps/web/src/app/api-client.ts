@@ -19,9 +19,11 @@ import type {
   MemoryNamespaceDto,
   MemoryRevisionDto,
   ProviderConfig,
+  ProviderConnectionTestResult,
   PromptDecisionDto,
   PromptPreviewDto,
   TimelineEventDto,
+  TestProviderConnectionInput,
   WorkspaceDto,
 } from "@future/core";
 import type { FutureApi, ImportUploadResult } from "./api-types";
@@ -60,6 +62,10 @@ export class ApiClient implements FutureApi {
 
   async createProvider(input: CreateProviderInput): Promise<ProviderConfig> {
     return this.mutate<ProviderConfig>("/providers", input);
+  }
+
+  async testProviderConnection(input: TestProviderConnectionInput): Promise<ProviderConnectionTestResult> {
+    return this.mutate<ProviderConnectionTestResult>("/providers/connection-test", input);
   }
 
   async listModelProfiles(providerId?: string): Promise<{ modelProfiles: ModelProfile[] }> {

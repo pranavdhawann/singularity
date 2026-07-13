@@ -25,14 +25,14 @@ export function App({ api = defaultApi }: { api?: FutureApi }) {
   if (state.status === "loading") {
     return (
       <main className="state-panel">
-        <p>Connecting to the local Future service...</p>
+        <p>Connecting to the local Singularity service...</p>
       </main>
     );
   }
   if (state.status === "error") {
     return (
       <main className="state-panel">
-        <h1>Future is offline</h1>
+        <h1>Singularity is offline</h1>
         <p role="alert">{state.message}</p>
         <button type="button" onClick={reload}>
           Retry
@@ -91,9 +91,9 @@ function ReadyAssistantShell({
     <main className="app-shell">
       <aside className="left-rail" aria-label="Primary">
         <div className="brand-block">
-          <span className="brand-mark">F</span>
+          <span className="brand-mark">S</span>
           <div>
-            <strong>Future</strong>
+            <strong>Singularity</strong>
             <span>Continuous local assistant</span>
           </div>
         </div>

@@ -17,6 +17,7 @@ import type { ContextService } from "../services/context-service";
 import type { MemoryService } from "../services/memory-service";
 import type { ImportService } from "../services/import-service";
 import type { ProviderService } from "../services/provider-service";
+import type { ProviderConnectionService } from "../services/provider-connection-service";
 import type { PromptPreviewService } from "../services/prompt-preview-service";
 import type { TurnCancellationRegistry } from "../services/turn-cancellation";
 
@@ -34,6 +35,7 @@ export interface ApiDependencies {
   promptPreviews: PromptPreviewRepository;
   modelProfiles: ModelProfileRepository;
   providerService: ProviderService;
+  providerConnectionService: ProviderConnectionService;
   promptPreviewService: PromptPreviewService;
   contextService: ContextService;
   memoryService: MemoryService;

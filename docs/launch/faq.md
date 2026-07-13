@@ -1,8 +1,8 @@
 # Launch FAQ
 
-## Is Future a model?
+## Is Singularity a model?
 
-No. Future owns the local memory, retrieval, citation, and permission layer. Models are replaceable runtimes.
+No. Singularity owns the local memory, retrieval, citation, and permission layer. Models are replaceable runtimes.
 
 ## Does it work offline?
 
@@ -20,10 +20,10 @@ Markdown, plain text, and ChatGPT JSON exports. Imports are size-limited, checkp
 
 No. A grant binds to one exact turn, provider, profile, model, context-pack hash, and final prompt hash. Changed inputs invalidate it.
 
-## Does Future act autonomously?
+## Does Singularity act autonomously?
 
 No. Autonomous external actions, broad integrations, cloud accounts, and teams are out of scope for this release.
 
 ## Why is the repository named singularity?
 
-Future is the product name. `singularity` is the existing repository name. A later rename may improve discovery, but `v0.1.0` does not change repository identity.
+Singularity is both the product and repository name. Internal `@future/*` package scopes and `FUTURE_*` environment variables remain compatibility identifiers until a later internal migration.

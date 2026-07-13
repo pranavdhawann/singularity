@@ -12,7 +12,7 @@ export function MemoryBrowser() {
       </div>
       <article className="memory-card">
         <span>Proposed</span>
-        <h3>Future uses SQLite for local truth.</h3>
+        <h3>Singularity uses SQLite for local truth.</h3>
         <p>Confidence 0.92, one source, local privacy label.</p>
         <div className="memory-actions">
           <button type="button">Approve</button>

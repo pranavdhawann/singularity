@@ -13,6 +13,15 @@ const server = createServer((request, response) => {
     response.end(JSON.stringify({ callCount }));
     return;
   }
+  if (request.method === "GET" && request.url === "/v1/models") {
+    if (request.headers.authorization !== "Bearer phase4-test-secret") {
+      response.writeHead(401).end();
+      return;
+    }
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(JSON.stringify({ data: [{ id: "phase4-model" }] }));
+    return;
+  }
   if (request.method !== "POST" || request.url !== "/v1/chat/completions") {
     response.writeHead(404).end();
     return;

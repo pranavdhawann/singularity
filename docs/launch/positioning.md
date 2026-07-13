@@ -6,7 +6,7 @@ Local memory and permission layer for AI assistants.
 
 ## Primary promise
 
-Future is the local memory and permission layer for AI assistants—import your history, retrieve cited context, and approve exactly what leaves your machine.
+Singularity is the local memory and permission layer for AI assistants—import your history, retrieve cited context, and approve exactly what leaves your machine.
 
 ## Wedge
 

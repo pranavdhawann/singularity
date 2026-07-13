@@ -72,7 +72,7 @@ export class AssistantTurnRepository {
       workspaceId: input.workspaceId,
       type: "user.message.created",
       actor: "user",
-      title: "Message to Future",
+      title: "Message to Singularity",
       payload: { text: input.message, turnId },
       privacy: { labels: ["local"] },
     });

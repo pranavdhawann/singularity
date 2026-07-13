@@ -6,6 +6,8 @@ coverage
 .worktrees
 playwright-report
 test-results
+output
+.playwright
 pnpm-lock.yaml
 LICENSE
 

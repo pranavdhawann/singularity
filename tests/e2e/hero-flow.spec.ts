@@ -3,8 +3,16 @@ import path from "node:path";
 
 test("first run imports a local source and produces an inspectable cited answer", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Set up Future" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Set up Singularity" })).toBeVisible();
   await page.getByLabel("Workspace name").fill("Browser Workspace");
+  await page.getByRole("combobox", { name: "Provider", exact: true }).selectOption("openai-compatible");
+  await page.getByLabel("Base URL").fill("http://127.0.0.1:4280/v1");
+  await page.getByLabel("Secret environment variable").fill("FUTURE_TEST_OPENAI_KEY");
+  await page.getByRole("button", { name: "Test connection" }).click();
+  await expect(page.getByText("Connected. 1 model available.")).toBeVisible();
+  const providersBeforeSetup = await page.request.get("/api/v2/providers");
+  expect(await providersBeforeSetup.json()).toEqual({ providers: [] });
+  await page.getByRole("combobox", { name: "Provider", exact: true }).selectOption("mock");
   await page.getByRole("button", { name: "Create local assistant" }).click();
 
   await expect(page.getByLabel("Workspace")).toContainText("Browser Workspace");
@@ -13,19 +21,19 @@ test("first run imports a local source and produces an inspectable cited answer"
   await expect(page.getByRole("heading", { name: "Timeline" })).toBeVisible();
 
   await page.getByRole("button", { name: "Imports", exact: true }).click();
-  await page.getByLabel("Choose import files").setInputFiles(path.resolve("examples/future-demo.md"));
+  await page.getByLabel("Choose import files").setInputFiles(path.resolve("examples/singularity-demo.md"));
   await page.getByRole("button", { name: "Import selected files" }).click();
-  const imported = page.locator("article").filter({ hasText: "future-demo.md" });
+  const imported = page.locator("article").filter({ hasText: "singularity-demo.md" });
   await expect(imported.getByText("failed", { exact: true })).toBeVisible();
-  await imported.getByRole("button", { name: "Retry future-demo.md" }).click();
+  await imported.getByRole("button", { name: "Retry singularity-demo.md" }).click();
   await expect(imported.getByText("completed", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Timeline", exact: true }).click();
 
-  const composer = page.getByLabel("Message Future");
+  const composer = page.getByLabel("Message Singularity");
   await composer.fill("launch readiness decision");
   await page.getByRole("button", { name: "Send" }).click();
   await expect(page.getByText(/Mock response for: launch readiness decision/)).toBeVisible();
-  const importedCitation = page.getByRole("button", { name: /Citation \d+:.*future-demo\.md/ }).last();
+  const importedCitation = page.getByRole("button", { name: /Citation \d+:.*singularity-demo\.md/ }).last();
   await expect(importedCitation).toBeVisible();
   await importedCitation.click();
   await expect(page.getByText("Document chunk").first()).toBeVisible();
@@ -41,18 +49,18 @@ test("first run imports a local source and produces an inspectable cited answer"
   await page.reload();
   await expect(page.getByText("launch readiness decision", { exact: true })).toBeVisible();
   await expect(page.getByText("What did I just ask about launch readiness?", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Message Future")).toBeVisible();
+  await expect(page.getByLabel("Message Singularity")).toBeVisible();
 });
 
 test("memory retrieval lifecycle changes source-backed answers", async ({ page }) => {
   test.setTimeout(60_000);
   await page.goto("/");
-  await expect(page.getByLabel("Workspace name").or(page.getByLabel("Message Future"))).toBeVisible();
+  await expect(page.getByLabel("Workspace name").or(page.getByLabel("Message Singularity"))).toBeVisible();
   if (await page.getByLabel("Workspace name").isVisible()) {
     await page.getByLabel("Workspace name").fill("Memory Workspace");
     await page.getByRole("button", { name: "Create local assistant" }).click();
   }
-  await expect(page.getByLabel("Message Future")).toBeVisible();
+  await expect(page.getByLabel("Message Singularity")).toBeVisible();
 
   await page.getByRole("button", { name: "Memory", exact: true }).click();
   await page.getByLabel("New namespace").fill("Architecture");
@@ -69,7 +77,7 @@ test("memory retrieval lifecycle changes source-backed answers", async ({ page }
   await expect(page.getByText("Revision history")).toBeVisible();
 
   await page.getByRole("button", { name: "Timeline" }).click();
-  const composer = page.getByLabel("Message Future");
+  const composer = page.getByLabel("Message Singularity");
   await composer.fill("What is the project codename?");
   await page.getByRole("button", { name: "Send" }).click();
   const firstAnswer = page.getByLabel("Assistant response").last();
@@ -105,5 +113,5 @@ test("memory retrieval lifecycle changes source-backed answers", async ({ page }
   await page.reload();
   await page.getByRole("button", { name: "Memory", exact: true }).click();
   await expect(page.getByRole("button", { name: "Project codename is Dragonfly" })).toHaveCount(0);
-  await expect(page.getByLabel("Message Future")).toBeVisible();
+  await expect(page.getByLabel("Message Singularity")).toBeVisible();
 });

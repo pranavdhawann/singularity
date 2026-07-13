@@ -19,9 +19,15 @@ build/
 coverage/
 .cache/
 .turbo/
+.eslintcache
+.npm/
+.yarn/
+*.tsbuildinfo
 .worktrees/
 test-results/
 playwright-report/
+output/
+.playwright/
 
 # Local app data
 .future/
@@ -40,6 +46,10 @@ data/
 tmp/
 temp/
 *.tmp
+*.pid
+*.pid.lock
+*.orig
+*.rej
 
 # Logs
 *.log

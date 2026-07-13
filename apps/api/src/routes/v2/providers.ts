@@ -1,4 +1,4 @@
-import type { CreateModelProfileInput, CreateProviderInput } from "@future/core";
+import type { CreateModelProfileInput, CreateProviderInput, TestProviderConnectionInput } from "@future/core";
 import type { FastifyInstance } from "fastify";
 import { sendApiError } from "../../server/api-errors";
 import type { ApiDependencies } from "../../server/dependencies";
@@ -9,6 +9,28 @@ interface ModelProfileQuery {
 
 export async function registerV2ProviderRoutes(server: FastifyInstance, deps: ApiDependencies): Promise<void> {
   server.get("/api/v2/providers", async () => ({ providers: deps.providers.list() }));
+
+  server.post<{ Body: TestProviderConnectionInput }>(
+    "/api/v2/providers/connection-test",
+    {
+      schema: {
+        body: {
+          type: "object",
+          required: ["kind", "baseUrl", "secretEnvironmentVariable"],
+          additionalProperties: false,
+          properties: {
+            kind: { type: "string", enum: ["openai-compatible"] },
+            baseUrl: { type: "string", minLength: 1 },
+            secretEnvironmentVariable: {
+              type: "string",
+              pattern: "^[A-Z][A-Z0-9_]*$",
+            },
+          },
+        },
+      },
+    },
+    async (request) => deps.providerConnectionService.test(request.body),
+  );
 
   server.post<{ Body: CreateProviderInput }>(
     "/api/v2/providers",

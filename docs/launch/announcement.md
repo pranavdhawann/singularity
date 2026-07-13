@@ -1,6 +1,6 @@
 # Launch announcement
 
-Future turns your ChatGPT history and project files into a private, cited assistant memory. It runs locally, supports Ollama and OpenAI-compatible providers, and shows you exactly what context leaves your machine before an external call.
+Singularity turns your ChatGPT history and project files into a private, cited assistant memory. It runs locally, supports Ollama and OpenAI-compatible providers, and shows you exactly what context leaves your machine before an external call.
 
 The first early release can import Markdown, text, and ChatGPT exports; retrieve across documents, reviewed memory, and prior events; show source ranges and ranking details; redact the complete external prompt; and record an explicit approval or denial.
 

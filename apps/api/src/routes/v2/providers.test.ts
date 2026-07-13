@@ -4,6 +4,52 @@ import { createServer } from "../../server/create-server";
 const sessionHeaders = { "x-future-session": "test-token" };
 
 describe("V2 provider routes", () => {
+  it("requires the local session for connection tests", async () => {
+    const server = await createServer({ databasePath: ":memory:", sessionToken: "test-token" });
+    const response = await server.inject({
+      method: "POST",
+      url: "/api/v2/providers/connection-test",
+      payload: {
+        kind: "openai-compatible",
+        baseUrl: "https://models.example/v1",
+        secretEnvironmentVariable: "FUTURE_MISSING_CONNECTION_KEY",
+      },
+    });
+
+    expect(response.statusCode).toBe(401);
+    await server.close();
+  });
+
+  it("returns a safe missing-key result without persisting a provider", async () => {
+    const previous = process.env.FUTURE_MISSING_CONNECTION_KEY;
+    delete process.env.FUTURE_MISSING_CONNECTION_KEY;
+    const server = await createServer({ databasePath: ":memory:", sessionToken: "test-token" });
+    try {
+      const response = await server.inject({
+        method: "POST",
+        url: "/api/v2/providers/connection-test",
+        headers: sessionHeaders,
+        payload: {
+          kind: "openai-compatible",
+          baseUrl: "https://models.example/v1",
+          secretEnvironmentVariable: "FUTURE_MISSING_CONNECTION_KEY",
+        },
+      });
+      const providers = await server.inject({ method: "GET", url: "/api/v2/providers" });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual({
+        status: "missing_key",
+        message: "Set the configured environment variable and restart Singularity.",
+      });
+      expect(providers.json()).toEqual({ providers: [] });
+    } finally {
+      if (previous === undefined) delete process.env.FUTURE_MISSING_CONNECTION_KEY;
+      else process.env.FUTURE_MISSING_CONNECTION_KEY = previous;
+      await server.close();
+    }
+  });
+
   it("creates and lists a provider with its model profile", async () => {
     const server = await createServer({ databasePath: ":memory:", sessionToken: "test-token" });
     const providerResponse = await server.inject({

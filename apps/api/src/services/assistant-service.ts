@@ -197,7 +197,7 @@ export class AssistantService {
         workspaceId: building.workspaceId,
         type: "assistant.response.created",
         actor: "assistant",
-        title: "Future answered",
+        title: "Singularity answered",
         payload: {
           turnId,
           responseText: partialText,
@@ -422,7 +422,7 @@ export class AssistantService {
         workspaceId: initial.workspaceId,
         type: "assistant.response.created",
         actor: "assistant",
-        title: "Future answered",
+        title: "Singularity answered",
         payload: { turnId: initial.id, responseText: partialText, contextPackId: contextPack.id },
         privacy: { labels: ["local"] },
       });
