@@ -118,4 +118,33 @@ describe("ImportService", () => {
       ctx.db.close();
     }
   });
+
+  it("fails an empty source with the stable empty_source code while preserving other files", async () => {
+    const ctx = setup();
+    try {
+      const empty = ctx.service.enqueueFile({
+        workspaceId: "w_1",
+        filename: "blank.md",
+        mediaType: "text/markdown",
+        kind: "markdown",
+        content: Buffer.from("   \n\t "),
+      });
+      const populated = ctx.service.enqueueFile({
+        workspaceId: "w_1",
+        filename: "notes.md",
+        mediaType: "text/markdown",
+        kind: "markdown",
+        content: Buffer.from("# Notes\n\nRetrievable content."),
+      });
+
+      await expect(ctx.service.run(empty.id)).rejects.toThrow();
+      await expect(ctx.service.run(populated.id)).resolves.toMatchObject({ state: "completed" });
+
+      expect(ctx.jobs.get(empty.id)).toMatchObject({ state: "failed", errorCode: "empty_source" });
+      expect(ctx.jobs.get(populated.id)?.state).toBe("completed");
+      expect(ctx.db.client.prepare("SELECT COUNT(*) FROM documents").pluck().get()).toBe(1);
+    } finally {
+      ctx.db.close();
+    }
+  });
 });

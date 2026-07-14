@@ -204,7 +204,14 @@ secret environment-variable name. Only the `env:NAME` reference is persisted;
 the value is resolved immediately before the call. For example:
 
 ```powershell
+# PowerShell (Windows)
 $env:FUTURE_OPENAI_API_KEY = "your-key"
+corepack pnpm dev
+```
+
+```bash
+# Bash (macOS/Linux)
+export FUTURE_OPENAI_API_KEY="your-key"
 corepack pnpm dev
 ```
 
@@ -220,7 +227,13 @@ one-shot test-only import interruption. It requires no external network or key.
 For custom dev origins, set a comma-separated allowlist:
 
 ```powershell
+# PowerShell (Windows)
 $env:FUTURE_ALLOWED_ORIGINS = "http://127.0.0.1:4173"
+```
+
+```bash
+# Bash (macOS/Linux)
+export FUTURE_ALLOWED_ORIGINS="http://127.0.0.1:4173"
 ```
 
 ## Manual External-Provider Privacy Boundary

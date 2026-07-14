@@ -1,3 +1,4 @@
+import { assertNonEmptySource } from "./errors";
 import { hashText } from "./hash";
 import type { ImportParseResult } from "./types";
 
@@ -8,6 +9,7 @@ export interface ParseMarkdownOptions {
 }
 
 export function parseMarkdownDocument(options: ParseMarkdownOptions): ImportParseResult {
+  assertNonEmptySource(options.text);
   return {
     documents: [
       {

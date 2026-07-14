@@ -1,3 +1,4 @@
+import { assertNonEmptySource } from "./errors";
 import { hashText } from "./hash";
 import type { ImportParseResult } from "./types";
 
@@ -8,6 +9,7 @@ export interface ParseTextOptions {
 }
 
 export function parseTextDocument(options: ParseTextOptions): ImportParseResult {
+  assertNonEmptySource(options.text);
   return {
     documents: [
       {
