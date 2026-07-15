@@ -293,7 +293,9 @@ describe("AssistantService", () => {
     expect(frames.at(-1)).toEqual(expect.objectContaining({ type: "completed" }));
     const statements = memories.list({ workspaceId: "w_demo" }).items.map((memory) => memory.statement);
     expect(statements).toContain("My dog's name is Ada.");
-    const captured = memories.list({ workspaceId: "w_demo" }).items.find((memory) => memory.statement === "My dog's name is Ada.");
+    const captured = memories
+      .list({ workspaceId: "w_demo" })
+      .items.find((memory) => memory.statement === "My dog's name is Ada.");
     expect(captured?.reviewState).toBe("approved");
   });
 
