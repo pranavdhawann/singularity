@@ -31,6 +31,7 @@ const RECOGNIZERS: Recognizer[] = [
   },
   { type: "secret", pattern: /\bsk-[A-Za-z0-9_-]{10,}\b/g },
   { type: "secret", pattern: /\bBearer\s+[A-Za-z0-9._-]{10,}\b/g },
+  { type: "credential_path", pattern: /\b[A-Z]:\\[^\s]*(?:\.ssh|credentials|secrets|tokens)[^\s]*/gi },
   { type: "credit_card", pattern: /\b(?:\d[ -]*?){13,19}\b/g, validate: luhnValid },
   { type: "ssn", pattern: /\b\d{3}-\d{2}-\d{4}\b/g },
   { type: "iban", pattern: /\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b/g },
