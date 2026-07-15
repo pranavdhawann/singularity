@@ -62,7 +62,7 @@ export function ReadyAssistantShell({
   providers: ProviderConfig[];
   modelProfiles: ModelProfile[];
 }) {
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState(workspaces[0]?.id ?? "");
+  const activeWorkspaceId = workspaces[0]?.id ?? "";
   const [activeProfileId, setActiveProfileId] = useState(modelProfiles[0]?.id ?? "");
   const [selectedContextPackId, setSelectedContextPackId] = useState<string | undefined>(undefined);
   const [settingsOpen, setSettingsOpen] = useState(false);

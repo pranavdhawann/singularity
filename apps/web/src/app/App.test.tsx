@@ -100,9 +100,11 @@ describe("App", () => {
   it("renders live workspace and model data when setup is complete", async () => {
     render(<App api={createReadyApi()} />);
 
-    expect(await screen.findByText((content, element) => {
-      return element?.tagName === "SPAN" && content.startsWith("Model:");
-    })).toBeInTheDocument();
+    expect(
+      await screen.findByText((content, element) => {
+        return element?.tagName === "SPAN" && content.startsWith("Model:");
+      }),
+    ).toBeInTheDocument();
     expect(screen.getByText("No activity recorded yet.")).toBeInTheDocument();
     expect(screen.getByLabelText("Message Singularity")).toBeInTheDocument();
   });

@@ -34,8 +34,6 @@ describe("PrivacyPanel", () => {
     const redactToggle = await screen.findByLabelText(/redact local/i);
     fireEvent.click(redactToggle);
 
-    await waitFor(() =>
-      expect(api.updateSettings).toHaveBeenCalledWith({ workspaceId: "w_1", redactLocalToo: true }),
-    );
+    await waitFor(() => expect(api.updateSettings).toHaveBeenCalledWith({ workspaceId: "w_1", redactLocalToo: true }));
   });
 });
