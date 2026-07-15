@@ -1,6 +1,12 @@
-import type { ModelProfile, ModelProvider } from "@future/core";
+import type { ModelProfile, ModelProvider, ProviderConfig, SecretStore } from "@future/core";
 import type { ModelProfileRepository, ProviderRepository } from "@future/db";
-import { MockProvider, OllamaProvider, OpenAiCompatibleProvider } from "@future/providers";
+import {
+  AnthropicProvider,
+  MockProvider,
+  OllamaProvider,
+  OpenAiCompatibleProvider,
+  OpenAiProvider,
+} from "@future/providers";
 import { OllamaEmbeddingAdapter, OpenAiCompatibleEmbeddingAdapter, type EmbeddingAdapter } from "@future/retrieval";
 
 export type ProviderServiceErrorCode =
@@ -17,10 +23,80 @@ export class ProviderServiceError extends Error {
   }
 }
 
+/** Reads directly from process.env, matching the pre-SecretStore behavior. Used when no store is injected. */
+const ENV_ONLY_SECRETS: SecretStore = {
+  get: (name: string) => process.env[name],
+  set: () => {
+    /* no-op: this fallback store does not persist secrets */
+  },
+  list: () => [],
+};
+
+export interface ProviderBuildExtra {
+  model: string;
+  contextWindow?: number;
+  baseUrl?: string;
+  secretEnvironmentVariable?: string;
+}
+
+/** Pure factory: turns a persisted ProviderConfig + runtime extras into a live ModelProvider. */
+export function buildProvider(config: ProviderConfig, extra: ProviderBuildExtra, secrets: SecretStore): ModelProvider {
+  switch (config.kind) {
+    case "mock":
+      return new MockProvider();
+
+    case "ollama":
+      return new OllamaProvider({
+        id: config.id,
+        ...(extra.baseUrl ? { baseUrl: extra.baseUrl } : {}),
+        model: extra.model,
+      });
+
+    case "openai-compatible": {
+      if (!extra.baseUrl || !isHttpUrl(extra.baseUrl)) {
+        throw new ProviderServiceError("invalid_external_endpoint");
+      }
+      const apiKey = extra.secretEnvironmentVariable ? secrets.get(extra.secretEnvironmentVariable) : undefined;
+      if (!apiKey) {
+        throw new ProviderServiceError("missing_external_secret");
+      }
+      return new OpenAiCompatibleProvider({
+        id: config.id,
+        baseUrl: extra.baseUrl,
+        apiKey,
+        models: [{ id: extra.model, displayName: extra.model, contextWindow: extra.contextWindow ?? 0 }],
+      });
+    }
+
+    case "anthropic": {
+      const apiKey = extra.secretEnvironmentVariable ? secrets.get(extra.secretEnvironmentVariable) : undefined;
+      return new AnthropicProvider({
+        id: config.id,
+        ...(apiKey ? { apiKey } : {}),
+        ...(extra.baseUrl ? { baseUrl: extra.baseUrl } : {}),
+        models: [{ id: extra.model, displayName: extra.model, contextWindow: extra.contextWindow ?? 200000 }],
+      });
+    }
+
+    case "openai": {
+      const apiKey = extra.secretEnvironmentVariable ? secrets.get(extra.secretEnvironmentVariable) : undefined;
+      return new OpenAiProvider({
+        id: config.id,
+        ...(apiKey ? { apiKey } : {}),
+        ...(extra.baseUrl ? { baseUrl: extra.baseUrl } : {}),
+      });
+    }
+
+    default:
+      throw new ProviderServiceError("secret_store_not_configured");
+  }
+}
+
 export class ProviderService {
   constructor(
     private readonly providers: ProviderRepository,
     private readonly profiles: ModelProfileRepository,
+    private readonly secrets: SecretStore = ENV_ONLY_SECRETS,
   ) {}
 
   getRuntime(profileId: string): { provider: ModelProvider; profile: ModelProfile; isLocal: boolean } {
@@ -35,39 +111,56 @@ export class ProviderService {
     }
 
     if (config.kind === "mock") {
-      return { provider: new MockProvider(), profile, isLocal: config.isLocal };
-    }
-
-    if (config.kind === "ollama") {
       return {
-        provider: new OllamaProvider({
-          id: config.id,
-          ...(config.baseUrl ? { baseUrl: config.baseUrl } : {}),
-          model: profile.model,
-        }),
+        provider: buildProvider(config, { model: profile.model, contextWindow: profile.contextWindow }, this.secrets),
         profile,
         isLocal: config.isLocal,
       };
     }
 
-    if (config.kind === "openai-compatible") {
+    if (config.kind === "ollama") {
+      return {
+        provider: buildProvider(
+          config,
+          {
+            model: profile.model,
+            contextWindow: profile.contextWindow,
+            ...(config.baseUrl ? { baseUrl: config.baseUrl } : {}),
+          },
+          this.secrets,
+        ),
+        profile,
+        isLocal: config.isLocal,
+      };
+    }
+
+    if (config.kind === "openai-compatible" || config.kind === "anthropic" || config.kind === "openai") {
       const runtimeConfig = this.providers.getRuntimeConfig(config.id);
       const baseUrl = runtimeConfig?.baseUrl;
-      if (!baseUrl || !isHttpUrl(baseUrl)) {
-        throw new ProviderServiceError("invalid_external_endpoint");
+      const reference = runtimeConfig?.secretReference;
+      const secretEnvironmentVariable = reference?.startsWith("env:") ? reference.slice(4) : undefined;
+
+      if (config.kind === "openai-compatible") {
+        if (!baseUrl || !isHttpUrl(baseUrl)) {
+          throw new ProviderServiceError("invalid_external_endpoint");
+        }
+        const apiKey = secretEnvironmentVariable ? this.secrets.get(secretEnvironmentVariable) : undefined;
+        if (!reference?.startsWith("env:") || !apiKey) {
+          throw new ProviderServiceError("missing_external_secret");
+        }
       }
-      const reference = runtimeConfig.secretReference;
-      const apiKey = reference ? resolveEnvironmentSecret(reference) : undefined;
-      if (!reference?.startsWith("env:") || !apiKey) {
-        throw new ProviderServiceError("missing_external_secret");
-      }
+
       return {
-        provider: new OpenAiCompatibleProvider({
-          id: config.id,
-          baseUrl,
-          apiKey,
-          models: [{ id: profile.model, displayName: profile.model, contextWindow: profile.contextWindow }],
-        }),
+        provider: buildProvider(
+          config,
+          {
+            model: profile.model,
+            contextWindow: profile.contextWindow,
+            ...(baseUrl ? { baseUrl } : {}),
+            ...(secretEnvironmentVariable ? { secretEnvironmentVariable } : {}),
+          },
+          this.secrets,
+        ),
         profile,
         isLocal: config.isLocal,
       };

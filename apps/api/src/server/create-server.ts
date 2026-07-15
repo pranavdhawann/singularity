@@ -13,6 +13,7 @@ import {
   openDatabase,
 } from "@future/db";
 import { randomUUID } from "node:crypto";
+import { dirname, join } from "node:path";
 import Fastify, { type FastifyInstance } from "fastify";
 import { registerCommandRoutes } from "../routes/commands";
 import { registerContextPackRoutes } from "../routes/context-packs";
@@ -41,6 +42,7 @@ import { ImportService } from "../services/import-service";
 import { ProviderService } from "../services/provider-service";
 import { ProviderConnectionService } from "../services/provider-connection-service";
 import { PromptPreviewService } from "../services/prompt-preview-service";
+import { FileSecretStore } from "../services/secret-store";
 import { TurnCancellationRegistry } from "../services/turn-cancellation";
 import type { ApiDependencies } from "./dependencies";
 import { registerApiErrorHandler } from "./api-errors";
@@ -65,7 +67,8 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   const namespaces = new NamespaceRepository(db);
   const compactions = new CompactionRepository(db);
   const embeddings = new EmbeddingRepository(db);
-  const providerService = new ProviderService(providers, modelProfiles);
+  const secrets = new FileSecretStore(join(dirname(options.databasePath), "secrets.json"));
+  const providerService = new ProviderService(providers, modelProfiles, secrets);
   const providerConnectionService = new ProviderConnectionService();
   const promptPreviewService = new PromptPreviewService({ previews: promptPreviews });
   const contextService = new ContextService({
@@ -90,6 +93,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
     providers,
     promptPreviews,
     modelProfiles,
+    secrets,
     providerService,
     providerConnectionService,
     promptPreviewService,

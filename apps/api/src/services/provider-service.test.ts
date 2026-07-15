@@ -1,6 +1,8 @@
+import type { SecretStore } from "@future/core";
 import { ModelProfileRepository, ProviderRepository, createTestDb } from "@future/db";
+import { AnthropicProvider, OpenAiProvider } from "@future/providers";
 import { describe, expect, it } from "vitest";
-import { ProviderService, ProviderServiceError } from "./provider-service";
+import { ProviderService, ProviderServiceError, buildProvider } from "./provider-service";
 
 describe("ProviderService", () => {
   it("resolves a persisted mock profile", () => {
@@ -117,5 +119,106 @@ describe("ProviderService", () => {
       else process.env.FUTURE_TEST_OPENAI_KEY = previous;
       db.close();
     }
+  });
+});
+
+describe("buildProvider", () => {
+  function stubSecrets(values: Record<string, string>): SecretStore {
+    return {
+      get: (name: string) => values[name],
+      set: () => {
+        throw new Error("not implemented");
+      },
+      list: () => Object.keys(values),
+    };
+  }
+
+  it("builds a native Anthropic provider and resolves its key from the SecretStore", async () => {
+    const secrets = stubSecrets({ FUTURE_ANTHROPIC_API_KEY: "sk-ant-x" });
+
+    const provider = buildProvider(
+      {
+        id: "p1",
+        kind: "anthropic",
+        displayName: "Claude",
+        isLocal: false,
+        hasSecret: true,
+        capabilities: { streaming: true, text: true, embeddings: false },
+        createdAt: "t",
+        updatedAt: "t",
+      },
+      { secretEnvironmentVariable: "FUTURE_ANTHROPIC_API_KEY", model: "claude-sonnet-5" },
+      secrets,
+    );
+
+    expect(provider).toBeInstanceOf(AnthropicProvider);
+    expect(provider.kind).toBe("anthropic");
+    await expect(provider.listModels()).resolves.toEqual([
+      { id: "claude-sonnet-5", displayName: "claude-sonnet-5", contextWindow: 200000 },
+    ]);
+  });
+
+  it("builds a native OpenAI provider and resolves its key from the SecretStore", () => {
+    const secrets = stubSecrets({ FUTURE_OPENAI_API_KEY: "sk-openai-x" });
+
+    const provider = buildProvider(
+      {
+        id: "p2",
+        kind: "openai",
+        displayName: "OpenAI",
+        isLocal: false,
+        hasSecret: true,
+        capabilities: { streaming: true, text: true, embeddings: false },
+        createdAt: "t",
+        updatedAt: "t",
+      },
+      { secretEnvironmentVariable: "FUTURE_OPENAI_API_KEY", model: "gpt-4o" },
+      secrets,
+    );
+
+    expect(provider).toBeInstanceOf(OpenAiProvider);
+    expect(provider.kind).toBe("openai");
+  });
+
+  it("uses the profile's contextWindow when provided for Anthropic", () => {
+    const secrets = stubSecrets({});
+
+    const provider = buildProvider(
+      {
+        id: "p3",
+        kind: "anthropic",
+        displayName: "Claude",
+        isLocal: false,
+        hasSecret: false,
+        capabilities: { streaming: true, text: true, embeddings: false },
+        createdAt: "t",
+        updatedAt: "t",
+      },
+      { model: "claude-sonnet-5", contextWindow: 64000 },
+      secrets,
+    );
+
+    expect(provider).toBeInstanceOf(AnthropicProvider);
+  });
+
+  it("still builds the mock provider", () => {
+    const secrets = stubSecrets({});
+
+    const provider = buildProvider(
+      {
+        id: "p4",
+        kind: "mock",
+        displayName: "Mock",
+        isLocal: true,
+        hasSecret: false,
+        capabilities: { streaming: true, text: true, embeddings: false },
+        createdAt: "t",
+        updatedAt: "t",
+      },
+      { model: "mock" },
+      secrets,
+    );
+
+    expect(provider.kind).toBe("mock");
   });
 });

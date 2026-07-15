@@ -1,3 +1,4 @@
+import type { SecretStore } from "@future/core";
 import type {
   AssistantTurnRepository,
   CompactionRepository,
@@ -34,6 +35,7 @@ export interface ApiDependencies {
   providers: ProviderRepository;
   promptPreviews: PromptPreviewRepository;
   modelProfiles: ModelProfileRepository;
+  secrets: SecretStore;
   providerService: ProviderService;
   providerConnectionService: ProviderConnectionService;
   promptPreviewService: PromptPreviewService;
