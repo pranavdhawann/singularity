@@ -1,4 +1,4 @@
-export type ProviderKind = "openai-compatible" | "ollama" | "mock";
+export type ProviderKind = "openai-compatible" | "ollama" | "mock" | "anthropic" | "openai";
 
 export interface ModelDescriptor {
   id: string;
