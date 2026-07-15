@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import path from "node:path";
+import { closeSettings, openSettingsTab } from "./support/chat-ui";
 
 test("first run imports a local source and produces an inspectable cited answer", async ({ page }) => {
   await page.goto("/");
@@ -15,19 +16,19 @@ test("first run imports a local source and produces an inspectable cited answer"
   await page.getByRole("combobox", { name: "Provider", exact: true }).selectOption("mock");
   await page.getByRole("button", { name: "Create local assistant" }).click();
 
-  await expect(page.getByLabel("Workspace")).toContainText("Browser Workspace");
   await expect(page.getByText("Model: Default")).toBeVisible();
   await expect(page.getByRole("button", { name: /command palette/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Timeline" })).toBeVisible();
+  await expect(page.getByLabel("Message Singularity")).toBeVisible();
 
-  await page.getByRole("button", { name: "Imports", exact: true }).click();
+  await openSettingsTab(page, "Imports");
   await page.getByLabel("Choose import files").setInputFiles(path.resolve("examples/singularity-demo.md"));
   await page.getByRole("button", { name: "Import selected files" }).click();
   const imported = page.locator("article").filter({ hasText: "singularity-demo.md" });
   await expect(imported.getByText("failed", { exact: true })).toBeVisible();
   await imported.getByRole("button", { name: "Retry singularity-demo.md" }).click();
   await expect(imported.getByText("completed", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Timeline", exact: true }).click();
+  await closeSettings(page);
 
   const composer = page.getByLabel("Message Singularity");
   await composer.fill("launch readiness decision");
@@ -62,7 +63,7 @@ test("memory retrieval lifecycle changes source-backed answers", async ({ page }
   }
   await expect(page.getByLabel("Message Singularity")).toBeVisible();
 
-  await page.getByRole("button", { name: "Memory", exact: true }).click();
+  await openSettingsTab(page, "Memory");
   await page.getByLabel("New namespace").fill("Architecture");
   await page.getByRole("button", { name: "Create namespace" }).click();
   await expect(page.getByRole("button", { name: "Architecture" })).toBeVisible();
@@ -75,8 +76,8 @@ test("memory retrieval lifecycle changes source-backed answers", async ({ page }
   await page.getByRole("button", { name: "Save memory" }).click();
   await expect(page.getByText("Version 2", { exact: true })).toBeVisible();
   await expect(page.getByText("Revision history")).toBeVisible();
+  await closeSettings(page);
 
-  await page.getByRole("button", { name: "Timeline" }).click();
   const composer = page.getByLabel("Message Singularity");
   await composer.fill("What is the project codename?");
   await page.getByRole("button", { name: "Send" }).click();
@@ -86,11 +87,11 @@ test("memory retrieval lifecycle changes source-backed answers", async ({ page }
   await expect(page.getByText("Final score", { exact: false }).first()).toBeVisible();
   await expect(page.getByText(/Lexical retrieval only/)).toBeVisible();
 
-  await page.getByRole("button", { name: "Memory", exact: true }).click();
+  await openSettingsTab(page, "Memory");
   await page.getByRole("button", { name: "Project codename is Firefly" }).click();
   await page.getByLabel("Memory status", { exact: true }).selectOption("outdated");
   await page.getByRole("button", { name: "Save memory" }).click();
-  await page.getByRole("button", { name: "Timeline" }).click();
+  await closeSettings(page);
   await composer.fill("Repeat the project codename from memory");
   await page.getByRole("button", { name: "Send" }).click();
   await expect(
@@ -100,7 +101,7 @@ test("memory retrieval lifecycle changes source-backed answers", async ({ page }
       .getByRole("button", { name: /Pinned memory|Approved memory/ }),
   ).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Memory", exact: true }).click();
+  await openSettingsTab(page, "Memory");
   await page.getByRole("button", { name: "Project codename is Firefly" }).click();
   await page.getByLabel("Memory statement").fill("Project codename is Dragonfly");
   await page.getByLabel("Memory status", { exact: true }).selectOption("approved");
@@ -111,7 +112,8 @@ test("memory retrieval lifecycle changes source-backed answers", async ({ page }
   await page.getByRole("button", { name: "Delete memory" }).click();
   await expect(page.getByRole("button", { name: "Project codename is Dragonfly" })).toHaveCount(0);
   await page.reload();
-  await page.getByRole("button", { name: "Memory", exact: true }).click();
+  await openSettingsTab(page, "Memory");
   await expect(page.getByRole("button", { name: "Project codename is Dragonfly" })).toHaveCount(0);
+  await closeSettings(page);
   await expect(page.getByLabel("Message Singularity")).toBeVisible();
 });

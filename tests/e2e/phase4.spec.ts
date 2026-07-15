@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import path from "node:path";
+import { closeSettings, openSettingsTab } from "./support/chat-ui";
 
 test("browser imports, resumes indexing, approves an exact external prompt, and inspects citations", async ({
   page,
@@ -45,7 +46,7 @@ test("browser imports, resumes indexing, approves an exact external prompt, and 
 
   await page.reload();
   await page.getByLabel("Model profile").selectOption({ label: "Phase 4 External" });
-  await page.getByRole("button", { name: "Imports", exact: true }).click();
+  await openSettingsTab(page, "Imports");
   await page
     .getByLabel("Choose import files")
     .setInputFiles([
@@ -61,16 +62,22 @@ test("browser imports, resumes indexing, approves an exact external prompt, and 
     await expect(card.getByText("completed", { exact: true })).toBeVisible();
   }
 
-  await page.getByRole("button", { name: "Timeline", exact: true }).click();
+  await closeSettings(page);
   const composer = page.getByLabel("Message Singularity");
-  await composer.fill("resumable import decision");
+  // "OWNERRECORD" is a marker unique to the imported phase4-notes.md chunk that
+  // carries the owner email (low-risk) and SSN (high-risk). FTS matches all query
+  // terms (AND), so the SSN must live in the source, not the query. The high-risk
+  // SSN is what pauses the turn for approval under the Mode-C contract.
+  await composer.fill("OWNERRECORD");
   await page.getByRole("button", { name: "Send" }).click();
 
   const preview = page.getByRole("dialog", { name: "External prompt preview" });
   await expect(preview).toBeVisible();
   await expect(preview.getByText("external", { exact: true })).toBeVisible();
   await expect(preview.getByText("phase4-model", { exact: true })).toBeVisible();
+  await expect(preview.getByText(/ssn: 1/)).toBeVisible();
   await expect(preview.getByText(/email: 1/)).toBeVisible();
+  await expect(preview.getByText("[REDACTED_SSN]", { exact: false })).toBeVisible();
   await expect(preview.getByText("[REDACTED_EMAIL]", { exact: false })).toBeVisible();
   const selectedSource = preview.getByRole("listitem").filter({ hasText: "phase4-notes.md" }).first();
   await expect(selectedSource).toBeVisible();
@@ -96,13 +103,13 @@ test("browser imports, resumes indexing, approves an exact external prompt, and 
   const storedPreview = await page.request.get(
     `/api/v2/prompt-previews/${String(required?.payload.previewId)}?workspaceId=${workspaceId}`,
   );
-  expect(((await storedPreview.json()) as { redactedPrompt: string }).redactedPrompt).not.toContain(
-    "phase4-owner@example.com",
-  );
+  const storedRedactedPrompt = ((await storedPreview.json()) as { redactedPrompt: string }).redactedPrompt;
+  expect(storedRedactedPrompt).not.toContain("phase4-owner@example.com");
+  expect(storedRedactedPrompt).not.toContain("123-45-6789");
 
   const callsBeforeDenial = await page.request.get("http://127.0.0.1:4280/calls");
   expect(await callsBeforeDenial.json()).toEqual({ callCount: 1 });
-  await composer.fill("resumable import decision denied externally");
+  await composer.fill("OWNERRECORD");
   await page.getByRole("button", { name: "Send" }).click();
   await expect(preview).toBeVisible();
   await preview.getByRole("button", { name: "Deny external prompt" }).click();
