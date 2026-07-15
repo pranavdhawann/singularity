@@ -255,34 +255,24 @@ colocated tests.
 
 ---
 
-### Unit D — `sqlite-vec` hybrid retrieval
+### Unit D — hybrid retrieval (ALREADY LARGELY IMPLEMENTED — deferred)
 
-**Purpose.** Add semantic vector search next to the existing FTS5 keyword index
-and merge them into one ranked result.
-
-**Interface (`packages/retrieval`).**
-
-- Register the `sqlite-vec` extension in the db connection (`packages/db`).
-- New migration: a `vec_chunks` virtual table keyed to `document_chunks`.
-- `hybridSearch(db, { workspaceId, query, queryEmbedding?, limit })` returns
-  merged, de-duplicated results ranked by a combined FTS (BM25) + vector-cosine
-  score (documented weighting). If `queryEmbedding` is absent, fall back to
-  FTS-only (no behavior regression).
-
-**Depends on.** Nothing hard (can build with a stub embedding); pairs with Unit E.
-
-**Files.** `packages/db/src/connection.ts`, new
-`packages/db/src/migrations/0005-vec-chunks.ts`,
-`packages/retrieval/src/hybrid.ts`, `.../index.ts`, colocated tests, indexing
-path in `apps/api/src/services/import-service.ts` (write vectors when embeddings
-available).
-
-**Acceptance criteria.**
-
-- Extension loads on all target platforms; migration is idempotent.
-- A query with an embedding returns semantically-related chunks that pure FTS
-  misses; ranking is stable and documented.
-- With no embedding, results equal today's FTS behavior (regression-safe).
+> **Revised 2026-07-15 after code exploration.** The repo **already** has hybrid
+> retrieval and local embeddings: `packages/retrieval/src/hybrid.ts`
+> (`rankHybridCandidates`, lexical 0.65 + vector 0.35), `ollama-embeddings.ts`
+> (`/api/embed`), `openai-embeddings.ts`, an `EmbeddingRepository` that persists
+> vectors, and `context-service.ts` which computes `vectorScore` via JS cosine
+> over stored embeddings. **Semantic recall works today.**
+>
+> The only thing `sqlite-vec` would add is pushing cosine similarity from
+> JavaScript into SQL — a **performance/scale optimization**, not a missing
+> capability. For a single local user with tens of thousands of entries the
+> current approach is sufficient (YAGNI).
+>
+> **Decision:** `sqlite-vec` is **deferred** out of Spec 1. It becomes a future
+> optimization task if/when profiling shows JS cosine is a bottleneck. Plan 2
+> therefore covers **only Unit E (auto-capture)** — the genuinely new pillar-③
+> value. No `0005-vec-chunks` migration in this release.
 
 ---
 
