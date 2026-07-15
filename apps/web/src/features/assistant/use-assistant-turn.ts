@@ -22,6 +22,7 @@ export function useAssistantTurn(options: UseAssistantTurnOptions) {
   const [turnId, setTurnId] = useState<string | undefined>(undefined);
   const [streamedText, setStreamedText] = useState("");
   const [error, setError] = useState<string | undefined>(undefined);
+  const [redactionCounts, setRedactionCounts] = useState<Record<string, number>>({});
   const [promptPreview, setPromptPreview] = useState<PromptPreviewDto | undefined>();
   const activeTurn = useRef<string | undefined>(undefined);
   const workspaceRef = useRef<string | undefined>(undefined);
@@ -31,6 +32,8 @@ export function useAssistantTurn(options: UseAssistantTurnOptions) {
       for await (const frame of options.api.streamAssistantTurn(id)) {
         if (frame.type === "delta") {
           setStreamedText((current) => current + frame.text);
+        } else if (frame.type === "context") {
+          setRedactionCounts(frame.redactionCounts);
         } else if (frame.type === "approval_required") {
           if (!workspaceRef.current) throw new Error("Workspace is unavailable for prompt approval");
           const preview = await options.api.getPromptPreview(frame.previewId, workspaceRef.current);
@@ -61,6 +64,7 @@ export function useAssistantTurn(options: UseAssistantTurnOptions) {
       setStatus("creating");
       setStreamedText("");
       setError(undefined);
+      setRedactionCounts({});
       setPromptPreview(undefined);
       workspaceRef.current = input.workspaceId;
       let result: "approval" | "terminal" = "terminal";
@@ -130,5 +134,16 @@ export function useAssistantTurn(options: UseAssistantTurnOptions) {
     await options.api.cancelAssistantTurn(activeTurn.current);
   }, [options.api]);
 
-  return { status, turnId, streamedText, error, promptPreview, submit, cancel, approvePrompt, denyPrompt };
+  return {
+    status,
+    turnId,
+    streamedText,
+    error,
+    redactionCounts,
+    promptPreview,
+    submit,
+    cancel,
+    approvePrompt,
+    denyPrompt,
+  };
 }

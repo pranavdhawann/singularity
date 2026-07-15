@@ -13,7 +13,7 @@ import {
   WorkspaceSettingsRepository,
   openDatabase,
 } from "@future/db";
-import { NodeRedactionEngine } from "@future/permissions";
+import { createGlinerRecognizer, NodeRedactionEngine } from "@future/permissions";
 import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
 import Fastify, { type FastifyInstance } from "fastify";
@@ -72,7 +72,10 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   const compactions = new CompactionRepository(db);
   const embeddings = new EmbeddingRepository(db);
   const secrets = new FileSecretStore(join(dirname(options.databasePath), "secrets.json"));
-  const redaction = new NodeRedactionEngine();
+  // Fill the ML recognizer slot with GLiNER when a model is configured
+  // (FUTURE_GLINER_MODEL); otherwise this resolves to an unavailable recognizer
+  // and redaction stays regex-only (NO_ML), as the spec permits.
+  const redaction = new NodeRedactionEngine(await createGlinerRecognizer());
   const workspaceSettings = new WorkspaceSettingsRepository(db);
   const getSettings = (workspaceId: string): { redactLocalToo: boolean; autoCapture: boolean } =>
     workspaceSettings.get(workspaceId);

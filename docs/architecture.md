@@ -35,4 +35,22 @@ Singularity is a local web application with a React browser client, a Fastify AP
 - approval binds to exact provider, model, context, and prompt hashes;
 - safe error codes reach the timeline; raw provider errors and response bodies do not.
 
+## Optional ML redaction (GLiNER)
+
+Redaction ships regex-only by default. The engine also has a GLiNER-backed ML
+recognizer in its `MlRecognizer` slot (`packages/permissions/src/gliner.ts`),
+which detects entities regex cannot (person names, addresses, unusual PII).
+
+It stays dormant unless a model is configured via `FUTURE_GLINER_MODEL` (a path
+to a GLiNER ONNX model). Activation also needs the optional `onnxruntime-node`
+runtime and a model-specific `<model>.adapter.mjs` exporting `encode`/`decode`;
+neither is a declared dependency, so the default build and CI stay lean. If any
+piece is missing the recognizer reports `available: false` and redaction remains
+regex-only. The recognizer's span→entity mapping, thresholding, and risk tagging
+are covered by unit tests with an injected session.
+
+> Enabling GLiNER inside the always-on external-turn flow additionally requires
+> rendering the approval preview through the same async engine, so the exact
+> masked prompt the user approves matches what the risk gate detected.
+
 See the [V2 design](superpowers/specs/2026-07-10-future-v2-continuous-assistant-design.md) for the complete product contract.

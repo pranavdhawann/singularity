@@ -2,6 +2,7 @@ import type { ModelProfile, ProviderConfig, WorkspaceDto } from "@future/core";
 import { useState } from "react";
 import { AssistantComposer } from "../features/assistant/AssistantComposer";
 import { ContextInspector } from "../features/assistant/ContextInspector";
+import { RedactionBadge } from "../features/assistant/RedactionBadge";
 import { useAssistantTurn } from "../features/assistant/use-assistant-turn";
 import { CommandPalette } from "../features/command-palette/CommandPalette";
 import { FirstRunSetup } from "../features/setup/FirstRunSetup";
@@ -84,6 +85,7 @@ export function ReadyAssistantShell({
       onCancel={assistant.cancel}
     />
   );
+  const redactionBadge = <RedactionBadge counts={assistant.redactionCounts} />;
 
   return (
     <main className="app-shell">
@@ -131,6 +133,7 @@ export function ReadyAssistantShell({
               streamedText={assistant.status === "streaming" ? assistant.streamedText : ""}
               onContextSelected={setSelectedContextPackId}
             />
+            {redactionBadge}
             {composer}
           </section>
           <ContextInspector api={api} contextPackId={selectedContextPackId} />

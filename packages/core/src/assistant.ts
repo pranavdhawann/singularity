@@ -83,7 +83,7 @@ export interface ContextPackInspection {
 
 export type AssistantStreamFrame =
   | { type: "started"; turn: AssistantTurnDto }
-  | { type: "context"; contextPackId: string; sourceCount: number }
+  | { type: "context"; contextPackId: string; sourceCount: number; redactionCounts: Record<string, number> }
   | { type: "approval_required"; turnId: string; previewId: string }
   | { type: "delta"; text: string }
   | {

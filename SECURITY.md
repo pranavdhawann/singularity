@@ -17,11 +17,11 @@ Include affected versions, reproduction steps, impact, and a minimal proof of co
 
 ## Current security boundary
 
-- Data is stored in local SQLite and is not encrypted at rest.
+- The SQLite database is stored locally and is not encrypted at rest.
 - The local HTTP API uses a session token and browser-origin checks, but the local OS account remains the trust boundary.
 - Imported content is treated as data for retrieval, not trusted instructions, but file parsing is not sandboxed.
 - External prompts are rendered and redacted locally, then require a bound approve/deny decision.
-- Secret environment-variable names may be stored; secret values are resolved at call time and should not be persisted.
+- Provider records store a secret environment-variable name, never the value. When a value is saved to the local secret store (`.future/secrets.json`) it is encrypted at rest with AES-256-GCM, keyed from `FUTURE_SECRET_KEY` or an auto-generated `0600` sidecar key. This protects a copied or synced file; it does not defend against an attacker with full local filesystem access (an OS keychain is the intended successor).
 
 Never use production credentials or irreplaceable sensitive data while evaluating this early release.
 

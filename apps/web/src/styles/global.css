@@ -96,15 +96,6 @@ textarea {
   min-height: 100vh;
 }
 
-.left-rail {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 20px 14px;
-  color: #f8faf8;
-  background: #18242d;
-}
-
 .brand-block {
   display: flex;
   align-items: center;
@@ -133,30 +124,11 @@ textarea {
   font-weight: 700;
 }
 
-.nav-list {
-  display: grid;
-  gap: 4px;
-}
-
-.nav-item,
 .command-row,
 .command-trigger {
   border: 1px solid transparent;
   border-radius: 8px;
   cursor: pointer;
-}
-
-.nav-item {
-  padding: 10px 12px;
-  color: #dfe7e6;
-  text-align: left;
-  background: transparent;
-}
-
-.nav-item:hover,
-.nav-item:focus-visible {
-  border-color: #30424e;
-  background: #22323d;
 }
 
 .workspace {
@@ -181,23 +153,6 @@ textarea {
   border-bottom: 0;
   color: #52636b;
   font-size: 13px;
-}
-
-.workspace-switcher {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #52636b;
-  font-size: 13px;
-}
-
-.workspace-switcher select {
-  min-width: 160px;
-  padding: 7px 10px;
-  border: 1px solid #c8d2d5;
-  border-radius: 8px;
-  color: #17212b;
-  background: #ffffff;
 }
 
 .top-status {
@@ -343,11 +298,6 @@ h3 {
   text-transform: uppercase;
 }
 
-.memory-browser {
-  display: grid;
-  gap: 12px;
-}
-
 .memory-tabs,
 .memory-actions {
   display: flex;
@@ -488,22 +438,6 @@ h3 {
   color: #52636b;
 }
 
-.permissions-panel {
-  display: grid;
-  gap: 8px;
-}
-
-.permission-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 12px;
-  border: 1px solid #d8e0e2;
-  border-radius: 8px;
-  background: #ffffff;
-}
-
 .assistant-response {
   padding: 14px;
   border: 1px solid #d8e0e2;
@@ -587,6 +521,33 @@ h3 {
 .composer-row .cancel-button {
   border-color: #a44949;
   background: #a44949;
+}
+
+.redaction-badge {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.redaction-badge button {
+  padding: 6px 10px;
+  border: 1px solid #cbd8d8;
+  border-radius: 999px;
+  color: #27584d;
+  background: #e8f2ef;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.redaction-badge ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 0;
+  padding: 0 0 0 2px;
+  list-style: none;
+  color: #52636b;
+  font-size: 12px;
 }
 
 .composer-status,
@@ -781,11 +742,6 @@ h3 {
     grid-template-columns: 1fr;
   }
 
-  .left-rail {
-    padding: 12px;
-  }
-
-  .nav-list,
   .command-list {
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   }
