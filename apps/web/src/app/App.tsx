@@ -10,7 +10,6 @@ import { ExternalPromptPreview } from "../features/prompt-preview/ExternalPrompt
 import { buildSettingsPanels } from "../features/settings/SettingsPanels";
 import { SettingsDrawer } from "../features/settings/SettingsDrawer";
 import { useTimeline } from "../features/timeline/use-timeline";
-import { WorkspaceSwitcher } from "../features/workspaces/WorkspaceSwitcher";
 import "../styles/global.css";
 import { ApiClient } from "./api-client";
 import type { FutureApi } from "./api-types";
@@ -97,14 +96,6 @@ export function ReadyAssistantShell({
               <span>Continuous local assistant</span>
             </div>
           </div>
-          <WorkspaceSwitcher
-            workspaces={workspaces}
-            value={activeWorkspaceId}
-            onChange={(workspaceId) => {
-              setActiveWorkspaceId(workspaceId);
-              setSelectedContextPackId(undefined);
-            }}
-          />
           <div className="top-status">
             <label>
               Model profile
