@@ -10,12 +10,17 @@ import {
   type ModelProvider,
 } from "@future/core";
 import type { AssistantTurnRepository, EventRepository, SqliteDatabase } from "@future/db";
+import type { RedactionEngine } from "@future/permissions";
 import type { ContextService } from "./context-service";
 import type { TurnCancellationRegistry } from "./turn-cancellation";
 import { PromptPreviewServiceError, type PromptPreviewService } from "./prompt-preview-service";
 
 interface ProviderRuntimeResolver {
   getRuntime(profileId: string): { provider: ModelProvider; profile: ModelProfile; isLocal: boolean };
+}
+
+interface WorkspaceSettingsReader {
+  getSettings(workspaceId: string): { redactLocalToo: boolean };
 }
 
 interface AssistantServiceDependencies {
@@ -26,6 +31,8 @@ interface AssistantServiceDependencies {
   providerService: ProviderRuntimeResolver;
   cancellations: TurnCancellationRegistry;
   promptPreviewService: PromptPreviewService;
+  redaction: RedactionEngine;
+  getSettings: WorkspaceSettingsReader["getSettings"];
 }
 
 interface UserEventRow {
@@ -79,7 +86,14 @@ export class AssistantService {
         profile,
       });
 
-      if (!isLocal) {
+      const rawPrompt = buildPrompt(message, contextPack.items);
+      const { redactLocalToo } = this.dependencies.getSettings(building.workspaceId);
+      const shouldRedact = !isLocal || redactLocalToo;
+      const redaction = shouldRedact
+        ? await this.dependencies.redaction.redact(rawPrompt, { useMl: false })
+        : { redacted: rawPrompt, entities: [], counts: {}, hasHighRisk: false, mlAvailable: false };
+
+      if (!isLocal && redaction.hasHighRisk) {
         const preview = this.dependencies.promptPreviewService.createForTurn({
           workspaceId: building.workspaceId,
           turnId,
@@ -103,7 +117,12 @@ export class AssistantService {
               type: "context_pack.created",
               actor: "system",
               title: "Built local context",
-              payload: { turnId, contextPackId: contextPack.id, sourceCount: contextPack.items.length },
+              payload: {
+                turnId,
+                contextPackId: contextPack.id,
+                sourceCount: contextPack.items.length,
+                redactionCounts: redaction.counts,
+              },
               privacy: { labels: ["local"] },
             }),
           );
@@ -164,6 +183,7 @@ export class AssistantService {
               turnId,
               contextPackId: contextPack.id,
               sourceCount: contextPack.items.length,
+              redactionCounts: redaction.counts,
             },
             privacy: { labels: ["local"] },
           }),
@@ -181,9 +201,8 @@ export class AssistantService {
         sourceCount: contextPack.items.length,
       };
 
-      const prompt = buildPrompt(message, contextPack.items);
       for await (const chunk of provider.streamText({
-        prompt,
+        prompt: redaction.redacted,
         model: profile.model,
         signal,
       })) {
@@ -230,6 +249,7 @@ export class AssistantService {
               providerId: profile.providerId,
               model: profile.model,
               outputCharacters: partialText.length,
+              redactionCounts: redaction.counts,
             },
             privacy: { labels: ["local"] },
           }),

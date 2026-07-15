@@ -12,6 +12,7 @@ import {
   NamespaceRepository,
   openDatabase,
 } from "@future/db";
+import { NodeRedactionEngine } from "@future/permissions";
 import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
 import Fastify, { type FastifyInstance } from "fastify";
@@ -68,6 +69,9 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   const compactions = new CompactionRepository(db);
   const embeddings = new EmbeddingRepository(db);
   const secrets = new FileSecretStore(join(dirname(options.databasePath), "secrets.json"));
+  const redaction = new NodeRedactionEngine();
+  // TODO(plan3): back this with real per-workspace settings persistence once the Settings drawer lands.
+  const getSettings = (_workspaceId: string): { redactLocalToo: boolean } => ({ redactLocalToo: false });
   const providerService = new ProviderService(providers, modelProfiles, secrets);
   const providerConnectionService = new ProviderConnectionService();
   const promptPreviewService = new PromptPreviewService({ previews: promptPreviews });
@@ -94,6 +98,8 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
     promptPreviews,
     modelProfiles,
     secrets,
+    redaction,
+    getSettings,
     providerService,
     providerConnectionService,
     promptPreviewService,
@@ -116,6 +122,8 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
       providerService,
       cancellations,
       promptPreviewService,
+      redaction,
+      getSettings,
     }),
   };
   const server = Fastify({
