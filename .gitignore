@@ -31,10 +31,14 @@ output/
 
 # Local app data
 .future/
-.future/secrets.json
 data/
 *.sqlite
 *.sqlite3
+
+# Local secret store — never commit (encrypted, but keep values and keys out of git)
+secrets.json
+secrets.json.key
+*.secrets.json
 *.db
 *.sqlite-shm
 *.sqlite-wal
