@@ -35,6 +35,7 @@ import { registerV2NamespaceRoutes } from "../routes/v2/namespaces";
 import { registerV2ProviderRoutes } from "../routes/v2/providers";
 import { registerV2PromptPreviewRoutes } from "../routes/v2/prompt-previews";
 import { registerV2SearchRoutes } from "../routes/v2/search";
+import { registerV2SecretRoutes } from "../routes/v2/secrets";
 import { registerV2SettingsRoutes } from "../routes/v2/settings";
 import { registerV2TimelineRoutes } from "../routes/v2/timeline";
 import { registerV2WorkspaceRoutes } from "../routes/v2/workspaces";
@@ -166,6 +167,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   await registerV2NamespaceRoutes(server, deps);
   await registerV2SearchRoutes(server, deps);
   await registerV2SettingsRoutes(server, deps);
+  await registerV2SecretRoutes(server, deps);
 
   await registerHealthRoutes(server);
   await registerWorkspaceRoutes(server, deps);

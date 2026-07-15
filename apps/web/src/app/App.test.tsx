@@ -35,6 +35,7 @@ function createApi(overrides: Partial<FutureApi> = {}): FutureApi {
     decidePromptPreview: vi.fn(),
     getSettings: vi.fn(async () => ({ redactLocalToo: false, autoCapture: true })),
     updateSettings: vi.fn(async () => ({ redactLocalToo: false, autoCapture: true })),
+    setSecret: vi.fn(async () => ({ names: [] })),
     ...overrides,
   };
 }

@@ -213,6 +213,10 @@ export class ApiClient implements FutureApi {
     return this.mutate("/settings", input, "PATCH");
   }
 
+  async setSecret(name: string, value: string): Promise<{ names: string[] }> {
+    return this.mutate("/secrets", { name, value });
+  }
+
   private async get<T>(path: string): Promise<T> {
     const response = await fetch(`${this.baseUrl}/v2${path}`);
     if (!response.ok) {

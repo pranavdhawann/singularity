@@ -90,6 +90,7 @@ export interface FutureApi {
   ): Promise<PromptDecisionDto>;
   getSettings(workspaceId: string): Promise<WorkspaceSettings>;
   updateSettings(input: UpdateWorkspaceSettingsInput): Promise<WorkspaceSettings>;
+  setSecret(name: string, value: string): Promise<{ names: string[] }>;
 }
 
 export interface ImportUploadResult {
