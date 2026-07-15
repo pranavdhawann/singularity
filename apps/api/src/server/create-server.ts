@@ -10,6 +10,7 @@ import {
   ProviderRepository,
   PromptPreviewRepository,
   NamespaceRepository,
+  WorkspaceSettingsRepository,
   openDatabase,
 } from "@future/db";
 import { NodeRedactionEngine } from "@future/permissions";
@@ -34,6 +35,7 @@ import { registerV2NamespaceRoutes } from "../routes/v2/namespaces";
 import { registerV2ProviderRoutes } from "../routes/v2/providers";
 import { registerV2PromptPreviewRoutes } from "../routes/v2/prompt-previews";
 import { registerV2SearchRoutes } from "../routes/v2/search";
+import { registerV2SettingsRoutes } from "../routes/v2/settings";
 import { registerV2TimelineRoutes } from "../routes/v2/timeline";
 import { registerV2WorkspaceRoutes } from "../routes/v2/workspaces";
 import { AssistantService } from "../services/assistant-service";
@@ -70,11 +72,9 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   const embeddings = new EmbeddingRepository(db);
   const secrets = new FileSecretStore(join(dirname(options.databasePath), "secrets.json"));
   const redaction = new NodeRedactionEngine();
-  // TODO(plan3): back this with real per-workspace settings persistence once the Settings drawer lands.
-  const getSettings = (_workspaceId: string): { redactLocalToo: boolean; autoCapture: boolean } => ({
-    redactLocalToo: false,
-    autoCapture: true,
-  });
+  const workspaceSettings = new WorkspaceSettingsRepository(db);
+  const getSettings = (workspaceId: string): { redactLocalToo: boolean; autoCapture: boolean } =>
+    workspaceSettings.get(workspaceId);
   const providerService = new ProviderService(providers, modelProfiles, secrets);
   const providerConnectionService = new ProviderConnectionService();
   const promptPreviewService = new PromptPreviewService({ previews: promptPreviews });
@@ -103,6 +103,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
     modelProfiles,
     secrets,
     redaction,
+    workspaceSettings,
     getSettings,
     providerService,
     providerConnectionService,
@@ -164,6 +165,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   await registerV2MemoryRoutes(server, deps);
   await registerV2NamespaceRoutes(server, deps);
   await registerV2SearchRoutes(server, deps);
+  await registerV2SettingsRoutes(server, deps);
 
   await registerHealthRoutes(server);
   await registerWorkspaceRoutes(server, deps);

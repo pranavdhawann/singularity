@@ -12,6 +12,7 @@ import type {
   PromptPreviewRepository,
   NamespaceRepository,
   SqliteDatabase,
+  WorkspaceSettingsRepository,
 } from "@future/db";
 import type { RedactionEngine } from "@future/permissions";
 import type { AssistantService } from "../services/assistant-service";
@@ -38,6 +39,7 @@ export interface ApiDependencies {
   modelProfiles: ModelProfileRepository;
   secrets: SecretStore;
   redaction: RedactionEngine;
+  workspaceSettings: WorkspaceSettingsRepository;
   getSettings: (workspaceId: string) => { redactLocalToo: boolean; autoCapture: boolean };
   providerService: ProviderService;
   providerConnectionService: ProviderConnectionService;

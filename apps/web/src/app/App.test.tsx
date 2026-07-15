@@ -33,6 +33,8 @@ function createApi(overrides: Partial<FutureApi> = {}): FutureApi {
     retryImport: vi.fn(),
     getPromptPreview: vi.fn(),
     decidePromptPreview: vi.fn(),
+    getSettings: vi.fn(async () => ({ redactLocalToo: false, autoCapture: true })),
+    updateSettings: vi.fn(async () => ({ redactLocalToo: false, autoCapture: true })),
     ...overrides,
   };
 }

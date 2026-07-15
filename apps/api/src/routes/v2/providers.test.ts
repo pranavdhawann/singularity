@@ -121,7 +121,7 @@ describe("V2 provider routes", () => {
     const response = await server.inject({ method: "GET", url: "/api/v2/health" });
 
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ ok: true, apiVersion: "v2", database: { migrationCount: 4 } });
+    expect(response.json()).toEqual({ ok: true, apiVersion: "v2", database: { migrationCount: 5 } });
     await server.close();
   });
 });

@@ -88,10 +88,23 @@ export interface FutureApi {
     decision: "approved" | "denied",
     bindingHash: string,
   ): Promise<PromptDecisionDto>;
+  getSettings(workspaceId: string): Promise<WorkspaceSettings>;
+  updateSettings(input: UpdateWorkspaceSettingsInput): Promise<WorkspaceSettings>;
 }
 
 export interface ImportUploadResult {
   files: Array<
     { filename: string; job: ImportJobDto } | { filename: string; errorCode: "unsupported_file" | "file_too_large" }
   >;
+}
+
+export interface WorkspaceSettings {
+  redactLocalToo: boolean;
+  autoCapture: boolean;
+}
+
+export interface UpdateWorkspaceSettingsInput {
+  workspaceId: string;
+  redactLocalToo?: boolean;
+  autoCapture?: boolean;
 }
