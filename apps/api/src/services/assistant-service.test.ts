@@ -1,8 +1,12 @@
 import type { ModelProfile, ModelProvider } from "@future/core";
 import {
   AssistantTurnRepository,
+  CompactionRepository,
   ContextPackRepository,
+  EmbeddingRepository,
   EventRepository,
+  MemoryRepository,
+  NamespaceRepository,
   PromptPreviewRepository,
   createTestDb,
   type TestDb,
@@ -11,6 +15,7 @@ import { NodeRedactionEngine, type RedactionEngine } from "@future/permissions";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AssistantService } from "./assistant-service";
 import { ContextService } from "./context-service";
+import { MemoryService } from "./memory-service";
 import { TurnCancellationRegistry } from "./turn-cancellation";
 import { PromptPreviewService } from "./prompt-preview-service";
 
@@ -270,6 +275,46 @@ describe("AssistantService", () => {
     expect(prompts).toHaveLength(1);
     expect(prompts[0]).toContain("me@x.com");
   });
+
+  it("auto-capture: stores a salient fact from the user message as an approved memory once the turn completes", async () => {
+    const provider = providerFrom(async function* () {
+      yield { text: "Noted." };
+    });
+    const { service, memories } = createServiceWithMemories(db, provider);
+    const { turn } = service.createTurn({
+      workspaceId: "w_demo",
+      modelProfileId: profile.id,
+      idempotencyKey: "key_auto_capture",
+      message: "My dog's name is Ada.",
+    });
+
+    const frames = await collect(service.streamTurn(turn.id));
+
+    expect(frames.at(-1)).toEqual(expect.objectContaining({ type: "completed" }));
+    const statements = memories.list({ workspaceId: "w_demo" }).items.map((memory) => memory.statement);
+    expect(statements).toContain("My dog's name is Ada.");
+    const captured = memories.list({ workspaceId: "w_demo" }).items.find((memory) => memory.statement === "My dog's name is Ada.");
+    expect(captured?.reviewState).toBe("approved");
+  });
+
+  it("auto-capture: creates no memory when the workspace has autoCapture disabled", async () => {
+    const provider = providerFrom(async function* () {
+      yield { text: "Noted." };
+    });
+    const { service, memories } = createServiceWithMemories(db, provider, { autoCapture: false });
+    const { turn } = service.createTurn({
+      workspaceId: "w_demo",
+      modelProfileId: profile.id,
+      idempotencyKey: "key_auto_capture_off",
+      message: "My dog's name is Ada.",
+    });
+
+    const frames = await collect(service.streamTurn(turn.id));
+
+    expect(frames.at(-1)).toEqual(expect.objectContaining({ type: "completed" }));
+    const statements = memories.list({ workspaceId: "w_demo" }).items.map((memory) => memory.statement);
+    expect(statements).not.toContain("My dog's name is Ada.");
+  });
 });
 
 function createService(
@@ -280,10 +325,24 @@ function createService(
     promptPreviewService?: PromptPreviewService;
     redaction?: RedactionEngine;
     redactLocalToo?: boolean;
+    autoCapture?: boolean;
+    memoryService?: MemoryService;
+    memories?: MemoryRepository;
   } = {},
 ): AssistantService {
   const events = new EventRepository(db.client);
   const contextPacks = new ContextPackRepository(db.client);
+  const memories = options.memories ?? new MemoryRepository(db.client);
+  const memoryService =
+    options.memoryService ??
+    new MemoryService({
+      db: db.client,
+      memories,
+      namespaces: new NamespaceRepository(db.client),
+      compactions: new CompactionRepository(db.client),
+      embeddings: new EmbeddingRepository(db.client),
+      events,
+    });
   return new AssistantService({
     db: db.client,
     turns: new AssistantTurnRepository(db.client),
@@ -297,8 +356,23 @@ function createService(
       }),
     cancellations: new TurnCancellationRegistry(),
     redaction: options.redaction ?? new NodeRedactionEngine(),
-    getSettings: () => ({ redactLocalToo: options.redactLocalToo ?? false }),
+    getSettings: () => ({
+      redactLocalToo: options.redactLocalToo ?? false,
+      autoCapture: options.autoCapture ?? true,
+    }),
+    memoryService,
+    memories,
   });
+}
+
+function createServiceWithMemories(
+  db: TestDb,
+  provider: ModelProvider,
+  options: { autoCapture?: boolean } = {},
+): { service: AssistantService; memories: MemoryRepository } {
+  const memories = new MemoryRepository(db.client);
+  const service = createService(db, provider, { ...options, memories });
+  return { service, memories };
 }
 
 function providerFrom(streamText: ModelProvider["streamText"]): ModelProvider {

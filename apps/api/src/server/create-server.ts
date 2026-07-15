@@ -71,7 +71,10 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   const secrets = new FileSecretStore(join(dirname(options.databasePath), "secrets.json"));
   const redaction = new NodeRedactionEngine();
   // TODO(plan3): back this with real per-workspace settings persistence once the Settings drawer lands.
-  const getSettings = (_workspaceId: string): { redactLocalToo: boolean } => ({ redactLocalToo: false });
+  const getSettings = (_workspaceId: string): { redactLocalToo: boolean; autoCapture: boolean } => ({
+    redactLocalToo: false,
+    autoCapture: true,
+  });
   const providerService = new ProviderService(providers, modelProfiles, secrets);
   const providerConnectionService = new ProviderConnectionService();
   const promptPreviewService = new PromptPreviewService({ previews: promptPreviews });
@@ -84,6 +87,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
     embeddingResolver: providerService,
   });
   const cancellations = new TurnCancellationRegistry();
+  const memoryService = new MemoryService({ db, memories, namespaces, compactions, embeddings, events });
   const deps: ApiDependencies = {
     db,
     turns,
@@ -104,7 +108,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
     providerConnectionService,
     promptPreviewService,
     contextService,
-    memoryService: new MemoryService({ db, memories, namespaces, compactions, embeddings, events }),
+    memoryService,
     importService: new ImportService({
       db,
       jobs: importJobs,
@@ -124,6 +128,8 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
       promptPreviewService,
       redaction,
       getSettings,
+      memoryService,
+      memories,
     }),
   };
   const server = Fastify({

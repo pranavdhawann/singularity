@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import {
   createEvent,
   createId,
+  extractSalientFacts,
   serializeTimelineEvent,
   type AssistantStreamFrame,
   type AssistantTurnDto,
@@ -9,9 +10,11 @@ import {
   type ModelProfile,
   type ModelProvider,
 } from "@future/core";
-import type { AssistantTurnRepository, EventRepository, SqliteDatabase } from "@future/db";
+import type { AssistantTurnRepository, EventRepository, MemoryRepository, SqliteDatabase } from "@future/db";
 import type { RedactionEngine } from "@future/permissions";
+import { selectNewFacts } from "./auto-capture";
 import type { ContextService } from "./context-service";
+import type { MemoryService } from "./memory-service";
 import type { TurnCancellationRegistry } from "./turn-cancellation";
 import { PromptPreviewServiceError, type PromptPreviewService } from "./prompt-preview-service";
 
@@ -20,7 +23,7 @@ interface ProviderRuntimeResolver {
 }
 
 interface WorkspaceSettingsReader {
-  getSettings(workspaceId: string): { redactLocalToo: boolean };
+  getSettings(workspaceId: string): { redactLocalToo: boolean; autoCapture: boolean };
 }
 
 interface AssistantServiceDependencies {
@@ -33,6 +36,8 @@ interface AssistantServiceDependencies {
   promptPreviewService: PromptPreviewService;
   redaction: RedactionEngine;
   getSettings: WorkspaceSettingsReader["getSettings"];
+  memoryService: MemoryService;
+  memories: MemoryRepository;
 }
 
 interface UserEventRow {
@@ -265,6 +270,7 @@ export class AssistantService {
       });
       complete();
       if (!completedTurn) throw new Error("assistant turn completion failed");
+      this.captureFacts(building.workspaceId, building.userEventId, message);
 
       const citations = contextPack.items.map((item) => item.source);
       yield {
@@ -487,6 +493,7 @@ export class AssistantService {
       });
       complete();
       if (!completedTurn) throw new Error("assistant turn completion failed");
+      this.captureFacts(initial.workspaceId, initial.userEventId, this.getUserMessage(initial.userEventId));
       const citations = contextPack.items.map((item) => item.source);
       yield {
         type: "completed",
@@ -617,6 +624,32 @@ export class AssistantService {
     deny();
     if (!deniedTurn) throw new Error("assistant denial failed");
     return deniedTurn;
+  }
+
+  /**
+   * Best-effort auto-capture: extract salient first-person facts from the
+   * user's message and store new ones as approved memories. Never throws —
+   * capture failures must not fail an otherwise-completed turn.
+   */
+  private captureFacts(workspaceId: string, userEventId: string, message: string): void {
+    try {
+      if (!this.dependencies.getSettings(workspaceId).autoCapture) return;
+      const facts = extractSalientFacts(message);
+      if (facts.length === 0) return;
+      const existing = this.dependencies.memories.list({ workspaceId }).items.map((memory) => memory.statement);
+      for (const statement of selectNewFacts(facts, existing)) {
+        this.dependencies.memoryService.create({
+          workspaceId,
+          type: "fact",
+          statement,
+          confidence: 0.6,
+          reviewState: "approved",
+          sourceIds: [userEventId],
+        });
+      }
+    } catch {
+      // auto-capture is best-effort; never fail a completed turn
+    }
   }
 
   private getUserMessage(eventId: string): string {

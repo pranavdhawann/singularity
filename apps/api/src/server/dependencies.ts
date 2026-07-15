@@ -38,7 +38,7 @@ export interface ApiDependencies {
   modelProfiles: ModelProfileRepository;
   secrets: SecretStore;
   redaction: RedactionEngine;
-  getSettings: (workspaceId: string) => { redactLocalToo: boolean };
+  getSettings: (workspaceId: string) => { redactLocalToo: boolean; autoCapture: boolean };
   providerService: ProviderService;
   providerConnectionService: ProviderConnectionService;
   promptPreviewService: PromptPreviewService;
