@@ -1,4 +1,6 @@
-export type RedactionKind = "secret" | "email" | "phone" | "private_key" | "credential_path";
+import { detectRegexEntities } from "./recognizers";
+
+export type RedactionKind = string;
 
 export interface Redaction {
   kind: RedactionKind;
@@ -12,42 +14,29 @@ export interface RedactionResult {
   redactions: Redaction[];
 }
 
-const redactionPatterns: Array<{ kind: RedactionKind; pattern: RegExp; replacement: string }> = [
-  {
-    kind: "private_key",
-    pattern: /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]+?-----END [A-Z ]*PRIVATE KEY-----/g,
-    replacement: "[REDACTED_PRIVATE_KEY]",
-  },
-  { kind: "secret", pattern: /\bsk-[A-Za-z0-9_-]{10,}\b/g, replacement: "[REDACTED_SECRET]" },
-  { kind: "secret", pattern: /\bBearer\s+[A-Za-z0-9._-]{10,}\b/g, replacement: "Bearer [REDACTED_SECRET]" },
-  { kind: "email", pattern: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, replacement: "[REDACTED_EMAIL]" },
-  {
-    kind: "phone",
-    pattern: /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g,
-    replacement: "[REDACTED_PHONE]",
-  },
-  {
-    kind: "credential_path",
-    pattern: /\b[A-Z]:\\[^\s]*(?:\.ssh|credentials|secrets|tokens)[^\s]*/gi,
-    replacement: "[REDACTED_PATH]",
-  },
-];
-
+/**
+ * Deterministic, regex-based redaction used to render the exact prompt shown in
+ * (and sent from) the external-approval preview.
+ *
+ * This delegates to the same recognizer set that classifies redaction risk
+ * (`detectRegexEntities`), so every entity that can pause a turn for approval —
+ * including high-risk types such as SSNs, credit cards, IBANs, and credential
+ * paths — is masked in the approved prompt. Keeping a second, narrower redactor
+ * here previously let high-risk PII gate for approval yet still leave in the
+ * text that was actually sent to the provider.
+ */
 export function redactSensitiveText(text: string): RedactionResult {
+  const entities = detectRegexEntities(text); // sorted by start
   const redactions: Redaction[] = [];
-  let nextText = text;
-
-  for (const { kind, pattern, replacement } of redactionPatterns) {
-    nextText = nextText.replace(pattern, (match: string, offset: number) => {
-      redactions.push({
-        kind,
-        start: offset,
-        end: offset + match.length,
-        replacement,
-      });
-      return replacement;
-    });
+  let redacted = "";
+  let cursor = 0;
+  for (const entity of entities) {
+    if (entity.start < cursor) continue; // skip overlapping matches
+    const replacement = `[REDACTED_${entity.type.toUpperCase()}]`;
+    redacted += text.slice(cursor, entity.start) + replacement;
+    redactions.push({ kind: entity.type, start: entity.start, end: entity.end, replacement });
+    cursor = entity.end;
   }
-
-  return { text: nextText, redactions };
+  redacted += text.slice(cursor);
+  return { text: redacted, redactions };
 }

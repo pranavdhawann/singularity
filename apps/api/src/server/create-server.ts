@@ -10,9 +10,12 @@ import {
   ProviderRepository,
   PromptPreviewRepository,
   NamespaceRepository,
+  WorkspaceSettingsRepository,
   openDatabase,
 } from "@future/db";
+import { NodeRedactionEngine } from "@future/permissions";
 import { randomUUID } from "node:crypto";
+import { dirname, join } from "node:path";
 import Fastify, { type FastifyInstance } from "fastify";
 import { registerCommandRoutes } from "../routes/commands";
 import { registerContextPackRoutes } from "../routes/context-packs";
@@ -32,6 +35,8 @@ import { registerV2NamespaceRoutes } from "../routes/v2/namespaces";
 import { registerV2ProviderRoutes } from "../routes/v2/providers";
 import { registerV2PromptPreviewRoutes } from "../routes/v2/prompt-previews";
 import { registerV2SearchRoutes } from "../routes/v2/search";
+import { registerV2SecretRoutes } from "../routes/v2/secrets";
+import { registerV2SettingsRoutes } from "../routes/v2/settings";
 import { registerV2TimelineRoutes } from "../routes/v2/timeline";
 import { registerV2WorkspaceRoutes } from "../routes/v2/workspaces";
 import { AssistantService } from "../services/assistant-service";
@@ -41,6 +46,7 @@ import { ImportService } from "../services/import-service";
 import { ProviderService } from "../services/provider-service";
 import { ProviderConnectionService } from "../services/provider-connection-service";
 import { PromptPreviewService } from "../services/prompt-preview-service";
+import { FileSecretStore } from "../services/secret-store";
 import { TurnCancellationRegistry } from "../services/turn-cancellation";
 import type { ApiDependencies } from "./dependencies";
 import { registerApiErrorHandler } from "./api-errors";
@@ -65,7 +71,12 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   const namespaces = new NamespaceRepository(db);
   const compactions = new CompactionRepository(db);
   const embeddings = new EmbeddingRepository(db);
-  const providerService = new ProviderService(providers, modelProfiles);
+  const secrets = new FileSecretStore(join(dirname(options.databasePath), "secrets.json"));
+  const redaction = new NodeRedactionEngine();
+  const workspaceSettings = new WorkspaceSettingsRepository(db);
+  const getSettings = (workspaceId: string): { redactLocalToo: boolean; autoCapture: boolean } =>
+    workspaceSettings.get(workspaceId);
+  const providerService = new ProviderService(providers, modelProfiles, secrets);
   const providerConnectionService = new ProviderConnectionService();
   const promptPreviewService = new PromptPreviewService({ previews: promptPreviews });
   const contextService = new ContextService({
@@ -77,6 +88,7 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
     embeddingResolver: providerService,
   });
   const cancellations = new TurnCancellationRegistry();
+  const memoryService = new MemoryService({ db, memories, namespaces, compactions, embeddings, events });
   const deps: ApiDependencies = {
     db,
     turns,
@@ -90,11 +102,15 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
     providers,
     promptPreviews,
     modelProfiles,
+    secrets,
+    redaction,
+    workspaceSettings,
+    getSettings,
     providerService,
     providerConnectionService,
     promptPreviewService,
     contextService,
-    memoryService: new MemoryService({ db, memories, namespaces, compactions, embeddings, events }),
+    memoryService,
     importService: new ImportService({
       db,
       jobs: importJobs,
@@ -112,6 +128,10 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
       providerService,
       cancellations,
       promptPreviewService,
+      redaction,
+      getSettings,
+      memoryService,
+      memories,
     }),
   };
   const server = Fastify({
@@ -146,6 +166,8 @@ export async function createServer(options: CreateServerOptions): Promise<Fastif
   await registerV2MemoryRoutes(server, deps);
   await registerV2NamespaceRoutes(server, deps);
   await registerV2SearchRoutes(server, deps);
+  await registerV2SettingsRoutes(server, deps);
+  await registerV2SecretRoutes(server, deps);
 
   await registerHealthRoutes(server);
   await registerWorkspaceRoutes(server, deps);

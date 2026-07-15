@@ -38,12 +38,14 @@ describe("runMigrations", () => {
         "0002_continuous_assistant",
         "0003_memory_hybrid_retrieval",
         "0004_imports_external_models",
+        "0005_workspace_settings",
       ]);
       expect(runMigrations(db).map((row) => row.id)).toEqual([
         "0001_initial",
         "0002_continuous_assistant",
         "0003_memory_hybrid_retrieval",
         "0004_imports_external_models",
+        "0005_workspace_settings",
       ]);
 
       const rows = db.prepare("SELECT id FROM schema_migrations").all();
@@ -52,6 +54,7 @@ describe("runMigrations", () => {
         { id: "0002_continuous_assistant" },
         { id: "0003_memory_hybrid_retrieval" },
         { id: "0004_imports_external_models" },
+        { id: "0005_workspace_settings" },
       ]);
 
       const columns = db.prepare("PRAGMA table_info(assistant_turns)").all() as Array<{
@@ -125,7 +128,7 @@ describe("runMigrations", () => {
       runMigrations(db);
 
       expect(db.prepare("SELECT name FROM workspaces WHERE id = ?").pluck().get("w_existing")).toBe("Existing");
-      expect(db.prepare("SELECT COUNT(*) FROM schema_migrations").pluck().get()).toBe(4);
+      expect(db.prepare("SELECT COUNT(*) FROM schema_migrations").pluck().get()).toBe(5);
     } finally {
       db.close();
     }

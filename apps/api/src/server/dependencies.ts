@@ -1,3 +1,4 @@
+import type { SecretStore } from "@future/core";
 import type {
   AssistantTurnRepository,
   CompactionRepository,
@@ -11,7 +12,9 @@ import type {
   PromptPreviewRepository,
   NamespaceRepository,
   SqliteDatabase,
+  WorkspaceSettingsRepository,
 } from "@future/db";
+import type { RedactionEngine } from "@future/permissions";
 import type { AssistantService } from "../services/assistant-service";
 import type { ContextService } from "../services/context-service";
 import type { MemoryService } from "../services/memory-service";
@@ -34,6 +37,10 @@ export interface ApiDependencies {
   providers: ProviderRepository;
   promptPreviews: PromptPreviewRepository;
   modelProfiles: ModelProfileRepository;
+  secrets: SecretStore;
+  redaction: RedactionEngine;
+  workspaceSettings: WorkspaceSettingsRepository;
+  getSettings: (workspaceId: string) => { redactLocalToo: boolean; autoCapture: boolean };
   providerService: ProviderService;
   providerConnectionService: ProviderConnectionService;
   promptPreviewService: PromptPreviewService;

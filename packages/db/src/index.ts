@@ -13,5 +13,6 @@ export * from "./repositories/namespaces";
 export * from "./repositories/providers";
 export * from "./repositories/prompt-previews";
 export * from "./repositories/search";
+export * from "./repositories/workspace-settings";
 export * from "./schema";
 export * from "./test-db";

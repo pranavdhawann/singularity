@@ -26,7 +26,7 @@ import type {
   TestProviderConnectionInput,
   WorkspaceDto,
 } from "@future/core";
-import type { FutureApi, ImportUploadResult } from "./api-types";
+import type { FutureApi, ImportUploadResult, UpdateWorkspaceSettingsInput, WorkspaceSettings } from "./api-types";
 
 export interface ApiClientOptions {
   baseUrl?: string;
@@ -203,6 +203,18 @@ export class ApiClient implements FutureApi {
       decision,
       bindingHash,
     });
+  }
+
+  async getSettings(workspaceId: string): Promise<WorkspaceSettings> {
+    return this.get(`/settings?workspaceId=${encodeURIComponent(workspaceId)}`);
+  }
+
+  async updateSettings(input: UpdateWorkspaceSettingsInput): Promise<WorkspaceSettings> {
+    return this.mutate("/settings", input, "PATCH");
+  }
+
+  async setSecret(name: string, value: string): Promise<{ names: string[] }> {
+    return this.mutate("/secrets", { name, value });
   }
 
   private async get<T>(path: string): Promise<T> {

@@ -15,6 +15,7 @@ describe("runMigrationSmoke", () => {
       "0002_continuous_assistant",
       "0003_memory_hybrid_retrieval",
       "0004_imports_external_models",
+      "0005_workspace_settings",
     ]);
     expect(output).toEqual(result.ids);
     expect(path.resolve(result.databasePath).startsWith(path.resolve(tmpdir()) + path.sep)).toBe(true);
