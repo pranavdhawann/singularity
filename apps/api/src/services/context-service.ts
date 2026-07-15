@@ -138,16 +138,36 @@ export class ContextService {
     if (!runtime) return { candidates, mode: "lexical", fallbackReason: "not_configured" };
     try {
       const vectorPool = mergeCandidates(candidates, this.search.listAuthorized(workspaceId));
+      const repo = this.dependencies.embeddings;
+
+      // Reuse embeddings already persisted for this adapter/model (mirrored into
+      // the sqlite-vec index) so unchanged candidates are not re-embedded.
+      const cached = new Map<string, number[]>();
+      if (repo) {
+        for (const record of repo.listForSources({
+          workspaceId,
+          adapter: runtime.adapter.id,
+          model: runtime.model,
+          sources: vectorPool.map((item) => ({ kind: item.kind, id: item.id, contentHash: item.contentHash })),
+        })) {
+          cached.set(embeddingKey(record.sourceKind, record.sourceId, record.contentHash), record.vector);
+        }
+      }
+      const missing = vectorPool.filter((item) => !cached.has(embeddingKey(item.kind, item.id, item.contentHash)));
+
       const result = await runtime.adapter.embed({
         model: runtime.model,
-        texts: [query, ...vectorPool.map((item) => item.text)],
+        texts: [query, ...missing.map((item) => item.text)],
       });
       if (!result.available) return { candidates, mode: "lexical", fallbackReason: "adapter_unavailable" };
-      const [queryVector, ...vectors] = result.vectors;
+      const [queryVector, ...missingVectors] = result.vectors;
       if (!queryVector) return { candidates, mode: "lexical", fallbackReason: "invalid_response" };
-      const scored = vectorPool.map((candidate, index) => {
-        const vector = vectors[index]!;
-        this.dependencies.embeddings?.upsert({
+
+      const fresh = new Map<string, number[]>();
+      missing.forEach((candidate, index) => {
+        const vector = missingVectors[index]!;
+        fresh.set(embeddingKey(candidate.kind, candidate.id, candidate.contentHash), vector);
+        repo?.upsert({
           workspaceId: candidate.workspaceId,
           sourceKind: candidate.kind,
           sourceId: candidate.id,
@@ -156,6 +176,11 @@ export class ContextService {
           model: runtime.model,
           vector,
         });
+      });
+
+      const scored = vectorPool.map((candidate) => {
+        const key = embeddingKey(candidate.kind, candidate.id, candidate.contentHash);
+        const vector = cached.get(key) ?? fresh.get(key)!;
         return { ...candidate, vectorScore: (cosine(queryVector, vector) + 1) / 2 };
       });
       return { candidates: scored, mode: "hybrid", fallbackReason: null };
@@ -242,6 +267,9 @@ function cosine(a: readonly number[], b: readonly number[]): number {
 }
 function hash(text: string): string {
   return createHash("sha256").update(text).digest("hex");
+}
+function embeddingKey(kind: string, id: string, contentHash: string): string {
+  return `${kind}:${id}:${contentHash}`;
 }
 function estimateTokens(text: string): number {
   return Math.max(1, Math.ceil(text.trim().split(/\s+/).length * 1.3));

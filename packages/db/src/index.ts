@@ -16,3 +16,4 @@ export * from "./repositories/search";
 export * from "./repositories/workspace-settings";
 export * from "./schema";
 export * from "./test-db";
+export * from "./vector-index";

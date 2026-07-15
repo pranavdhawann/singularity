@@ -1,5 +1,6 @@
 import { createId } from "@future/core";
 import type { SqliteDatabase } from "../connection";
+import { SqliteVecIndex } from "../vector-index";
 
 export interface EmbeddingRecord {
   id: string;
@@ -41,7 +42,14 @@ export class EmbeddingDimensionError extends Error {
 }
 
 export class EmbeddingRepository {
-  constructor(private readonly db: SqliteDatabase) {}
+  private readonly vectorIndex: SqliteVecIndex;
+
+  constructor(
+    private readonly db: SqliteDatabase,
+    vectorIndex?: SqliteVecIndex,
+  ) {
+    this.vectorIndex = vectorIndex ?? SqliteVecIndex.create(db);
+  }
 
   upsert(input: UpsertEmbeddingInput): EmbeddingRecord {
     if (input.vector.length === 0 || input.vector.some((value) => !Number.isFinite(value))) {
@@ -68,7 +76,7 @@ export class EmbeddingRepository {
         vector_json = excluded.vector_json, created_at = excluded.created_at`,
       )
       .run({ ...input, id, dimensions: input.vector.length, vectorJson: JSON.stringify(input.vector), createdAt });
-    return this.find(
+    const record = this.find(
       input.workspaceId,
       input.sourceKind,
       input.sourceId,
@@ -76,6 +84,59 @@ export class EmbeddingRepository {
       input.adapter,
       input.model,
     )!;
+    // Mirror into the optional sqlite-vec index for native KNN (best-effort).
+    this.vectorIndex.upsert({ embeddingId: record.id, workspaceId: record.workspaceId, vector: record.vector });
+    return record;
+  }
+
+  /**
+   * Returns the persisted embeddings most similar to `queryVector` in a
+   * workspace for the given adapter/model. Uses sqlite-vec KNN when available
+   * and otherwise falls back to an exact JavaScript cosine scan.
+   */
+  searchSimilar(input: {
+    workspaceId: string;
+    adapter: string;
+    model: string;
+    queryVector: number[];
+    limit: number;
+  }): EmbeddingRecord[] {
+    const matches = this.vectorIndex.search({
+      workspaceId: input.workspaceId,
+      vector: input.queryVector,
+      limit: input.limit * 2,
+    });
+    if (matches.length > 0) {
+      const records = matches
+        .map((match) => this.getById(match.embeddingId))
+        .filter(
+          (record): record is EmbeddingRecord => record?.adapter === input.adapter && record.model === input.model,
+        );
+      if (records.length > 0) return records.slice(0, input.limit);
+    }
+    // Fallback: exact cosine over the workspace's persisted vectors.
+    const pool = this.listForWorkspace(input.workspaceId, input.adapter, input.model);
+    return pool
+      .map((record) => ({ record, score: cosineSimilarity(input.queryVector, record.vector) }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, input.limit)
+      .map((entry) => entry.record);
+  }
+
+  getById(id: string): EmbeddingRecord | undefined {
+    const row = this.db
+      .prepare<{ id: string }, EmbeddingRow>(`SELECT * FROM source_embeddings WHERE id = @id`)
+      .get({ id });
+    return row ? mapEmbedding(row) : undefined;
+  }
+
+  private listForWorkspace(workspaceId: string, adapter: string, model: string): EmbeddingRecord[] {
+    return this.db
+      .prepare<Record<string, string>, EmbeddingRow>(
+        `SELECT * FROM source_embeddings WHERE workspace_id = @workspaceId AND adapter = @adapter AND model = @model`,
+      )
+      .all({ workspaceId, adapter, model })
+      .map(mapEmbedding);
   }
 
   listForSources(input: {
@@ -123,6 +184,20 @@ export class EmbeddingRepository {
       .get({ workspaceId, sourceKind, sourceId, contentHash, adapter, model });
     return row ? mapEmbedding(row) : undefined;
   }
+}
+
+function cosineSimilarity(a: number[], b: number[]): number {
+  if (a.length !== b.length || a.length === 0) return 0;
+  let dot = 0;
+  let magA = 0;
+  let magB = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    dot += a[i]! * b[i]!;
+    magA += a[i]! * a[i]!;
+    magB += b[i]! * b[i]!;
+  }
+  const denom = Math.sqrt(magA) * Math.sqrt(magB);
+  return denom === 0 ? 0 : dot / denom;
 }
 
 function mapEmbedding(row: EmbeddingRow): EmbeddingRecord {

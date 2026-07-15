@@ -47,6 +47,43 @@ describe("EmbeddingRepository", () => {
     }
   });
 
+  it("finds the most similar persisted embeddings, scoped to workspace, adapter, and model", () => {
+    const db = createTestDb();
+    try {
+      const embeddings = new EmbeddingRepository(db.client);
+      const store = (id: string, vector: number[], workspaceId = "w_1", model = "e") =>
+        embeddings.upsert({
+          workspaceId,
+          sourceKind: "document_chunk",
+          sourceId: id,
+          contentHash: id,
+          adapter: "ollama",
+          model,
+          vector,
+        });
+      store("near", [1, 0, 0]);
+      store("mid", [0.5, 0.5, 0]);
+      store("far", [0, 0, 1]);
+      store("other_ws", [1, 0, 0], "w_2");
+      store("other_model", [1, 0, 0], "w_1", "different");
+
+      const results = embeddings.searchSimilar({
+        workspaceId: "w_1",
+        adapter: "ollama",
+        model: "e",
+        queryVector: [0.9, 0.1, 0],
+        limit: 2,
+      });
+
+      expect(results.map((record) => record.sourceId)).toEqual(["near", "mid"]);
+      expect(results.map((record) => record.sourceId)).not.toContain("far");
+      expect(results.map((record) => record.sourceId)).not.toContain("other_ws");
+      expect(results.map((record) => record.sourceId)).not.toContain("other_model");
+    } finally {
+      db.close();
+    }
+  });
+
   it("rejects non-finite and inconsistent vector dimensions", () => {
     const db = createTestDb();
     try {
