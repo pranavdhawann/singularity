@@ -151,7 +151,12 @@ export class AssistantService {
           });
         });
         waitForApproval();
-        yield { type: "context", contextPackId: contextPack.id, sourceCount: contextPack.items.length };
+        yield {
+          type: "context",
+          contextPackId: contextPack.id,
+          sourceCount: contextPack.items.length,
+          redactionCounts: redaction.counts,
+        };
         yield { type: "approval_required", turnId, previewId: preview.id };
         return;
       }
@@ -204,6 +209,7 @@ export class AssistantService {
         type: "context",
         contextPackId: contextPack.id,
         sourceCount: contextPack.items.length,
+        redactionCounts: redaction.counts,
       };
 
       for await (const chunk of provider.streamText({
@@ -363,7 +369,12 @@ export class AssistantService {
     if (!preview || !contextPack) throw new AssistantServiceError("turn_not_streamable");
 
     yield { type: "started", turn: initial };
-    yield { type: "context", contextPackId: contextPack.id, sourceCount: contextPack.items.length };
+    yield {
+      type: "context",
+      contextPackId: contextPack.id,
+      sourceCount: contextPack.items.length,
+      redactionCounts: preview.redactionCounts,
+    };
 
     let decision;
     try {

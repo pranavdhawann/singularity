@@ -589,6 +589,33 @@ h3 {
   background: #a44949;
 }
 
+.redaction-badge {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.redaction-badge button {
+  padding: 6px 10px;
+  border: 1px solid #cbd8d8;
+  border-radius: 999px;
+  color: #27584d;
+  background: #e8f2ef;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.redaction-badge ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 0;
+  padding: 0 0 0 2px;
+  list-style: none;
+  color: #52636b;
+  font-size: 12px;
+}
+
 .composer-status,
 .turn-cancelled,
 .turn-error {

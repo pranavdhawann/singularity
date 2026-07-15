@@ -20,7 +20,7 @@ describe("useAssistantTurn", () => {
     const completed = { ...turn, state: "completed" as const, contextPackId: "ctx_1", assistantEventId: "evt_answer" };
     const streamAssistantTurn = vi.fn(async function* (): AsyncIterable<AssistantStreamFrame> {
       yield { type: "started", turn };
-      yield { type: "context", contextPackId: "ctx_1", sourceCount: 1 };
+      yield { type: "context", contextPackId: "ctx_1", sourceCount: 1, redactionCounts: { email: 2 } };
       yield { type: "delta", text: "Hello " };
       yield { type: "delta", text: "world" };
       yield {
@@ -54,6 +54,7 @@ describe("useAssistantTurn", () => {
 
     expect(result.current.status).toBe("completed");
     expect(result.current.streamedText).toBe("Hello world");
+    expect(result.current.redactionCounts).toEqual({ email: 2 });
     expect(onTimelineChanged).toHaveBeenCalled();
     expect(onContextSelected).toHaveBeenCalledWith("ctx_1");
   });
@@ -85,7 +86,7 @@ describe("useAssistantTurn", () => {
       .fn()
       .mockImplementationOnce(async function* (): AsyncIterable<AssistantStreamFrame> {
         yield { type: "started", turn };
-        yield { type: "context", contextPackId: "ctx_1", sourceCount: 0 };
+        yield { type: "context", contextPackId: "ctx_1", sourceCount: 0, redactionCounts: { ssn: 1 } };
         yield { type: "approval_required", turnId: turn.id, previewId: preview.id };
       })
       .mockImplementationOnce(async function* (): AsyncIterable<AssistantStreamFrame> {
