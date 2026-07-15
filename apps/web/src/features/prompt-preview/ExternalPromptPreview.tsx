@@ -1,4 +1,14 @@
+import { useEffect, useRef } from "react";
 import type { PromptPreviewDto } from "@future/core";
+
+const FOCUSABLE_SELECTOR = [
+  "a[href]",
+  "button:not([disabled])",
+  "textarea:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])',
+].join(",");
 
 export function ExternalPromptPreview({
   preview,
@@ -9,8 +19,52 @@ export function ExternalPromptPreview({
   onApprove(): void | Promise<void>;
   onDeny(): void | Promise<void>;
 }) {
+  const dialogRef = useRef<HTMLElement>(null);
+  const denyRef = useRef<HTMLButtonElement>(null);
+
+  // Focus the safe default control (Deny) on open and restore focus to the
+  // control that opened the dialog once it closes.
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    denyRef.current?.focus();
+    return () => previouslyFocused?.focus?.();
+  }, []);
+
+  // Keep keyboard focus inside the modal and treat Escape as an explicit,
+  // safe deny of the external prompt.
+  const onKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      void onDeny();
+      return;
+    }
+    if (event.key !== "Tab") return;
+
+    const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR) ?? []);
+    if (focusable.length === 0) return;
+
+    const first = focusable[0]!;
+    const last = focusable[focusable.length - 1]!;
+    const active = document.activeElement;
+
+    if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
   return (
-    <section className="prompt-preview" role="dialog" aria-modal="true" aria-labelledby="prompt-preview-title">
+    <section
+      ref={dialogRef}
+      className="prompt-preview"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="prompt-preview-title"
+      onKeyDown={onKeyDown}
+    >
       <header>
         <div>
           <p className="eyebrow">Permission required</p>
@@ -72,7 +126,7 @@ export function ExternalPromptPreview({
         </>
       ) : null}
       <footer>
-        <button type="button" className="cancel-button" onClick={() => void onDeny()}>
+        <button ref={denyRef} type="button" className="cancel-button" onClick={() => void onDeny()}>
           Deny external prompt
         </button>
         <button type="button" onClick={() => void onApprove()}>

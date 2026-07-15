@@ -693,6 +693,36 @@ h3 {
   cursor: default;
 }
 
+.import-limits {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.85rem;
+  color: #4a5b5e;
+}
+
+.import-selection-error {
+  margin-top: 8px;
+}
+
+.import-failures {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  color: #8a2f22;
+  font-size: 0.9rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .prompt-preview {
   position: fixed;
   z-index: 20;

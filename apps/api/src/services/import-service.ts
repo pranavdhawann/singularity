@@ -3,6 +3,7 @@ import { createEvent, type ImportJobDto } from "@future/core";
 import { type EventRepository, type ImportJobRepository, type SqliteDatabase } from "@future/db";
 import {
   chunkDocument,
+  ImportParseError,
   parseChatGptExport,
   parseMarkdownDocument,
   parseTextDocument,
@@ -30,8 +31,8 @@ export interface EnqueueImportFileInput {
 }
 
 export class ImportServiceError extends Error {
-  constructor(readonly code: "parse_failed" | "index_failed") {
-    super(code.replace("_", " "));
+  constructor(readonly code: "parse_failed" | "index_failed" | "empty_source") {
+    super(code.replaceAll("_", " "));
     this.name = "ImportServiceError";
   }
 }
@@ -73,8 +74,10 @@ export class ImportService {
         documentCount: parsed.documents.length,
       });
     } catch (error) {
-      this.dependencies.jobs.fail(jobId, "parse_failed");
-      throw error instanceof ImportServiceError ? error : new ImportServiceError("parse_failed");
+      const code = error instanceof ImportParseError ? error.code : "parse_failed";
+      this.dependencies.jobs.fail(jobId, code);
+      if (error instanceof ImportServiceError) throw error;
+      throw new ImportServiceError(code);
     }
 
     let checkpoint = this.dependencies.jobs.advance(jobId, "parsing", {
