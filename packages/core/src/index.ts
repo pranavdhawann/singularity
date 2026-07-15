@@ -9,4 +9,5 @@ export * from "./permissions";
 export * from "./prompt-preview";
 export * from "./providers";
 export * from "./redaction";
+export * from "./salience";
 export * from "./secrets";
