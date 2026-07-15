@@ -8,3 +8,4 @@ export * from "./memory";
 export * from "./permissions";
 export * from "./prompt-preview";
 export * from "./providers";
+export * from "./secrets";
