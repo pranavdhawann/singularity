@@ -5,6 +5,7 @@ import { createServer } from "./server/create-server";
 
 const databasePath = process.env.FUTURE_DB_PATH ?? ".future/future.sqlite";
 const port = Number.parseInt(process.env.PORT ?? "4174", 10);
+const host = process.env.FUTURE_HOST ?? "127.0.0.1";
 
 await mkdir(dirname(databasePath), { recursive: true });
 
@@ -13,6 +14,6 @@ const allowedOrigins = (process.env.FUTURE_ALLOWED_ORIGINS ?? "http://127.0.0.1:
   .map((origin) => origin.trim())
   .filter(Boolean);
 const server = await createServer({ databasePath, sessionToken: randomUUID(), allowedOrigins });
-await server.listen({ host: "127.0.0.1", port });
+await server.listen({ host, port });
 
-console.log(`Singularity API listening on http://127.0.0.1:${port}`);
+console.log(`Singularity API listening on http://${host}:${port}`);

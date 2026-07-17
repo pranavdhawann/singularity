@@ -80,6 +80,15 @@ ChatGPT `.json` export instead:
 corepack pnpm dev
 ```
 
+### Or run the demo with Docker
+
+```bash
+docker build -t singularity https://github.com/pranavdhawann/singularity.git
+docker run --rm -p 127.0.0.1:4173:4173 -p 127.0.0.1:4174:4174 singularity
+```
+
+Then open `http://127.0.0.1:4173` and ask `launch readiness decision`.
+
 ## 🤖 Use a real model
 
 ### Local — Ollama

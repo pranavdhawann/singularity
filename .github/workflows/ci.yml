@@ -54,3 +54,21 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  docker:
+    name: Docker demo smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.0
+      - run: docker build -t singularity-demo .
+      - name: Boot the demo and probe the API
+        run: |
+          docker run -d --name demo -p 4173:4173 -p 4174:4174 singularity-demo
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:4174/api/health | grep -q '"ok":true'; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs demo
+          exit 1
