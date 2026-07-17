@@ -9,7 +9,7 @@ Import your history, retrieve **cited** context, and approve **exactly** what le
 [![CI](https://github.com/pranavdhawann/singularity/actions/workflows/ci.yml/badge.svg)](https://github.com/pranavdhawann/singularity/actions/workflows/ci.yml)
 [![MIT License](https://img.shields.io/badge/license-MIT-2f766d.svg)](LICENSE)
 [![Release](https://img.shields.io/badge/release-v0.2.0-17262e.svg)](https://github.com/pranavdhawann/singularity/releases/tag/v0.2.0)
-[![Node](https://img.shields.io/badge/node-24%2B-2f766d.svg)](https://nodejs.org/)
+[![Node](https://img.shields.io/badge/node-22.13%2B-2f766d.svg)](https://nodejs.org/)
 [![Local-first](https://img.shields.io/badge/local--first-privacy-17262e.svg)](#-privacy--security-boundary)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-2f766d.svg)](CONTRIBUTING.md)
 

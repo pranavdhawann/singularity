@@ -10,7 +10,7 @@ The deterministic demo and mock provider do. Ollama can keep generation local af
 
 ## Where is data stored?
 
-In local SQLite under `.future/` by default. The database is not encrypted at rest in `v0.1.0`.
+In local SQLite under `.future/` by default. The database is not encrypted at rest in `v0.2.0`.
 
 ## What can I import?
 
