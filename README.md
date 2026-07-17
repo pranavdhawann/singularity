@@ -8,7 +8,7 @@ Import your history, retrieve **cited** context, and approve **exactly** what le
 
 [![CI](https://github.com/pranavdhawann/singularity/actions/workflows/ci.yml/badge.svg)](https://github.com/pranavdhawann/singularity/actions/workflows/ci.yml)
 [![MIT License](https://img.shields.io/badge/license-MIT-2f766d.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/release-v0.1.0-17262e.svg)](https://github.com/pranavdhawann/singularity/releases/tag/v0.1.0)
+[![Release](https://img.shields.io/badge/release-v0.2.0-17262e.svg)](https://github.com/pranavdhawann/singularity/releases/tag/v0.2.0)
 [![Node](https://img.shields.io/badge/node-24%2B-2f766d.svg)](https://nodejs.org/)
 [![Local-first](https://img.shields.io/badge/local--first-privacy-17262e.svg)](#-privacy--security-boundary)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-2f766d.svg)](CONTRIBUTING.md)
@@ -25,7 +25,7 @@ a **local Ollama** model, or connect an **OpenAI-compatible** provider — witho
 handing one vendor ownership of your durable memory.
 
 > [!NOTE]
-> **Release status — `v0.1.0`.** An early but functional, local-first release
+> **Release status — `v0.2.0`.** An early but functional, local-first release
 > for technical early adopters. It is not production-ready and does not yet
 > include desktop packaging, encrypted local storage, cloud sync, or multi-user
 > isolation.
@@ -216,7 +216,7 @@ The detailed boundary is in [Next Steps](docs/12-next-steps.md).
 Singularity is the product and repository name. Internal `@future/*` package
 scopes, `FUTURE_*` environment variables, the `x-future-session` local header,
 and `.future/` data directory remain stable compatibility identifiers in
-`v0.1.0`. They will change only through a separately planned migration. The local
+`v0.2.0`. They will change only through a separately planned migration. The local
 checkout folder can be renamed independently.
 
 ## 🤝 Contributing
