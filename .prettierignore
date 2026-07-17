@@ -9,6 +9,7 @@ playwright-report
 test-results
 output
 .playwright
+docs/superpowers/plans
 pnpm-lock.yaml
 LICENSE
 
