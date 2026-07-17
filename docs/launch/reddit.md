@@ -1,13 +1,13 @@
-# Reddit draft
+# Reddit draft (r/LocalLLaMA first, then r/selfhosted)
 
-**Title:** I built a local-first assistant that cites imported ChatGPT history and asks before external calls
+**Title:** I built a local-first assistant that cites your imported ChatGPT history and shows you the exact redacted prompt before any external call
 
-Singularity is an open-source local memory and permission layer for AI assistants. You can import ChatGPT exports, Markdown, or text; retrieve across them with citations; inspect the exact source ranges; and use an offline mock, Ollama, or an OpenAI-compatible provider.
+Singularity is an open-source local memory and permission layer for AI assistants. Import ChatGPT exports, Markdown, or text; retrieve across them with citations and inspectable source ranges; run fully offline, against Ollama, or against any OpenAI-compatible provider.
 
-For external providers, Singularity builds and redacts the full prompt locally, then pauses until you approve or deny the exact preview. The approval is bound to the provider, model, selected context, and final prompt hashes.
+For external providers it builds and redacts the full prompt locally (always-on PII redaction with a live redaction badge), then pauses until you approve or deny the exact preview — the approval is bound to the provider, model, selected context, and prompt hashes. Secrets sit in an encrypted local store; retrieval is SQLite FTS5 plus a sqlite-vec KNN vector index.
 
-The current `v0.1.0` is for technical early adopters. It uses local SQLite and has a one-command seeded demo after install, but it does not yet have desktop packaging or encrypted storage.
+v0.2.0 is for technical early adopters. One-command Docker demo or a pnpm install; local SQLite; no cloud account. No desktop packaging yet, and the timeline database is not encrypted at rest.
 
 Repo and quick start: https://github.com/pranavdhawann/singularity
 
-I am looking for honest install reports and feedback on citation quality, Ollama setup, and the prompt approval UI—not star farming.
+Looking for honest install reports and feedback on citation quality, Ollama setup, and the prompt approval UI — not star farming.
