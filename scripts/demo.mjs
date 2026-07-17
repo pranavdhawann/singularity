@@ -46,9 +46,16 @@ export function checkPrerequisites({
   spawnCheck = spawnSync,
   ...launchOptions
 } = {}) {
-  const nodeMajor = Number.parseInt(nodeVersion.split(".")[0] ?? "", 10);
-  if (!Number.isInteger(nodeMajor) || nodeMajor < 22) {
-    throw new Error("Singularity requires Node.js 22 or newer. Install Node.js 22 or 24 and retry.");
+  const [majorVersion, minorVersion] = nodeVersion.split(".");
+  const nodeMajor = Number.parseInt(majorVersion ?? "", 10);
+  const nodeMinor = Number.parseInt(minorVersion ?? "", 10);
+  if (
+    !Number.isInteger(nodeMajor) ||
+    !Number.isInteger(nodeMinor) ||
+    nodeMajor < 22 ||
+    (nodeMajor === 22 && nodeMinor < 13)
+  ) {
+    throw new Error("Singularity requires Node.js 22.13 or newer. Install Node.js 22 or 24 and retry.");
   }
 
   const corepack = corepackInvocation(launchOptions);

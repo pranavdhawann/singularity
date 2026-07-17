@@ -109,13 +109,19 @@ describe("demo launcher", () => {
 
   it("rejects Node versions below 22 with remediation", () => {
     expect(() => checkPrerequisites({ nodeVersion: "20.19.0" })).toThrow(
-      "Singularity requires Node.js 22 or newer. Install Node.js 22 or 24 and retry.",
+      "Singularity requires Node.js 22.13 or newer. Install Node.js 22 or 24 and retry.",
     );
   });
 
   it("accepts Node 22", () => {
     expect(() => checkPrerequisites({ nodeVersion: "22.18.0", spawnCheck: () => ({ status: 0 }) })).not.toThrow(
-      "Singularity requires Node.js 22 or newer. Install Node.js 22 or 24 and retry.",
+      "Singularity requires Node.js 22.13 or newer. Install Node.js 22 or 24 and retry.",
+    );
+  });
+
+  it("rejects Node 22.12 below the declared 22.13 floor", () => {
+    expect(() => checkPrerequisites({ nodeVersion: "22.12.0", spawnCheck: () => ({ status: 0 }) })).toThrow(
+      "Singularity requires Node.js 22.13 or newer. Install Node.js 22 or 24 and retry.",
     );
   });
 

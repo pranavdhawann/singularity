@@ -4,6 +4,7 @@ build
 coverage
 .future
 .worktrees
+.superpowers
 playwright-report
 test-results
 output
