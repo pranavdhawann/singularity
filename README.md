@@ -32,9 +32,9 @@ handing one vendor ownership of your durable memory.
 
 <div align="center">
 
-[![Watch Singularity retrieve a cited local source](docs/assets/singularity-demo.png)](docs/assets/singularity-demo.webm)
+<img src="docs/assets/singularity-demo.gif" alt="Singularity demo: ask a question, get a cited answer, and open the exact local source range" width="840" />
 
-▶ **[Watch the 60-second demo](docs/assets/singularity-demo.webm)** — run the offline demo, ask a question, and inspect the cited local source.
+▶ **[Full-quality video](docs/assets/singularity-demo.webm)** — run the offline demo, ask a question, and inspect the cited local source.
 
 </div>
 
