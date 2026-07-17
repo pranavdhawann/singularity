@@ -59,7 +59,7 @@ durable layer on **your** machine.
 
 ## 🚀 60-second local demo
 
-**Requirements:** [Node.js 24+](https://nodejs.org/) with Corepack, and Git.
+**Requirements:** [Node.js 22.13+](https://nodejs.org/) (24 recommended) with Corepack, and Git.
 
 ```bash
 git clone https://github.com/pranavdhawann/singularity.git

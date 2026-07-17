@@ -107,9 +107,15 @@ describe("demo launcher", () => {
     expect(child.kill).not.toHaveBeenCalled();
   });
 
-  it("rejects Node versions below 24 with remediation", () => {
-    expect(() => checkPrerequisites({ nodeVersion: "22.18.0" })).toThrow(
-      "Singularity requires Node.js 24 or newer. Install Node.js 24 and retry.",
+  it("rejects Node versions below 22 with remediation", () => {
+    expect(() => checkPrerequisites({ nodeVersion: "20.19.0" })).toThrow(
+      "Singularity requires Node.js 22 or newer. Install Node.js 22 or 24 and retry.",
+    );
+  });
+
+  it("accepts Node 22", () => {
+    expect(() => checkPrerequisites({ nodeVersion: "22.18.0", spawnCheck: () => ({ status: 0 }) })).not.toThrow(
+      "Singularity requires Node.js 22 or newer. Install Node.js 22 or 24 and retry.",
     );
   });
 

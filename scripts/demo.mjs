@@ -47,8 +47,8 @@ export function checkPrerequisites({
   ...launchOptions
 } = {}) {
   const nodeMajor = Number.parseInt(nodeVersion.split(".")[0] ?? "", 10);
-  if (!Number.isInteger(nodeMajor) || nodeMajor < 24) {
-    throw new Error("Singularity requires Node.js 24 or newer. Install Node.js 24 and retry.");
+  if (!Number.isInteger(nodeMajor) || nodeMajor < 22) {
+    throw new Error("Singularity requires Node.js 22 or newer. Install Node.js 22 or 24 and retry.");
   }
 
   const corepack = corepackInvocation(launchOptions);
